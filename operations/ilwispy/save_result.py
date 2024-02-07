@@ -18,9 +18,9 @@ class SaveResultOperation(OpenEoOperation):
         return ""
               
 
-    def run(self, job_id, processOutput, processInput):
+    def run(self,job_id,job_name, processOutput, processInput):
         if self.runnable:
-            self.logStartOperation(processOutput, job_id)
+            self.logStartOperation(processOutput, job_id,job_name)
             path = openeoip_config['data_locations']['root_user_data_location']
             path = path['location'] + '/' + str(job_id)    
             os.makedirs(path)
@@ -38,7 +38,7 @@ class SaveResultOperation(OpenEoOperation):
                 for filename in file_names:
                     fn = path + "/"  + filename
                     files.append(fn)
-            self.logEndOperation(processOutput, job_id)
+            self.logEndOperation(processOutput, job_id, job_name)
             return createOutput('finished', files, constants.DTRASTERLIST)
         message = common.notRunnableError(job_id)
         return createOutput('error', message, constants.DTERROR)

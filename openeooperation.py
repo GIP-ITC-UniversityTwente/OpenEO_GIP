@@ -229,13 +229,15 @@ class OpenEoOperation:
         log = {'type' : 'progressevent', 'job_id': job_id, 'progress' : message , 'last_updated' : timenow, 'status' : status}   
         put2Queue(processOutput, log)
     
-    def logStartOperation(self, processOutput, job_id):
-        common.logMessage(logging.INFO, 'started: ' + self.name + "with job id:" + str(job_id))
+    def logStartOperation(self, processOutput, job_id, job_name):
+        common.logMessage(logging.INFO, 'started: ' + self.name + " with job name:" + str(job_name))
         return self.logProgress(processOutput, job_id, self.name,constants.STATUSRUNNING)
 
-    def logEndOperation(self, processOutput, job_id):
-        common.logMessage(logging.INFO, 'ended: ' + self.name + "with job id:" + str(job_id))
-        return self.logProgress(processOutput, job_id, 'finished ' + self.name,constants.STATUSFINISHED) 
+    def logEndOperation(self, processOutput, job_id, job_name):
+        common.logMessage(logging.INFO, 'ended: ' + self.name + " with job name:" + str(job_name))
+        return self.logProgress(processOutput, job_id, 'finished ' + self.name,constants.STATUSFINISHED)
+
+            
 
 def createOutput(status, value, datatype, format='')        :
     return {"status" : status, "value" : value, "datatype" : datatype, 'format' : format}  

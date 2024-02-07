@@ -35,9 +35,9 @@ class BaseUnarymapCalc(OpenEoOperation):
         except Exception as ex:
             return ""
 
-    def base_run(self, job_id, processOutput, processInput):
+    def base_run(self,job_id,job_name, processOutput, processInput):
         if self.runnable:
-            self.logStartOperation(processOutput, job_id)
+            self.logStartOperation(processOutput, job_id,job_name)
             put2Queue(processOutput, {'progress' : 0, 'job_id' : job_id, 'status' : 'running'})
             if isinstance(self.parmValue, list):
                 outputRasters = []                                
@@ -49,7 +49,7 @@ class BaseUnarymapCalc(OpenEoOperation):
             else:
                 c = eval('math.' + self.operation + '(' + self.parmValue + ')')
                 out = createOutput('finished', c, constants.DTNUMBER)
-            self.logEndOperation(processOutput, job_id)
+            self.logEndOperation(processOutput, job_id, job_name)
             put2Queue(processOutput,{'progress' : 100, 'job_id' : job_id, 'status' : 'finished'}) 
             return out
         message = common.notRunnableError(job_id)    
@@ -105,9 +105,9 @@ class BaseBinarymapCalcBase(OpenEoOperation):
 
    
 
-    def base_run(self, job_id, processOutput, processInput):
+    def base_run(self,job_id,job_name, processOutput, processInput):
         if self.runnable:
-            self.logStartOperation(processOutput, job_id)
+            self.logStartOperation(processOutput, job_id,job_name)
             put2Queue(processOutput, {'progress' : 0, 'job_id' : job_id, 'status' : 'running'})
 
             outputRasters = [] 
@@ -140,7 +140,7 @@ class BaseBinarymapCalcBase(OpenEoOperation):
                 out =  createOutput('finished', outputRasters, constants.DTRASTER)                
               
                 
-            self.logEndOperation(processOutput, job_id)
+            self.logEndOperation(processOutput, job_id, job_name)
             put2Queue(processOutput,{'progress' : 100, 'job_id' : job_id, 'status' : 'finished'}) 
             return out
         common.notRunnableError(job_id)    

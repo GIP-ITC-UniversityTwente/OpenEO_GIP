@@ -61,9 +61,10 @@ class OpenEOJobResults(Resource):
         return self.queueJob(job_id, user)  
 
    def get(self, job_id):
-        request_json = request.get_json()
-        user = UserInfo(request)
-        return self.returnJobResultUrls(user, job_id, user, request_json)   
+        if ( request.is_json):
+            request_json = request.get_json()
+            user = UserInfo(request)
+            return self.returnJobResultUrls(user, job_id, request_json)   
 
 class OpenEOIJobByIdEstimate(Resource):
    def processGetEstimate(self, job_id, user):

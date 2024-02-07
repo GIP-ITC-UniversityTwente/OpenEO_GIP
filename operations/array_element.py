@@ -40,7 +40,7 @@ class ArrayElementOperation(OpenEoOperation):
 
         return ""
    
-    def run(self, job_id, processOutput, processInput):
+    def run(self,job_id,job_name, processOutput, processInput):
         if self.runnable:
             outputRaster = self.inputRasters[self.bandIndex]
             return createOutput('finished', outputRaster, constants.DTRASTER)

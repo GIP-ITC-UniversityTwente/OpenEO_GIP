@@ -20,18 +20,18 @@ class ReduceDimensionsOperation(OpenEoOperation):
         return ""
               
 
-    def run(self, job_id, processOutput, processInput):
+    def run(self,job_id,job_name, processOutput, processInput):
         if self.runnable:
-            self.logStartOperation(processOutput, job_id)
+            self.logStartOperation(processOutput, job_id,job_name)
             if self.reducer['resolved'] == None:
                 pgraph = self.reducer['process_graph']
                 args = self.data['base']
                 process = processGraph.ProcessGraph(pgraph, args, getOperation)
-                output =  process.run(job_id, processOutput, processInput)
-                self.logEndOperation(processOutput, job_id)
+                output =  process.run(job_id, job_name, processOutput, processInput)
+                self.logEndOperation(processOutput, job_id, job_name)
                 return output
             else:
-                self.logEndOperation(processOutput, job_id)
+                self.logEndOperation(processOutput, job_id, job_name)
                 return createOutput('finished', self.reducer['resolved'], constants.DTRASTER)
         message = common.notRunnableError(job_id)           
         return createOutput('error', message, constants.DTERROR)

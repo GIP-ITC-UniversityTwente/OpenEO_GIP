@@ -22,13 +22,13 @@ class NormalizedDifference(OpenEoOperation):
         return ""
               
 
-    def run(self, job_id, processOutput, processInput):
+    def run(self,job_id,job_name, processOutput, processInput):
         if self.runnable:
-            self.logStartOperation(processOutput, job_id)
+            self.logStartOperation(processOutput, job_id,job_name)
             outputRc = ilwis.do("mapcalc", "(@1 - @2) / (@1 + @2)", self.inputRaster1.getRaster().rasterImp(), self.inputRaster2.getRaster().rasterImp())
             outputRasters = []                
             outputRasters.extend(self.setOutput([outputRc], self.extra))
-            self.logEndOperation(processOutput, job_id)
+            self.logEndOperation(processOutput, job_id, job_name)
             return createOutput('finished', outputRasters, constants.DTRASTERLIST)
         message = common.notRunnableError(job_id)
         return createOutput('error', message, constants.DTERROR)

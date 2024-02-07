@@ -37,7 +37,7 @@ class DummyLongFunc(OpenEoOperation):
 
             return ""
 
-    def run(self, job_id, processOutput, processInput):
+    def run(self,job_id,job_name, processOutput, processInput):
             if self.runnable:
                 logCount = 0
                 lasttime = time.time()

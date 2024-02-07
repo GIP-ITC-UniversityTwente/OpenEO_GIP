@@ -32,9 +32,9 @@ class BaseAggregateData(OpenEoOperation):
 
         return ""
       
-    def base_run(self, job_id, processOutput, processInput):
+    def base_run(self,job_id,job_name, processOutput, processInput):
         if self.runnable:
-            self.logStartOperation(processOutput, job_id)
+            self.logStartOperation(processOutput, job_id,job_name)
             if hasattr(self, 'rasters'):
                 outputRasters = []
                 for rc in self.rasters:
@@ -43,7 +43,7 @@ class BaseAggregateData(OpenEoOperation):
                     extra = self.constructExtraParams(rc, rc.temporalExtent, 0)
                     outputRasters.extend(self.setOutput([outputRc], extra))
 
-                self.logEndOperation(processOutput, job_id)
+                self.logEndOperation(processOutput, job_id, job_name)
                 return createOutput('finished', outputRasters, constants.DTRASTER)
         message = common.notRunnableError(job_id)
         return createOutput('error', message, constants.DTERROR)      

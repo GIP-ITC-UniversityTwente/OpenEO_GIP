@@ -6,6 +6,8 @@ from datetime import datetime
 import uuid
 from multiprocessing import Pipe
 import json
+import logging
+import common
 
 def get(key,values,  defaultValue):
     if key in values:
@@ -87,9 +89,14 @@ class OpenEOProcess(multiprocessing.Process):
         if id == 0:
             self.job_id = str(uuid.uuid4())
         else:
-            self.jon_id = id
-      
-                  
+            self.job_id = id
+        if (not hasattr(self, 'title')) :
+            self.title = "job " + self.job_id 
+        else:
+            if self.title == '':
+                self.title = "job " + self.job_id         
+        self.processGraph.title = self.title                      
+
         self.parameters = []
         if 'parameters' in processValues:
             for parameter in processValues['parameters']:
@@ -185,7 +192,8 @@ class OpenEOProcess(multiprocessing.Process):
 
     def run(self, toServer):
         if self.processGraph != None:
-            outputinfo = self.processGraph.run(str(self.job_id), toServer, self.fromServer)
+            common.logMessage(logging.INFO, 'started job_id: ' + self.job_id + "with name: " + self.title)
+            outputinfo = self.processGraph.run(str(self.job_id), self.title, toServer, self.fromServer)
             self.sendTo.close()
             self.fromServer.close()
             if outputinfo != None:
@@ -193,7 +201,7 @@ class OpenEOProcess(multiprocessing.Process):
                 if outputinfo['status'] == constants.STATUSSTOPPED:
                     self.cleanup()
                 
-
+            common.logMessage(logging.INFO,'finished job_id: ' + self.job_id )
     
   
         

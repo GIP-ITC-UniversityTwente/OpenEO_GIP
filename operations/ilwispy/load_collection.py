@@ -151,9 +151,9 @@ class LoadCollectionOperation(OpenEoOperation):
 
         return outputRasters                  
         
-    def run(self, job_id, processOutput, processInput):
+    def run(self,job_id,job_name, processOutput, processInput):
         if self.runnable:
-            self.logStartOperation(processOutput, job_id)
+            self.logStartOperation(processOutput, job_id,job_name)
             
             indexes = str(self.bandIdxs).lstrip('[').rstrip(']')
             indexes = [int(ele) for ele in indexes.split(',')]
@@ -165,7 +165,7 @@ class LoadCollectionOperation(OpenEoOperation):
             if self.inputRaster.grouping == 'band':                
                 outputRasters = self.byBand(indexes, env)
 
-            self.logEndOperation(processOutput, job_id)
+            self.logEndOperation(processOutput, job_id, job_name)
             return createOutput('finished', outputRasters, constants.DTRASTER)
         message = common.notRunnableError(job_id)
         return createOutput('error', message, constants.DTERROR)

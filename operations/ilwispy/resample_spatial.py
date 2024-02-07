@@ -58,9 +58,9 @@ class ResampleSpatial(OpenEoOperation):
         return ""
               
 
-    def run(self, job_id, processOutput, processInput):
+    def run(self,job_id,job_name, processOutput, processInput):
         if self.runnable:
-            self.logStartOperation(processOutput, job_id)
+            self.logStartOperation(processOutput, job_id,job_name)
             put2Queue(processOutput, {'progress' : 0, 'job_id' : job_id, 'status' : 'running'})
             
             env = self.inputRaster.envelope()
@@ -72,7 +72,7 @@ class ResampleSpatial(OpenEoOperation):
             outputRasters = []                
             outputRasters.extend(self.setOutput([outputRc], self.extra))
             put2Queue(processOutput,{'progress' : 100, 'job_id' : job_id, 'status' : 'finished'}) 
-            self.logEndOperation(processOutput, job_id)
+            self.logEndOperation(processOutput, job_id, job_name)
             return createOutput('finished', outputRasters, constants.DTRASTER)  
         message = common.notRunnableError(job_id)
         return createOutput('error', message, constants.DTERROR)

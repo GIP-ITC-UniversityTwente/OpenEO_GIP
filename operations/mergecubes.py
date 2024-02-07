@@ -28,7 +28,7 @@ class MergeCubes(OpenEoOperation):
         except:
             return "error" 
 
-    def run(self, job_id, processOutput, processInput):
+    def run(self,job_id,job_name, processOutput, processInput):
         if self.runnable:
             return None
         lenTarget = len(self.targetRasters)

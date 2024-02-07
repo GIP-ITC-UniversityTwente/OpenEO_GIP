@@ -34,7 +34,6 @@ def getRasterDataSets():
     return raster_data_sets
 
 def saveIdDatabase(idDatabse):
-        current_dir = os.path.dirname(os.path.abspath(__file__))
         home = Path.home()
         loc = openeoip_config['data_locations']['system_files']
         sytemFolder = os.path.join(home, loc['location'])
@@ -50,8 +49,8 @@ def logMessage(level, message):
       logger = logging.getLogger('openeo')
       logger.log(level, message)
 
-def notRunnableError(name, job_id):
-     message = "operation not runnable:" + name + "job id:" + str(job_id)
+def notRunnableError(name, job_name):
+     message = "operation not runnable:" + name + "job id:" + str(job_name)
      logMessage(logging.ERROR, message)
      return message
 

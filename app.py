@@ -11,7 +11,7 @@ def initLogger():
     logpath = os.path.join(os.path.dirname(__file__), 'log')
     if not os.path.exists(logpath):
         os.mkdir(logpath)
-    fileHandler = logging.FileHandler("{0}/{1}.log".format(logpath, ' logfile' ))
+    fileHandler = logging.FileHandler("{0}/{1}.log".format(logpath, 'openeoserver' ))
     fileHandler.setFormatter(logFormatter)
     logger.addHandler(fileHandler)
 
@@ -66,7 +66,6 @@ api = Api(app)
 
 globalsSingleton.initGlobals()
 
-common.logMessage(logging.INFO, 'server started, initialization finished')
 
 @app.route('/')
 def index():
@@ -106,7 +105,7 @@ t1 = Thread(target=startProcesses)
 t1.start()
 
 
-
+common.logMessage(logging.INFO, 'server started, initialization finished')
 
 if __name__ == '__main__':
     app.run()

@@ -22,8 +22,8 @@ class MaxOperation(BaseAggregateData):
 
         return ""
 
-    def run(self, job_id, processOutput, processInput):
-        return self.base_run(job_id, processOutput, processInput)
+    def run(self,job_id,job_name, processOutput, processInput):
+        return self.base_run(job_id, job_name, processOutput, processInput)
     
 class MeanOperation(BaseAggregateData):
     def __init__(self):
@@ -42,8 +42,8 @@ class MeanOperation(BaseAggregateData):
 
         return ""
 
-    def run(self, job_id, processOutput, processInput):
-        return self.base_run(job_id, processOutput, processInput) 
+    def run(self,job_id,job_name, processOutput, processInput):
+        return self.base_run(job_id, job_name, processOutput, processInput) 
 
 class MedianOperation(BaseAggregateData):
     def __init__(self):
@@ -62,8 +62,8 @@ class MedianOperation(BaseAggregateData):
 
         return ""
 
-    def run(self, job_id, processOutput, processInput):
-        return self.base_run(job_id, processOutput, processInput) 
+    def run(self,job_id,job_name, processOutput, processInput):
+        return self.base_run(job_id, job_name, processOutput, processInput) 
 
 class MinOperation(BaseAggregateData):
     def __init__(self):
@@ -82,8 +82,8 @@ class MinOperation(BaseAggregateData):
 
         return ""
 
-    def run(self, job_id, processOutput, processInput):
-        return self.base_run(job_id, processOutput, processInput) 
+    def run(self,job_id,job_name, processOutput, processInput):
+        return self.base_run(job_id, job_name, processOutput, processInput) 
 
 class SumOperation(BaseAggregateData):
     def __init__(self):
@@ -102,8 +102,8 @@ class SumOperation(BaseAggregateData):
 
         return ""
 
-    def run(self, job_id, processOutput, processInput):
-        return self.base_run(job_id, processOutput, processInput)             
+    def run(self,job_id,job_name, processOutput, processInput):
+        return self.base_run(job_id, job_name, processOutput, processInput)             
 class VarianceOperation(BaseAggregateData):
     def __init__(self):
         self.loadOpenEoJsonDef('variance.json')
@@ -121,8 +121,8 @@ class VarianceOperation(BaseAggregateData):
 
         return ""
 
-    def run(self, job_id, processOutput, processInput):
-        return self.base_run(job_id, processOutput, processInput)
+    def run(self,job_id,job_name, processOutput, processInput):
+        return self.base_run(job_id, job_name, processOutput, processInput)
     
 class StandardDevOperation(BaseAggregateData):
     def __init__(self):
@@ -141,8 +141,8 @@ class StandardDevOperation(BaseAggregateData):
 
         return ""
 
-    def run(self, job_id, processOutput, processInput):
-        return self.base_run(job_id, processOutput, processInput)    
+    def run(self,job_id,job_name, processOutput, processInput):
+        return self.base_run(job_id, job_name, processOutput, processInput)    
     
 def registerOperation():
     funcs = []     
