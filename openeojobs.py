@@ -1,4 +1,4 @@
-from flask import make_response, jsonify, request
+from flask import make_response, jsonify, request, url_for
 from flask_restful import Resource
 from workflow.openeoprocess import OpenEOProcess
 from processmanager import globalProcessManager, makeBaseResponseDict
@@ -6,6 +6,11 @@ from userinfo import UserInfo
 from constants.constants import *
 from globals import globalsSingleton
 from constants import constants
+import common
+import os
+import json
+from itsdangerous import URLSafeTimedSerializer
+from datetime import datetime
 
 class OpenEOIPJobs(Resource):
     def processPostJobId(self, user, request_json):
@@ -39,9 +44,60 @@ class OpenEOIPJobs(Resource):
             return self.processGetJobs(user)
           
 class OpenEOJobResults(Resource):
-   def returnJobResultUrls(self, job_id, user, request_json):
-       eoprocess = globalProcessManager.allJobsMetadata4User(user, job_id, request.base_url)
-       return ""
+   def returnJobResultUrls(self, job_id, user, host):
+        path = common.openeoip_config['data_locations']['root_user_data_location']
+        rootJobdataPath = os.path.join(path['location'],str(job_id))
+        path = os.path.join(rootJobdataPath, "jobmetadata.json") 
+        if os.path.exists(path):
+            with open(path, "r") as fp:
+                    eoprocess = json.load(fp)           
+            ##eoprocess = globalProcessManager.allJobsMetadata4User(user, job_id, request.base_url)
+            result = {}
+            result['stac_version'] = globalsSingleton.openeoip_config['stac_version']
+            result['id'] = job_id
+            result['type'] = 'Feature'
+            result["stac_extensions"] = ["https://stac-extensions.github.io/eo/v1.0.0/schema.json", 
+                                            "https://stac-extensions.github.io/view/v1.0.0/schema.json",
+                                            "https://stac-extensions.github.io/projection/v1.0.0/schema.json",
+                                            "https://stac-extensions.github.io/raster/v1.1.0/schema.json"]
+            if 'spatialextent' in eoprocess:
+                result['bbox'] = eoprocess['spatialextent']
+                arr = result['bbox']
+                coords = [[arr[0], arr[1]], [arr[2], arr[1]], [arr[2], arr[3]],[arr[0], arr[3]], [arr[0], arr[1]]] 
+                result['geometry'] = {'type' : 'Polygon',  'coordinate': coords}
+            properties = {}
+            properties['start_datetime'] = eoprocess['start_datetime']
+            properties['end_datetime'] = eoprocess['end_datetime']
+            properties['datetime'] = eoprocess['submitted'] 
+            properties['title'] = eoprocess['title']
+            properties['description'] = eoprocess['description']
+            properties['openeo:status'] = 'finished'
+            result['properties'] = properties
+            assets = {}
+            # Iterate directory
+            for path in os.listdir(rootJobdataPath):
+                if os.path.isfile(os.path.join(rootJobdataPath, path)):
+                    if path == 'jobmetadata.json':
+                        continue
+                    fullpath = os.path.join(rootJobdataPath,path) 
+                    type, role = common.inspectFileType(fullpath) 
+                    s = URLSafeTimedSerializer('120202')
+                    token = s.dumps({'user_id': job_id })
+                    url1 = 'openeodatadownload'
+                    urlep = url_for(url1, token=token)
+                    urldl = "http://"+ host + urlep + "___" + path
+                    item = {'href' : urldl, 'type': type, 'title' : path, 'roles' : [role]}                       
+                    assets[path] = item
+            result['assets'] = assets 
+            globalProcessManager.outputs[job_id].availableStart = datetime.now()
+            return make_response(jsonify(result),200)
+        else:
+              err = globalsSingleton.errorJson('JobNotFinished', job_id,'')
+              return make_response(jsonify(err),err.code) 
+
+
+
+        return 
        
    def queueJob(self, job_id, user):
         try:
@@ -61,11 +117,10 @@ class OpenEOJobResults(Resource):
         return self.queueJob(job_id, user)  
 
    def get(self, job_id):
-        if ( request.is_json):
-            request_json = request.get_json()
-            user = UserInfo(request)
-            return self.returnJobResultUrls(user, job_id, request_json)   
-
+        user = UserInfo(request)
+        host =  request.environ['HTTP_HOST']
+        return self.returnJobResultUrls(job_id, user, host)  
+   
 class OpenEOIJobByIdEstimate(Resource):
    def processGetEstimate(self, job_id, user):
         try:
