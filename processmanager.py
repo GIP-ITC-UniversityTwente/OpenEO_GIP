@@ -37,6 +37,7 @@ def ErrorResponse(id, code, message):
 def worker(openeoprocess, outputQueue):
     openeoprocess.status = constants.STATUSRUNNING
     openeoprocess.run(outputQueue)
+    print("done")
 
 class OutputInfo:
     def __init__(self, eoprocess):
@@ -46,6 +47,7 @@ class OutputInfo:
         self.output = None
         self.status = constants.STATUSQUEUED
         self.logs = []
+        self.availableStart = None
 
     def isFinished(self):
         return self.progress == 1
@@ -149,12 +151,15 @@ class ProcessManager:
         with self.lockOutput:
             processes = []   
             for key,value in self.outputs.items():
-                if value.eoprocess.user == user:
+                if value.eoprocess.user == user or user.username == 'undefined':
                     if job_id == None or ( job_id == str(value.eoprocess.job_id)):
                         dict = value.eoprocess.toDict( job_id == None)
                         dict['progress'] = value.progress
                         dict['updated'] = value.last_updated
                         dict['status'] = value.status
+                        if value.status == constants.STATUSJOBDONE:
+                            dict['status'] = 'finished'
+                            dict['progress'] = 'Job done'
                         dict['job_id'] = value.eoprocess.job_id
                         dict['submitted'] = value.eoprocess.submitted
                         dict["links"]  = {
@@ -206,7 +211,9 @@ class ProcessManager:
                 self.outputs[str(eoprocess.job_id)].status = constants.STATUSRUNNING
                 p.start()
             if self.outputQueue.qsize() > 0:
-                self.changeOutputStatus()
+                item = self.outputQueue.get()
+                print(item['status'])                
+                self.changeOutputStatus(item)
             endTimer = datetime.now()
             if (endTimer - startTimer).seconds > 120:
                 self.dumpProcessTables()
@@ -227,7 +234,7 @@ class ProcessManager:
                         
                         dump = pickle.load(f)
                         for output in dump.items():
-                            if output[1].status == constants.STATUSFINISHED:
+                            if output[1].status == constants.STATUSJOBDONE:
                                 self.outputs[output[1].eoprocess.job_id] = output[1]
                             elif output[1].status == constants.STATUSQUEUED:
                                 self.processQueue.append(output[1].eoprocess)
@@ -235,15 +242,16 @@ class ProcessManager:
                                 self.processQueue.append(output[1].eoprocess)                        
 
 
-    def changeOutputStatus(self):
-        item = self.outputQueue.get()
+    def changeOutputStatus(self, item):
+        
         job_id = item['job_id']
         if job_id in self.outputs:
             type = item['type']
             if type == 'progressevent':
                 self.outputs[job_id].progress = item['progress']
                 self.outputs[job_id].last_updated = str(datetime.now())
-                self.outputs[job_id].status = item['status']
+                if item['status'] == constants.STATUSJOBDONE:
+                    self.outputs[job_id].status = constants.STATUSJOBDONE
             if type == 'logginevent':
                 del item['type']
                 self.outputs[job_id].logs.append(item)
