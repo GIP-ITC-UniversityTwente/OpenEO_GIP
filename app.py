@@ -4,6 +4,7 @@ import pathlib
 import logging
 import common
 
+
 def initLogger():
     logFormatter = logging.Formatter("%(asctime)s [%(threadName)-12.12s] [%(levelname)-5.5s]  %(message)s")
     logger = logging.getLogger('openeo')
@@ -25,6 +26,7 @@ common.logMessage(logging.INFO, 'server started, process id:' + str(os.getpid())
 
 pp = pathlib.Path(__file__).parent.resolve()
 pp = str(pp)
+
 sys.path.append(pp + '/workflow')
 sys.path.append(pp + '/constants')
 sys.path.append(pp + '/operations')
@@ -49,12 +51,13 @@ from openeologs import OpenEOIPLogs
 from openeovalidate import OpenEOIPValidate
 from openeoudfruntimes import OpenEOUdfRuntimes
 from openeofiles import OpenEODownloadFile
+from datadownload import OpenEODataDownload
 
 from processmanager import globalProcessManager
 from threading import Thread
 from wellknown import WellKnown
 import common
-#from flask import request
+
 
 #init part
 
@@ -63,6 +66,7 @@ app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_host=1, x_proto=1)
 app.config['JSONIFY_PRETTYPRINT_REGULAR'] = True
 
 api = Api(app)
+
 
 globalsSingleton.initGlobals()
 
@@ -75,6 +79,11 @@ def index():
 @app.route('/.well-known/openeo')
 def well_known():
         return WellKnown.get(api)
+
+@app.route('/get_file/<token>')
+def get_file(token):
+    CAPABILITIES = replace_links_in_capabilities()
+    return make_response(jsonify(CAPABILITIES), 200)
 
 api.add_resource( OpenEOIPCollections,'/collections')
 api.add_resource( OpenEOIPCollection,'/collections/<string:name>')
@@ -94,6 +103,7 @@ api.add_resource( OpenEOIPLogs,'/jobs/<string:job_id>/logs')
 api.add_resource( OpenEOIPValidate,'/validation')
 api.add_resource( OpenEOUdfRuntimes,'/udf_runtimes')
 api.add_resource( OpenEODownloadFile,'/files/<string:filepath>')
+api.add_resource( OpenEODataDownload,'/download/<token>')
 
 ##api.add_resource( OpenEODelete,'/jobs/<string:job_id>')
 CORS(app)
