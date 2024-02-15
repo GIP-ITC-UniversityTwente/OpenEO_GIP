@@ -29,14 +29,14 @@ class LinearScaleRangeOperation(OpenEoOperation):
         return ""
               
 
-    def run(self,job_id,job_name, processOutput, processInput):
+    def run(self,openeojob, processOutput, processInput):
         if self.runnable:
-            self.logStartOperation(processOutput, job_id,job_name)
+            self.logStartOperation(processOutput, openeojob)
 
             outputRc = ilwis.do("linearstretch", self.inputRaster,self.inpMin, self.inpMax, self.outMin, self.outMax)
             outputRasters = []                
             outputRasters.extend(self.setOutput([outputRc], self.extra))
-            return createOutput('finished', outputRasters, constants.DTRASTERLIST)
+            return createOutput(constants.STATUSFINISHED, outputRasters, constants.DTRASTERLIST)
         
         return createOutput('error', "operation no runnable", constants.DTERROR)
         

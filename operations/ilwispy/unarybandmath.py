@@ -8,8 +8,8 @@ class ArcCosOperation(BaseUnarymapCalc):
         self.base_prepare(arguments, 'acos')
         return ""
 
-    def run(self,job_id,job_name, processOutput, processInput):
-        return self.base_run(job_id, job_name, processOutput, processInput)
+    def run(self,openeojob, processOutput, processInput):
+        return self.base_run(openeojob, processOutput, processInput)
     
 class ArcCosHOperation(BaseUnarymapCalc):
     def __init__(self):
@@ -19,8 +19,8 @@ class ArcCosHOperation(BaseUnarymapCalc):
         self.base_prepare(arguments, 'acosh')
         return ""
 
-    def run(self,job_id,job_name, processOutput, processInput):
-        return self.base_run(job_id, job_name, processOutput, processInput) 
+    def run(self,openeojob, processOutput, processInput):
+        return self.base_run(openeojob, processOutput, processInput) 
 
 class CosHOperation(BaseUnarymapCalc):
     def __init__(self):
@@ -30,8 +30,8 @@ class CosHOperation(BaseUnarymapCalc):
         self.base_prepare(arguments, 'cosh')
         return ""
 
-    def run(self,job_id,job_name, processOutput, processInput):
-        return self.base_run(job_id, job_name, processOutput, processInput)         
+    def run(self,openeojob, processOutput, processInput):
+        return self.base_run(openeojob, processOutput, processInput)         
     
 class CosOperation(BaseUnarymapCalc):
     def __init__(self):
@@ -41,8 +41,8 @@ class CosOperation(BaseUnarymapCalc):
         self.base_prepare(arguments, 'cos')
         return ""
 
-    def run(self,job_id,job_name, processOutput, processInput):
-        return self.base_run(job_id, job_name, processOutput, processInput)    
+    def run(self,openeojob, processOutput, processInput):
+        return self.base_run(openeojob, processOutput, processInput)    
 
 class ASinOperation(BaseUnarymapCalc):
     def __init__(self):
@@ -52,8 +52,8 @@ class ASinOperation(BaseUnarymapCalc):
         self.base_prepare(arguments, 'asin')
         return ""
 
-    def run(self,job_id,job_name, processOutput, processInput):
-        return self.base_run(job_id, job_name, processOutput, processInput)
+    def run(self,openeojob, processOutput, processInput):
+        return self.base_run(openeojob, processOutput, processInput)
     
 class ASinHOperation(BaseUnarymapCalc):
     def __init__(self):
@@ -63,8 +63,8 @@ class ASinHOperation(BaseUnarymapCalc):
         self.base_prepare(arguments, 'asinh')
         return ""
 
-    def run(self,job_id,job_name, processOutput, processInput):
-        return self.base_run(job_id, job_name, processOutput, processInput)    
+    def run(self,openeojob, processOutput, processInput):
+        return self.base_run(openeojob, processOutput, processInput)    
         
 class SinOperation(BaseUnarymapCalc):
     def __init__(self):
@@ -74,8 +74,8 @@ class SinOperation(BaseUnarymapCalc):
         self.base_prepare(arguments, 'sin')
         return ""
 
-    def run(self,job_id,job_name, processOutput, processInput):
-        return self.base_run(job_id, job_name, processOutput, processInput)
+    def run(self,openeojob, processOutput, processInput):
+        return self.base_run(openeojob, processOutput, processInput)
     
 class SinHOperation(BaseUnarymapCalc):
     def __init__(self):
@@ -85,8 +85,8 @@ class SinHOperation(BaseUnarymapCalc):
         self.base_prepare(arguments, 'sinh')
         return ""
 
-    def run(self,job_id,job_name, processOutput, processInput):
-        return self.base_run(job_id, job_name, processOutput, processInput)    
+    def run(self,openeojob, processOutput, processInput):
+        return self.base_run(openeojob, processOutput, processInput)    
 
 class TanOperation(BaseUnarymapCalc):
     def __init__(self):
@@ -96,8 +96,8 @@ class TanOperation(BaseUnarymapCalc):
         self.base_prepare(arguments, 'tan')
         return ""
 
-    def run(self,job_id,job_name, processOutput, processInput):
-        return self.base_run(job_id, job_name, processOutput, processInput)
+    def run(self,openeojob, processOutput, processInput):
+        return self.base_run(openeojob, processOutput, processInput)
     
 class TanHOperation(BaseUnarymapCalc):
     def __init__(self):
@@ -107,8 +107,8 @@ class TanHOperation(BaseUnarymapCalc):
         self.base_prepare(arguments, 'tanh')
         return ""
 
-    def run(self,job_id,job_name, processOutput, processInput):
-        return self.base_run(job_id, job_name, processOutput, processInput)    
+    def run(self,openeojob, processOutput, processInput):
+        return self.base_run(openeojob, processOutput, processInput)    
 
 class ATanOperation(BaseUnarymapCalc):
     def __init__(self):
@@ -118,8 +118,8 @@ class ATanOperation(BaseUnarymapCalc):
         self.base_prepare(arguments, 'atan')
         return ""
 
-    def run(self,job_id,job_name, processOutput, processInput):
-        return self.base_run(job_id, job_name, processOutput, processInput) 
+    def run(self,openeojob, processOutput, processInput):
+        return self.base_run(openeojob, processOutput, processInput) 
 
 class AbsOperation(BaseUnarymapCalc):
     def __init__(self):
@@ -129,8 +129,8 @@ class AbsOperation(BaseUnarymapCalc):
         self.base_prepare(arguments, 'abs')
         return ""
 
-    def run(self,job_id,job_name, processOutput, processInput):
-        return self.base_run(job_id, job_name, processOutput, processInput)                  
+    def run(self,openeojob, processOutput, processInput):
+        return self.base_run(openeojob, processOutput, processInput)                  
     
 class CeilOperation(BaseUnarymapCalc):
     def __init__(self):
@@ -140,8 +140,8 @@ class CeilOperation(BaseUnarymapCalc):
         self.base_prepare(arguments, 'ceil')
         return ""
 
-    def run(self,job_id,job_name, processOutput, processInput):
-        return self.base_run(job_id, job_name, processOutput, processInput) 
+    def run(self,openeojob, processOutput, processInput):
+        return self.base_run(openeojob, processOutput, processInput) 
 
 class FloorOperation(BaseUnarymapCalc):
     def __init__(self):
@@ -151,8 +151,8 @@ class FloorOperation(BaseUnarymapCalc):
         self.base_prepare(arguments, 'floor')
         return ""
 
-    def run(self,job_id,job_name, processOutput, processInput):
-        return self.base_run(job_id, job_name, processOutput, processInput)
+    def run(self,openeojob, processOutput, processInput):
+        return self.base_run(openeojob, processOutput, processInput)
 
 class IntOperation(BaseUnarymapCalc):
     def __init__(self):
@@ -162,8 +162,8 @@ class IntOperation(BaseUnarymapCalc):
         self.base_prepare(arguments, 'int')
         return ""
 
-    def run(self,job_id,job_name, processOutput, processInput):
-        return self.base_run(job_id, job_name, processOutput, processInput) 
+    def run(self,openeojob, processOutput, processInput):
+        return self.base_run(openeojob, processOutput, processInput) 
 
 class RoundOperation(BaseUnarymapCalc):
     def __init__(self):
@@ -173,8 +173,8 @@ class RoundOperation(BaseUnarymapCalc):
         self.base_prepare(arguments, 'round')
         return ""
 
-    def run(self,job_id,job_name, processOutput, processInput):
-        return self.base_run(job_id, job_name, processOutput, processInput) 
+    def run(self,openeojob, processOutput, processInput):
+        return self.base_run(openeojob, processOutput, processInput) 
 
 class LnOperation(BaseUnarymapCalc):
     def __init__(self):
@@ -184,8 +184,8 @@ class LnOperation(BaseUnarymapCalc):
         self.base_prepare(arguments, 'ln')
         return ""
 
-    def run(self,job_id,job_name, processOutput, processInput):
-        return self.base_run(job_id, job_name, processOutput, processInput)                       
+    def run(self,openeojob, processOutput, processInput):
+        return self.base_run(openeojob, processOutput, processInput)                       
     
 class PowerOperation(BaseUnarymapCalc):
     def __init__(self):
@@ -195,8 +195,8 @@ class PowerOperation(BaseUnarymapCalc):
         self.base_prepare(arguments, 'pow')
         return ""
 
-    def run(self,job_id,job_name, processOutput, processInput):
-        return self.base_run(job_id, job_name, processOutput, processInput)  
+    def run(self,openeojob, processOutput, processInput):
+        return self.base_run(openeojob, processOutput, processInput)  
 
 class SqrtOperation(BaseUnarymapCalc):
     def __init__(self):
@@ -206,8 +206,8 @@ class SqrtOperation(BaseUnarymapCalc):
         self.base_prepare(arguments, 'sqrt')
         return ""
 
-    def run(self,job_id,job_name, processOutput, processInput):
-        return self.base_run(job_id, job_name, processOutput, processInput) 
+    def run(self,openeojob, processOutput, processInput):
+        return self.base_run(openeojob, processOutput, processInput) 
 
 class ExpOperation(BaseUnarymapCalc):
     def __init__(self):
@@ -217,8 +217,8 @@ class ExpOperation(BaseUnarymapCalc):
         self.base_prepare(arguments, 'exp')
         return ""
 
-    def run(self,job_id,job_name, processOutput, processInput):
-        return self.base_run(job_id, job_name, processOutput, processInput)           
+    def run(self,openeojob, processOutput, processInput):
+        return self.base_run(openeojob, processOutput, processInput)           
 
 def registerOperation():
      funcs = []

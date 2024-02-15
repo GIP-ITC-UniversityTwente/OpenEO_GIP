@@ -35,24 +35,24 @@ class BaseUnarymapCalc(OpenEoOperation):
         except Exception as ex:
             return ""
 
-    def base_run(self,job_id,job_name, processOutput, processInput):
+    def base_run(self,openeojob, processOutput, processInput):
         if self.runnable:
-            self.logStartOperation(processOutput, job_id,job_name)
-            put2Queue(processOutput, {'progress' : 0, 'job_id' : job_id, 'status' : 'running'})
+            self.logStartOperation(processOutput, openeojob)
+            put2Queue(processOutput, {'progress' : 0, 'job_id' : openeojob.job_id, 'status' : 'running'})
             if isinstance(self.parmValue, list):
                 outputRasters = []                                
                 for item in self.parmValue:
                     oper = self.operation + '(@1)'
                     outputRc = ilwis.do('mapcalc', oper, item['raster'])
                     outputRasters.extend(self.setOutput([outputRc], item['extra']))
-                out =  createOutput('finished', outputRasters, constants.DTRASTER)                
+                out =  createOutput(constants.STATUSFINISHED, outputRasters, constants.DTRASTER)                
             else:
                 c = eval('math.' + self.operation + '(' + self.parmValue + ')')
-                out = createOutput('finished', c, constants.DTNUMBER)
-            self.logEndOperation(processOutput, job_id, job_name)
-            put2Queue(processOutput,{'progress' : 100, 'job_id' : job_id, 'status' : 'finished'}) 
+                out = createOutput(constants.STATUSFINISHED, c, constants.DTNUMBER)
+            self.logEndOperation(processOutput,openeojob)
+            put2Queue(processOutput,{'progress' : 100, 'job_id' : openeojob.job_id, 'status' : 'finished'}) 
             return out
-        message = common.notRunnableError(job_id)    
+        message = common.notRunnableError(openeojob.job_id)   
         return createOutput('error', message, constants.DTERROR)
     
 class BaseBinarymapCalcBase(OpenEoOperation):
@@ -105,10 +105,10 @@ class BaseBinarymapCalcBase(OpenEoOperation):
 
    
 
-    def base_run(self,job_id,job_name, processOutput, processInput):
+    def base_run(self,openeojob, processOutput, processInput):
         if self.runnable:
-            self.logStartOperation(processOutput, job_id,job_name)
-            put2Queue(processOutput, {'progress' : 0, 'job_id' : job_id, 'status' : 'running'})
+            self.logStartOperation(processOutput, openeojob)
+            put2Queue(processOutput, {'progress' : 0, 'job_id' : openeojob.job_id, 'status' : 'running'})
 
             outputRasters = [] 
             oper = '@1' + self.operation + '@2' 
@@ -133,15 +133,15 @@ class BaseBinarymapCalcBase(OpenEoOperation):
                 elif self.operation in ['log']:
                     expr = 'math.' + self.operation + '(' + str(self.p1)+ ',' +  str(self.p2) + ')'
                     output = eval(expr)
-                out = createOutput('finished', output, constants.DTNUMBER) 
+                out = createOutput(constants.STATUSFINISHED, output, constants.DTNUMBER) 
 
             if self.ismaps1 or self.ismaps2:
                 outputRasters.extend(self.setOutput(outputs, self.extra))
-                out =  createOutput('finished', outputRasters, constants.DTRASTER)                
+                out =  createOutput(constants.STATUSFINISHED, outputRasters, constants.DTRASTER)                
               
                 
-            self.logEndOperation(processOutput, job_id, job_name)
-            put2Queue(processOutput,{'progress' : 100, 'job_id' : job_id, 'status' : 'finished'}) 
+            self.logEndOperation(processOutput,openeojob)
+            put2Queue(processOutput,{'progress' : 100, 'job_id' : openeojob.job_id, 'status' : 'finished'}) 
             return out
-        common.notRunnableError(job_id)    
+        common.notRunnableError(openeojob.job_id)   
         return createOutput('error', "operation no runnable", constants.DTERROR)                        

@@ -86,11 +86,11 @@ class ProcessGraph(OpenEoOperation):
         except Exception as ex:
             return createOutput(False, str(ex), constants.DTERROR)
 
-    def run(self,job_id, job_name, toServer, fromServer ):
+    def run(self,openeojob, toServer, fromServer ):
         try:
             for key, processNode in self.outputNodes:
                 self.startNode = NodeExecution(processNode,self)
-                self.startNode.run(job_id, job_name, toServer, fromServer)
+                self.startNode.run(openeojob, toServer, fromServer)
                 return self.startNode.outputInfo
         except Exception as ex:
             return createOutput(False, str(ex), constants.DTERROR)
@@ -128,7 +128,7 @@ class NodeExecution :
         self.outputInfo = None
         self.indirectKeys = ['from_parameter', 'from_node', 'reducer']
 
-    def run(self,job_id,job_name, toServer, fromServer):
+    def run(self,openeojob, toServer, fromServer):
         args = self.processNode.localArguments
         for key, parmDef in args.items():
             if parmDef['resolved'] == None:
@@ -136,11 +136,11 @@ class NodeExecution :
                 if isinstance(definition, dict):
                    for item in definition.items():
                         if item[0] in self.indirectKeys:
-                            resolvedValue = self.resolveNode(job_id, job_name, toServer, fromServer, item)
+                            resolvedValue = self.resolveNode(openeojob, toServer, fromServer, item)
                         else:            
-                            resolvedValue = self.resolveNode(job_id, job_name, toServer, fromServer, (key, definition)) 
+                            resolvedValue = self.resolveNode(openeojob, toServer, fromServer, (key, definition)) 
                 else:
-                    resolvedValue = self.resolveNode(job_id, job_name, toServer, fromServer, (key, definition))                        
+                    resolvedValue = self.resolveNode(openeojob, toServer, fromServer, (key, definition))                        
                 args[key]['resolved'] = resolvedValue
 
         processObj = self.processGraph.getOperation(self.processNode.process_id)
@@ -148,11 +148,11 @@ class NodeExecution :
             ##arguments = self.processNode.argumentValues
             executeObj =  copy.deepcopy(processObj)
             args['serverChannel'] = toServer
-            args['job_id'] = job_id
+            args['job_id'] = openeojob.job_id
             message = executeObj.prepare(args)
             if  executeObj.runnable:
                 try:                
-                    self.outputInfo = executeObj.run(job_id, job_name, toServer, fromServer) 
+                    self.outputInfo = executeObj.run(openeojob, toServer, fromServer) 
                 except Exception:
                     return 'error'                    
             else:                               
@@ -195,14 +195,14 @@ class NodeExecution :
         return bandmathOperation                                                                                                                
 
    
-    def resolveNode(self, job_id, job_name, toServer, fromServer, parmKeyValue):
+    def resolveNode(self,openeojob, toServer, fromServer, parmKeyValue):
         if 'from_node' in parmKeyValue:
             referredNodeName = parmKeyValue[1]
             referredNode = self.processGraph.id2node(referredNodeName)
             if referredNode != None:
                 if referredNode[1].nodeValue == None:
                     refExecutionNode = NodeExecution(referredNode[1], self.processGraph)
-                    if refExecutionNode.run(job_id, job_name, toServer, fromServer) == '':
+                    if refExecutionNode.run(openeojob, toServer, fromServer) == '':
                         referredNode[1].nodeValue = refExecutionNode.outputInfo
                         return referredNode[1].nodeValue['value']
                     return 'hmm'
@@ -210,13 +210,13 @@ class NodeExecution :
                 refNode = self.processNode.parentProcessGraph.resolveParameter(parmKeyValue[1])
                 if refNode['resolved'] != None:
                     return refNode['resolved'] 
-                return self.resolveNode(job_id, job_name, toServer, fromServer, refNode)  
+                return self.resolveNode(openeojob, toServer, fromServer, refNode)  
         elif 'reducer' in parmKeyValue:
             pgraph = parmKeyValue[1]['process_graph']
             args = self.processNode.localArguments
             self.mapcalc(args,pgraph)
             process = ProcessGraph(pgraph, args, self.processGraph.getOperation)
-            self.outputInfo = process.run(job_id, job_name, toServer, fromServer)
+            self.outputInfo = process.run(openeojob, toServer, fromServer)
             return self.outputInfo['value']
         else:
             return parmKeyValue[1]                                              

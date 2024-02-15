@@ -13,7 +13,7 @@ def prepare(self, arguments):
                          
         return ''  
 
-def run(self,job_id,job_name, processOutput, processInput):
+def run(self,openeojob, processOutput, processInput):
     if self.runnable:
          return None
     

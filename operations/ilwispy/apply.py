@@ -20,13 +20,13 @@ class ApplyOperation(OpenEoOperation):
         return ""
               
 
-    def run(self,job_id,job_name, processOutput, processInput):
+    def run(self,openeojob, processOutput, processInput):
         if self.runnable:
-            self.logStartOperation(processOutput, job_id,job_name)
+            self.logStartOperation(processOutput, openeojob)
             if self.apply != None:
                 pgraph = self.apply['process_graph']
                 process = processGraph.ProcessGraph(pgraph, self.data, getOperation)
-                return process.run(job_id, job_name, processOutput, processInput)
+                return process.run(openeojob, processOutput, processInput)
         
         return createOutput('error', "operation no runnable", constants.DTERROR)
         

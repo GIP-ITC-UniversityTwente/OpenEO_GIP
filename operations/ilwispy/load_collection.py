@@ -11,10 +11,12 @@ import posixpath
 import shutil
 import common
 
+
 class LoadCollectionOperation(OpenEoOperation):
     def __init__(self):
         self.loadOpenEoJsonDef('load_collection.json')
-      
+        ##print('aaaaaaaaaaaa '+ openeo.testingvar)
+
         self.kind = constants.PDPREDEFINED
         self.bandIdxs = []
         self.lyrIdxs = []
@@ -151,9 +153,9 @@ class LoadCollectionOperation(OpenEoOperation):
 
         return outputRasters                  
         
-    def run(self,job_id,job_name, processOutput, processInput):
+    def run(self,openeojob, processOutput, processInput):
         if self.runnable:
-            self.logStartOperation(processOutput, job_id,job_name)
+            self.logStartOperation(processOutput, openeojob)
             
             indexes = str(self.bandIdxs).lstrip('[').rstrip(']')
             indexes = [int(ele) for ele in indexes.split(',')]
@@ -165,9 +167,9 @@ class LoadCollectionOperation(OpenEoOperation):
             if self.inputRaster.grouping == 'band':                
                 outputRasters = self.byBand(indexes, env)
 
-            self.logEndOperation(processOutput, job_id, job_name)
-            return createOutput('finished', outputRasters, constants.DTRASTER)
-        message = common.notRunnableError(job_id)
+            self.logEndOperation(processOutput,openeojob)
+            return createOutput(constants.STATUSFINISHED, outputRasters, constants.DTRASTER)
+        message = common.notRunnableError(openeojob.job_id)
         return createOutput('error', message, constants.DTERROR)
            
 def registerOperation():

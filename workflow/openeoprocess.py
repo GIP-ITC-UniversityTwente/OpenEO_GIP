@@ -8,6 +8,8 @@ from multiprocessing import Pipe
 import json
 import logging
 import common
+import os
+
 
 def get(key,values,  defaultValue):
     if key in values:
@@ -76,7 +78,7 @@ class OpenEOProcess(multiprocessing.Process):
             processValues = request_json['process']
         else:
             processValues = request_json
-
+        self.spatialextent = []
         self.processGraph = None
 
         self.processGraph = ProcessGraph(get('process_graph', processValues, None), None, getOperation)
@@ -144,6 +146,11 @@ class OpenEOProcess(multiprocessing.Process):
         if hasattr(self, key):
             dict[key] = getattr(self, key)
         return dict
+    
+    def setItem2(self, key, dict, alt):
+        if hasattr(self, alt):
+            dict[key] = getattr(self, alt)
+        return dict
 
     def estimate(self, user):
         return self.processGraph.estimate()
@@ -161,7 +168,7 @@ class OpenEOProcess(multiprocessing.Process):
         if short == False:
             processDict = {}
             processDict = self.setItem('summary', processDict) 
-            processDict = self.setItem('id', processDict) 
+            processDict = self.setItem2('id', processDict,'title') 
             processDict = self.setItem('desciption', processDict)
             parms = []
             for parm in self.parameters:
@@ -178,6 +185,7 @@ class OpenEOProcess(multiprocessing.Process):
             processDict['process_graph'] = self.processGraph.sourceGraph
             dictForm['process'] = processDict
             dictForm['log_level'] = self.log_level
+            dictForm['spatialextent'] = self.spatialextent
 
         return dictForm  
 
@@ -192,15 +200,30 @@ class OpenEOProcess(multiprocessing.Process):
 
     def run(self, toServer):
         if self.processGraph != None:
+            timeStart = str(datetime.now())
             common.logMessage(logging.INFO, 'started job_id: ' + self.job_id + "with name: " + self.title)
-            outputinfo = self.processGraph.run(str(self.job_id), self.title, toServer, self.fromServer)
-            self.sendTo.close()
-            self.fromServer.close()
+            outputinfo = self.processGraph.run(self, toServer, self.fromServer)
+            timeEnd = str(datetime.now())
+            if 'spatialextent' in outputinfo:
+                self.spatialextent = outputinfo['spatialextent']
+            log = {'type' : 'progressevent', 'job_id': self.job_id, 'progress' : 'job finished' , 'last_updated' : timeEnd, 'status' : constants.STATUSJOBDONE}   
+            toServer.put(log)
+            ##self.sendTo.close()
+            ##self.fromServer.close()
             if outputinfo != None:
-                self.status = outputinfo['status']            
                 if outputinfo['status'] == constants.STATUSSTOPPED:
                     self.cleanup()
-                
+                else:
+                   self.status = constants.STATUSJOBDONE                      
+            else:                    
+                self.status = constants.STATUSJOBDONE 
+            path = common.openeoip_config['data_locations']['root_user_data_location']
+            path = os.path.join(path['location'] + '/' + str(self.job_id + "/jobmetadata.json") )                                   
+            dict = self.toDict(False) 
+            dict['start_datetime']  = timeStart
+            dict['end_datetime']  = timeEnd
+            with open(path, "w") as fp:
+                json.dump(dict, fp)   
             common.logMessage(logging.INFO,'finished job_id: ' + self.job_id )
     
   

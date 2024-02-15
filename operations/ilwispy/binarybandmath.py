@@ -8,8 +8,8 @@ class AddOperation(BaseBinarymapCalcBase):
         self.base_prepare(arguments, '+')
         return ""
 
-    def run(self,job_id,job_name, processOutput, processInput):
-        return self.base_run(job_id, job_name, processOutput, processInput)
+    def run(self,openeojob, processOutput, processInput):
+        return self.base_run(openeojob, processOutput, processInput)
 
 class DivideOperation(BaseBinarymapCalcBase):
     def __init__(self):
@@ -19,8 +19,8 @@ class DivideOperation(BaseBinarymapCalcBase):
         self.base_prepare(arguments, '/')
         return ""
 
-    def run(self,job_id,job_name, processOutput, processInput):
-        return self.base_run(job_id, job_name, processOutput, processInput)
+    def run(self,openeojob, processOutput, processInput):
+        return self.base_run(openeojob, processOutput, processInput)
     
 class MultiplyOperation(BaseBinarymapCalcBase):
     def __init__(self):
@@ -30,8 +30,8 @@ class MultiplyOperation(BaseBinarymapCalcBase):
         self.base_prepare(arguments, '*')
         return ""
 
-    def run(self,job_id,job_name, processOutput, processInput):
-        return self.base_run(job_id, job_name, processOutput, processInput) 
+    def run(self,openeojob, processOutput, processInput):
+        return self.base_run(openeojob, processOutput, processInput) 
      
 class SubtractOperation(BaseBinarymapCalcBase):
     def __init__(self):
@@ -41,8 +41,8 @@ class SubtractOperation(BaseBinarymapCalcBase):
         self.base_prepare(arguments, '-')
         return ""
 
-    def run(self,job_id,job_name, processOutput, processInput):
-        return self.base_run(job_id, job_name, processOutput, processInput) 
+    def run(self,openeojob, processOutput, processInput):
+        return self.base_run(openeojob, processOutput, processInput) 
 
 class LogNOperation(BaseBinarymapCalcBase):
     def __init__(self):
@@ -52,8 +52,8 @@ class LogNOperation(BaseBinarymapCalcBase):
         self.base_prepare(arguments, 'log')
         return ""
 
-    def run(self,job_id,job_name, processOutput, processInput):
-        return self.base_run(job_id, job_name, processOutput, processInput) 
+    def run(self,openeojob, processOutput, processInput):
+        return self.base_run(openeojob, processOutput, processInput) 
 
 class GTOperation(BaseBinarymapCalcBase):
     def __init__(self):
@@ -63,8 +63,8 @@ class GTOperation(BaseBinarymapCalcBase):
         self.base_prepare(arguments, '>')
         return ""
 
-    def run(self,job_id,job_name, processOutput, processInput):
-        return self.base_run(job_id, job_name, processOutput, processInput) 
+    def run(self,openeojob, processOutput, processInput):
+        return self.base_run(openeojob, processOutput, processInput) 
 
 class GTEOperation(BaseBinarymapCalcBase):
     def __init__(self):
@@ -74,8 +74,8 @@ class GTEOperation(BaseBinarymapCalcBase):
         self.base_prepare(arguments, '>=')
         return ""
 
-    def run(self,job_id,job_name, processOutput, processInput):
-        return self.base_run(job_id, job_name, processOutput, processInput) 
+    def run(self,openeojob, processOutput, processInput):
+        return self.base_run(openeojob, processOutput, processInput) 
 
 class LTOperation(BaseBinarymapCalcBase):
     def __init__(self):
@@ -85,8 +85,8 @@ class LTOperation(BaseBinarymapCalcBase):
         self.base_prepare(arguments, '<')
         return ""
 
-    def run(self,job_id,job_name, processOutput, processInput):
-        return self.base_run(job_id, job_name, processOutput, processInput) 
+    def run(self,openeojob, processOutput, processInput):
+        return self.base_run(openeojob, processOutput, processInput) 
 
 class LTEOperation(BaseBinarymapCalcBase):
     def __init__(self):
@@ -96,8 +96,8 @@ class LTEOperation(BaseBinarymapCalcBase):
         self.base_prepare(arguments, '<=')
         return ""
 
-    def run(self,job_id,job_name, processOutput, processInput):
-        return self.base_run(job_id, job_name, processOutput, processInput) 
+    def run(self,openeojob, processOutput, processInput):
+        return self.base_run(openeojob, processOutput, processInput) 
 
 class EqOperation(BaseBinarymapCalcBase):
     def __init__(self):
@@ -107,8 +107,8 @@ class EqOperation(BaseBinarymapCalcBase):
         self.base_prepare(arguments, '==')
         return ""
 
-    def run(self,job_id,job_name, processOutput, processInput):
-        return self.base_run(job_id, job_name, processOutput, processInput) 
+    def run(self,openeojob, processOutput, processInput):
+        return self.base_run(openeojob, processOutput, processInput) 
 
 class OrOperation(BaseBinarymapCalcBase):
     def __init__(self):
@@ -118,8 +118,8 @@ class OrOperation(BaseBinarymapCalcBase):
         self.base_prepare(arguments, 'or')
         return ""
 
-    def run(self,job_id,job_name, processOutput, processInput):
-        return self.base_run(job_id, job_name, processOutput, processInput) 
+    def run(self,openeojob, processOutput, processInput):
+        return self.base_run(openeojob, processOutput, processInput) 
 
 class AndOperation(BaseBinarymapCalcBase):
     def __init__(self):
@@ -129,8 +129,8 @@ class AndOperation(BaseBinarymapCalcBase):
         self.base_prepare(arguments, 'and')
         return ""
 
-    def run(self,job_id,job_name, processOutput, processInput):
-        return self.base_run(job_id, job_name, processOutput, processInput) 
+    def run(self,openeojob, processOutput, processInput):
+        return self.base_run(openeojob, processOutput, processInput) 
 
 class XorOperation(BaseBinarymapCalcBase):
     def __init__(self):
@@ -140,8 +140,8 @@ class XorOperation(BaseBinarymapCalcBase):
         self.base_prepare(arguments, 'xor')
         return ""
 
-    def run(self,job_id,job_name, processOutput, processInput):
-        return self.base_run(job_id, job_name, processOutput, processInput)                                      
+    def run(self,openeojob, processOutput, processInput):
+        return self.base_run(openeojob, processOutput, processInput)                                      
     
 def registerOperation():
     funcs = []     

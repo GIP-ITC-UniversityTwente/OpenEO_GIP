@@ -37,18 +37,18 @@ class FilterBands(OpenEoOperation):
         except:
             return "error" 
 
-    def run(self,job_id,job_name, processOutput, processInput):
+    def run(self,openeojob, processOutput, processInput):
         if self.runnable:
-            self.logStartOperation(processOutput, job_id,job_name)
+            self.logStartOperation(processOutput, openeojob)
             outData = []
             for raster in self.inpData:
                     for bandItem in raster.bands:
                         if self.bands != None:
                             if bandItem['name'] in self.bands:
                                 outData.append(raster)
-            self.logEndOperation(processOutput, job_id, job_name)
-            return createOutput('finished', outData, constants.DTRASTER)
-        common.notRunnableError(job_id) 
+            self.logEndOperation(processOutput,openeojob)
+            return createOutput(constants.STATUSFINISHED, outData, constants.DTRASTER)
+        common.notRunnableError(openeojob.job_id) 
         return createOutput('error', "operation not runnable", constants.DTERROR)   
 
 def registerOperation():

@@ -37,7 +37,7 @@ class DummyLongFunc(OpenEoOperation):
 
             return ""
 
-    def run(self,job_id,job_name, processOutput, processInput):
+    def run(self,openeojob, processOutput, processInput):
             if self.runnable:
                 logCount = 0
                 lasttime = time.time()
@@ -48,14 +48,14 @@ class DummyLongFunc(OpenEoOperation):
                     currenttime = time.time()
                     r = random.random() * 100
                     if r > 95.0:
-                        globalProcessManager.addLog4job(job_id, logCount, 'warning', 'dummy message ' + str(r))
+                        globalProcessManager.addLog4job(openeojob.job_id, logCount, 'warning', 'dummy message ' + str(r))
                         timenow = str(datetime.now())
-                        put2Queue(processOutput,{'type' : 'logginevent', 'job_id': job_id, 'id' : logCount, 'level' : 'info', 'message' : 'dummy ' + str(r), 'timestamp' : timenow} )
+                        put2Queue(processOutput,{'type' : 'logginevent', 'job_id': openeojob.job_id, 'id' : logCount, 'level' : 'info', 'message' : 'dummy ' + str(r), 'timestamp' : timenow} )
                         logCount = logCount + 1
 
                     if currenttime - lasttime > 5:
                         p = int(100 * float(i/self.a))
-                        messageProgress(processOutput, job_id, p)
+                        messageProgress(processOutput, openeojob.job_id, p)
                             
                         lasttime = currenttime
 
@@ -67,7 +67,7 @@ class DummyLongFunc(OpenEoOperation):
                 if self.stopped == True:
                     status = constants.STATUSSTOPPED
 
-                put2Queue(processOutput, {'type': 'progressevent', 'progress' : 100, 'job_id' : job_id, 'status' : status}) 
+                put2Queue(processOutput, {'type': 'progressevent', 'progress' : 100, 'job_id' : openeojob.job_id, 'status' : status}) 
                   
                 return createOutput(status, 23, constants.DTNUMBER)
             

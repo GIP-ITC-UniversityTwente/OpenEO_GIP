@@ -58,10 +58,10 @@ class ResampleSpatial(OpenEoOperation):
         return ""
               
 
-    def run(self,job_id,job_name, processOutput, processInput):
+    def run(self,openeojob, processOutput, processInput):
         if self.runnable:
-            self.logStartOperation(processOutput, job_id,job_name)
-            put2Queue(processOutput, {'progress' : 0, 'job_id' : job_id, 'status' : 'running'})
+            self.logStartOperation(processOutput, openeojob)
+            put2Queue(processOutput, {'progress' : 0, 'job_id' : openeojob.job_id, 'status' : 'running'})
             
             env = self.inputRaster.envelope()
             grf = ilwis.do('createcornersgeoreference', \
@@ -71,10 +71,10 @@ class ResampleSpatial(OpenEoOperation):
             outputRc = ilwis.do("resample", self.inputRaster, grf, self.method)
             outputRasters = []                
             outputRasters.extend(self.setOutput([outputRc], self.extra))
-            put2Queue(processOutput,{'progress' : 100, 'job_id' : job_id, 'status' : 'finished'}) 
-            self.logEndOperation(processOutput, job_id, job_name)
-            return createOutput('finished', outputRasters, constants.DTRASTER)  
-        message = common.notRunnableError(job_id)
+            put2Queue(processOutput,{'progress' : 100, 'job_id' : openeojob.job_id, 'status' : 'finished'}) 
+            self.logEndOperation(processOutput,openeojob)
+            return createOutput(constants.STATUSFINISHED, outputRasters, constants.DTRASTER)  
+        message = common.notRunnableError(openeojob.job_id)
         return createOutput('error', message, constants.DTERROR)
         
 def registerOperation():

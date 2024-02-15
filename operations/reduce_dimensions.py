@@ -3,7 +3,6 @@ from operationconstants import *
 from constants import constants
 from workflow import processGraph
 from globals import getOperation
-import logging
 import common
 
 class ReduceDimensionsOperation(OpenEoOperation):
@@ -20,20 +19,20 @@ class ReduceDimensionsOperation(OpenEoOperation):
         return ""
               
 
-    def run(self,job_id,job_name, processOutput, processInput):
+    def run(self,openeojob, processOutput, processInput):
         if self.runnable:
-            self.logStartOperation(processOutput, job_id,job_name)
+            self.logStartOperation(processOutput, openeojob)
             if self.reducer['resolved'] == None:
                 pgraph = self.reducer['process_graph']
                 args = self.data['base']
                 process = processGraph.ProcessGraph(pgraph, args, getOperation)
-                output =  process.run(job_id, job_name, processOutput, processInput)
-                self.logEndOperation(processOutput, job_id, job_name)
+                output =  process.run(openeojob, processOutput, processInput)
+                self.logEndOperation(processOutput,openeojob)
                 return output
             else:
-                self.logEndOperation(processOutput, job_id, job_name)
-                return createOutput('finished', self.reducer['resolved'], constants.DTRASTER)
-        message = common.notRunnableError(job_id)           
+                self.logEndOperation(processOutput,openeojob)
+                return createOutput(constants.STATUSFINISHED, self.reducer['resolved'], constants.DTRASTER)
+        message = common.notRunnableError(openeojob.job_id)          
         return createOutput('error', message, constants.DTERROR)
         
 def registerOperation():
