@@ -229,13 +229,13 @@ class OpenEoOperation:
         log = {'type' : 'progressevent', 'job_id': job_id, 'progress' : message , 'last_updated' : timenow, 'status' : status}   
         put2Queue(processOutput, log)
     
-    def logStartOperation(self, processOutput, job_id, job_name):
-        common.logMessage(logging.INFO, 'started: ' + self.name + " with job name:" + str(job_name))
-        return self.logProgress(processOutput, job_id, self.name,constants.STATUSRUNNING)
+    def logStartOperation(self, processOutput,openeojob):
+        common.logMessage(logging.INFO, 'started: ' + self.name + " with job name:" + openeojob.title)
+        return self.logProgress(processOutput, openeojob.job_id, self.name,constants.STATUSRUNNING)
 
-    def logEndOperation(self, processOutput, job_id, job_name):
-        common.logMessage(logging.INFO, 'ended: ' + self.name + " with job name:" + str(job_name))
-        return self.logProgress(processOutput, job_id, 'finished ' + self.name,constants.STATUSFINISHED)
+    def logEndOperation(self, processOutput,openeojob):
+        common.logMessage(logging.INFO, 'ended: ' + self.name + " with job name:" + openeojob.title)
+        return self.logProgress(processOutput, openeojob.job_id, 'finished ' + self.name,constants.STATUSFINISHED)
 
             
 
