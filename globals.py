@@ -95,7 +95,8 @@ class Globals :
             return {"id" : id, "code" : 400, "message" : message }
         else:
             if errorStringCode in self.default_errrors:
-                predefCode = self.default_errrors[errorStringCode].http                    
+                predefCode = self.default_errrors[errorStringCode].http 
+                message = self.default_errrors[errorStringCode].message                   
                 return {"id" : id, "code" : predefCode, "message" : message }
                 
         return {"id" : id, "code" : 400, "message" : message }
