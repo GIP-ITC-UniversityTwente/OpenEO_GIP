@@ -9,7 +9,7 @@ from zipfile import ZipFile
 import os
 from werkzeug.wsgi import FileWrapper
 import pathlib
-import datetime
+import common
 
 def getMimeType(filename):
     try:
@@ -38,40 +38,7 @@ class OpenEOIPResult(Resource):
             if process.processGraph != None:
                 outputInfo = process.processGraph.run(process.job_id, None, None)
 
-                if outputInfo["status"] == STATUSFINISHED:
-                    if outputInfo["datatype"] == DTRASTER or outputInfo["datatype"] == DTRASTERLIST :
-                        if len(outputInfo["value"]) ==1:
-                            filename = outputInfo["value"][0]
-                            mimet = getMimeType(filename)
-                            with open(filename, 'rb') as file:
-                                binary_data = file.read()
-                                response = Response(binary_data,
-                                                mimetype=mimet,
-                                                direct_passthrough=True)
-                        else:   
-                            stream = BytesIO()
-                            now = datetime.datetime.now()
-                            date_string = now.strftime("%Y%m%d%H%M%S")
-                            date_int = int(date_string)
-                            with ZipFile(stream, 'a') as zf:                                                         
-                                for fn in outputInfo["value"]:
-                                    zf.write(fn, os.path.basename(str(date_int) + ".zip"))
-                                stream.seek(0)
-                                w = FileWrapper(stream)
-                                response = Response(w,
-                                                mimetype="application/x-zip",
-                                                direct_passthrough=True)
-
-                          
-                    elif outputInfo["datatype"] != DTRASTER:
-                        response = Response(str(outputInfo["value"]), mimetype = "string", direct_passthrough=True)
-                        response.headers['Content-Type'] = 'string'
-                    return response
-                    
-                response =  make_response(makeBaseResponseDict(process.job_id, 'error', 404, None, outputInfo["value"]),400)
-                response.headers['Content-Type'] = 'string'
-
-                return response
+                return common.makeResponse(outputInfo)
         except Exception as ex:
             return make_response(makeBaseResponseDict(-1, 'error', 404, None, str(ex)),400)
         

@@ -25,6 +25,7 @@ STATUSCREATED = "created"
 STATUSRUNNING = "running"
 STATUSSTOPPED = "canceled"
 STATUSFINISHED = "finished"
+STATUSJOBDONE = "jobdone"
 STATUSUNKNOWN = "unknown"
 CUSTOMERROR = "custom error"
 
