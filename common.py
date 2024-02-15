@@ -1,9 +1,17 @@
+from flask import make_response, jsonify, Response
+from werkzeug.wsgi import FileWrapper
 import json
 from pathlib import Path
 import os
 import pickle
 from multiprocessing import Lock
 import logging
+import mimetypes
+from constants.constants import *
+from io import BytesIO
+from zipfile import ZipFile
+import os
+from datetime import datetime
 
 lock = Lock()
 
@@ -61,3 +69,46 @@ def makeFolder(path):
             os.makedirs(path)
     except Exception as ex:
         raise Exception('server error. could not make:' + path)         
+
+def inspectFileType(filename):
+    type, encoding = mimetypes.guess_type(filename)
+    role ='data'
+    if type == 'image/tiff':
+        type = type + ';application=geotiff'
+    if type == 'application/json' or type == 'application/xml':
+         role = 'metadata'
+    return type, role  
+
+
+def makeResponse(outputInfo):
+    if outputInfo["status"] == STATUSFINISHED:
+        if outputInfo["datatype"] == DTRASTER or outputInfo["datatype"] == DTRASTERLIST :
+            if len(outputInfo["value"]) ==1:
+                filename = outputInfo["value"][0]
+                mimet = mimetypes.guess_type(filename)
+                with open(filename, 'rb') as file:
+                    binary_data = file.read()
+                    response = Response(binary_data,
+                                    mimetype=mimet,
+                                    direct_passthrough=True)
+            else:   
+                stream = BytesIO()
+                now = datetime.datetime.now()
+                date_string = now.strftime("%Y%m%d%H%M%S")
+                date_int = int(date_string)
+                with ZipFile(stream, 'a') as zf:                                                         
+                    for fn in outputInfo["value"]:
+                        zf.write(fn, os.path.basename(str(date_int) + ".zip"))
+                    stream.seek(0)
+                    w = FileWrapper(stream)
+                    response = Response(w,
+                                    mimetype="application/x-zip",
+                                    direct_passthrough=True)
+
+                
+        elif outputInfo["datatype"] != DTRASTER:
+            response = Response(str(outputInfo["value"]), mimetype = "string", direct_passthrough=True)
+            response.headers['Content-Type'] = 'string'
+
+        return response
+    return None            
