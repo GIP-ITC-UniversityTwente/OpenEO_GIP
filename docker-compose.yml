@@ -8,8 +8,9 @@ services:
     container_name: openeo
     volumes:
       - './:/app'
-      - './data:/data'
-      - './config:/config'
+      - './../data:/app/data'
+      - './../config:/app/config'
+      - './../properties:/app/properties'
     #environment:
     #  - 'FLASK_DEBUG': '1'
     ports:
