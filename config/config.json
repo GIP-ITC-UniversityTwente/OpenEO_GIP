@@ -21,5 +21,6 @@
     },
     "stac_version" : "1.0",
     "links" : [{"rel" : "Some general info", "href" : "https://some/itc/website", "title" : "OpenEO catalog for ITC"}],
-    "udf_runtimes" : [ {"runtime" : "python3", "version" : "3.10", "description" : "Python interpreter"} ]
+    "udf_runtimes" : [ {"runtime" : "python3", "version" : "3.10", "description" : "Python interpreter"} ],
+    "openeo_gip_root" : "http://127.0.0.1:5000/"
 }
