@@ -16,7 +16,8 @@ from zipfile import ZipFile
 class OpenEODataDownload(Resource):
     def get(self, token):
         ss = request.base_url
-        s = URLSafeTimedSerializer('120202')
+        secret = globalsSingleton.signed_url_secret 
+        s = URLSafeTimedSerializer(secret)
         idx = token.rfind('___')
         if idx != -1:
             folder_token = token[:idx]

@@ -80,8 +80,9 @@ class OpenEOJobResults(Resource):
                     if path == 'jobmetadata.json':
                         continue
                     fullpath = os.path.join(rootJobdataPath,path) 
-                    type, role = common.inspectFileType(fullpath) 
-                    s = URLSafeTimedSerializer('120202')
+                    type, role = common.inspectFileType(fullpath)
+                    secret = globalsSingleton.signed_url_secret 
+                    s = URLSafeTimedSerializer(secret)
                     token = s.dumps({'user_id': job_id })
                     url1 = 'openeodatadownload'
                     urlep = url_for(url1, token=token)
