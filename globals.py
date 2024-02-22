@@ -6,6 +6,8 @@ from operations.registerOperations import initOperationMetadata
 from constants import constants
 import datetime
 import common
+import uuid
+import sqlite3
 
 def getOperation(operationName)        :
     if  operationName in globalsSingleton.operations:
@@ -21,19 +23,40 @@ class Globals :
         serverValid = True
         openeoip_config = None
         internal_database = {}
+        signed_url_secret = str(uuid.uuid4())
         operations = initOperationMetadata(getOperation)
     except Exception as ex:
         serverValid = False
 
+    def __init__(self):
+        self.initGlobals()
+        
     def initGlobals(self):
         if  self.openeoip_config == None:
             openeoip_configfile = open('./config/config.json')
             self.openeoip_config = json.load(openeoip_configfile)
             codesfile = open('./config/default_error_codes.json')
             self.default_errrors = json.load(codesfile)  
+       
 
                                
-      
+    def create_table(self, create_table_sql):
+        try:
+            c = self.databseConn.cursor()
+            c.execute(create_table_sql)
+        except Exception as e:
+            print(e)  
+    
+    def create_connection(self, db_file):
+        self.databseConn = None
+        try:
+            self.databseConn = sqlite3.connect(db_file)
+            print(sqlite3.version)
+        except Exception as e:
+            print(e)
+        finally:
+            if self.databseConn:
+                self.databseConn.close()
 
     def insertRasterInDatabase(self, raster):
         self.internal_database[raster.id] = raster
