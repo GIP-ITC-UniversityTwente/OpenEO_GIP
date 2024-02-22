@@ -33,10 +33,11 @@ sys.path.append(pp + '/operations')
 sys.path.append(pp + '/operations/ilwispy')
 sys.path.append(pp)
 
-from flask import Flask, jsonify, make_response
+from flask import Flask, jsonify, make_response, request
 from flask_restful import Api
 from flask_cors import CORS
 from werkzeug.middleware.proxy_fix import ProxyFix
+from flask_httpauth import HTTPBasicAuth
 from globals import globalsSingleton
 from openeocollections import OpenEOIPCollections
 from openeocapabilities import OpenEOIPCapabilities, OpenEOIPServices, OpenEOIPServiceTypes,replace_links_in_capabilities
@@ -52,6 +53,7 @@ from openeovalidate import OpenEOIPValidate
 from openeoudfruntimes import OpenEOUdfRuntimes
 from openeofiles import OpenEODownloadFile
 from datadownload import OpenEODataDownload
+import userdb
 
 from processmanager import globalProcessManager
 from threading import Thread
@@ -61,15 +63,26 @@ import common
 
 #init part
 
+
+
 app = Flask(__name__)
-app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_host=1, x_proto=1)
+#app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_host=1, x_proto=1)
 app.config['JSONIFY_PRETTYPRINT_REGULAR'] = True
 
 api = Api(app)
 
+auth = HTTPBasicAuth()
 
-globalsSingleton.initGlobals()
+##globalsSingleton.initGlobals()
 
+@auth.verify_password
+def verify_password(username, password):
+    r = request
+    userDB = userdb.UserDatabase()
+    userDB.openDataBase()    
+    if userDB:
+        return userDB.login(username, password)
+    return False
 
 @app.route('/')
 def index():
@@ -78,6 +91,10 @@ def index():
 
 @app.route('/.well-known/openeo')
 def well_known():
+        return WellKnown.get(api)
+
+@app.route('/.well-known/openid-configuration')
+def openid_configuration():
         return WellKnown.get(api)
 
 @app.route('/get_file/<token>')
