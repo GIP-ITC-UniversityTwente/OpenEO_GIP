@@ -3,7 +3,7 @@ from flask import make_response, jsonify, request
     
 from globals import globalsSingleton
 
-OPENEO_GIP_ROOT = "http://127.0.0.1:5000/"
+OPENEO_GIP_ROOT = globalsSingleton.openeoip_config['openeo_gip_root']
 
 CAPABILITIES = {
         "api_version": "1.2.0",
