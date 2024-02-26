@@ -373,14 +373,19 @@ class RasterData:
         return idxs           
 
     def getLayerIndexes(self, temporalExtent):
-            first = parser.parse(temporalExtent[0])
-            last = parser.parse(temporalExtent[1])
             idxs = []
-            for layer in self.layers:
-                layerTempFirst = parser.parse(layer.temporalExtent[0])
-                layerTempLast = parser.parse(layer.temporalExtent[1])
-                if layerTempFirst >=  first and layerTempLast <= last:
-                    idxs.append(layer.index)
+            if temporalExtent == None:
+                for layer in self.layers:
+                     idxs.append(layer.index)
+
+            else:
+                first = parser.parse(temporalExtent[0])
+                last = parser.parse(temporalExtent[1])
+                for layer in self.layers:
+                    layerTempFirst = parser.parse(layer.temporalExtent[0])
+                    layerTempLast = parser.parse(layer.temporalExtent[1])
+                    if layerTempFirst >=  first and layerTempLast <= last:
+                        idxs.append(layer.index)
 
             return idxs
     
