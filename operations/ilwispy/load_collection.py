@@ -80,13 +80,25 @@ class LoadCollectionOperation(OpenEoOperation):
 
             if 'temporal_extent' in arguments:
                 self.temporalExtent = arguments['temporal_extent']['resolved']
-                if arguments['temporal_extent']['resolved'] != None:
-                    self.lyrIdxs = self.inputRaster.getLayerIndexes(arguments['temporal_extent']['resolved'])
-                else:
-                    self.lyrIdxs.append(0)                
-
+                #if arguments['temporal_extent']['resolved'] != None:
+                self.lyrIdxs = self.inputRaster.getLayerIndexes(arguments['temporal_extent']['resolved'])
+               # else:
+               #     self.lyrIdxs.append(0)  
             path = Path(folder).as_uri()
             ilwis.setWorkingCatalog(path)
+
+            if 'spatial_extent' in arguments:
+                sect = arguments['spatial_extent']['resolved']
+                if sect != None:
+                    sext = [sect['west'], sect['south'], sect['east'], sect['north']]
+                    datapath = os.path.join(self.dataSource, self.inputRaster.bands[0]['source'])                            
+                    rband = ilwis.RasterCoverage(datapath)
+                    csyLL = ilwis.CoordinateSystem("epsg:4326")
+                    llenv = ilwis.Envelope(ilwis.Coordinate(sect['west'], sect['south']), ilwis.Coordinate(sect['east'], sect['north']))
+                    e = str(rband.coordinateSystem().convertEnvelope(csyLL, llenv))
+                    env = e.split(' ')
+                    self.inputRaster.spatialExtent = [env[0], env[2], env[1], env[3]]
+           
             self.runnable = True
             self.rasterSizesEqual = True
  
