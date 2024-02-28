@@ -3,8 +3,9 @@ from flask import make_response, jsonify, request, Response
 from constants.constants import *
 from workflow.openeoprocess import OpenEOProcess
 from userinfo import UserInfo
+from authentication import AuthenticatedResource
 
-class OpenEOIPValidate(Resource):
+class OpenEOIPValidate(AuthenticatedResource):
     def post(self):
         request_json = request.get_json()
         user = UserInfo(request)

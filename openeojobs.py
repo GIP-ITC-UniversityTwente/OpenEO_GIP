@@ -6,13 +6,14 @@ from userinfo import UserInfo
 from constants.constants import *
 from globals import globalsSingleton
 from constants import constants
+from authentication import AuthenticatedResource
 import common
 import os
 import json
 from itsdangerous import URLSafeTimedSerializer
 from datetime import datetime
 
-class OpenEOIPJobs(Resource):
+class OpenEOIPJobs(AuthenticatedResource):
     def processPostJobId(self, user, request_json):
         try:
             process = OpenEOProcess(user, request_json, 0)
@@ -43,7 +44,7 @@ class OpenEOIPJobs(Resource):
             user = UserInfo(request)
             return self.processGetJobs(user)
           
-class OpenEOJobResults(Resource):
+class OpenEOJobResults(AuthenticatedResource):
    def returnJobResultUrls(self, job_id, user, host):
         path = common.openeoip_config['data_locations']['root_user_data_location']
         rootJobdataPath = os.path.join(path['location'],str(job_id))
@@ -122,7 +123,7 @@ class OpenEOJobResults(Resource):
         host =  request.environ['HTTP_HOST']
         return self.returnJobResultUrls(job_id, user, host)  
    
-class OpenEOIJobByIdEstimate(Resource):
+class OpenEOIJobByIdEstimate(AuthenticatedResource):
    def processGetEstimate(self, job_id, user):
         try:
             estimate = globalProcessManager.makeEstimate(user, job_id)
@@ -137,7 +138,7 @@ class OpenEOIJobByIdEstimate(Resource):
         return self.processGetEstimate(job_id, user)
  
         
-class OpenEOMetadata4JobById(Resource):
+class OpenEOMetadata4JobById(AuthenticatedResource):
     def processGetJobId(self, job_id, request):
         try:
             user = UserInfo(request)

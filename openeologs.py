@@ -2,8 +2,9 @@ from flask import jsonify, request, make_response
 from flask_restful import Resource
 from processmanager import globalProcessManager, makeBaseResponseDict
 from userinfo import UserInfo
+from authentication import AuthenticatedResource
 
-class OpenEOIPLogs(Resource):
+class OpenEOIPLogs(AuthenticatedResource):
     def get(self, job_id):
         try:
             user = UserInfo(request)

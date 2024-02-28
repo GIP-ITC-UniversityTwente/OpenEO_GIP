@@ -4,10 +4,7 @@ from constants.constants import *
 from workflow.openeoprocess import OpenEOProcess
 from userinfo import UserInfo
 from processmanager import makeBaseResponseDict
-from io import BytesIO
-from zipfile import ZipFile
-import os
-from werkzeug.wsgi import FileWrapper
+from authentication import AuthenticatedResource
 import pathlib
 import common
 
@@ -25,7 +22,7 @@ def getMimeType(filename):
         return 'application/octet-stream'
           
         
-class OpenEOIPResult(Resource):
+class OpenEOIPResult(AuthenticatedResource):
     def post(self):
         request_json = request.get_json()
         user = UserInfo(request)

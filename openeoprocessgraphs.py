@@ -4,8 +4,9 @@ from globals import globalsSingleton
 from constants.constants import *
 from processmanager import linkSection
 from userinfo import UserInfo
+from authentication import AuthenticatedResource
 
-class OpenEOProcessGraphs(Resource):
+class OpenEOProcessGraphs(AuthenticatedResource):
     def __init__(self):
         Resource.__init__(self)
 

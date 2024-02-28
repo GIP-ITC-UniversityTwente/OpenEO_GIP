@@ -3,8 +3,9 @@ from flask import make_response, jsonify, request
 from globals import globalsSingleton
 from constants.constants import *
 from processmanager import linkSection
+from authentication import AuthenticatedResource
 
-class OpenEOProcessGraph(Resource):
+class OpenEOProcessGraph(AuthenticatedResource):
     def get(self, graph_id):
         oper = {}
         for operation in globalsSingleton.operations.values() :
