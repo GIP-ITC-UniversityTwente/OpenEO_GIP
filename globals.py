@@ -8,6 +8,7 @@ import datetime
 import common
 import uuid
 import sqlite3
+from authenticationdatabase import authenticationDB
 
 def getOperation(operationName)        :
     if  operationName in globalsSingleton.operations:
@@ -24,7 +25,10 @@ class Globals :
         openeoip_config = None
         internal_database = {}
         signed_url_secret = str(uuid.uuid4())
+        token_secret = str(uuid.uuid4()) 
         operations = initOperationMetadata(getOperation)
+        authenticationDB.deleteTokens()
+
     except Exception as ex:
         serverValid = False
 
@@ -118,8 +122,9 @@ class Globals :
             return {"id" : id, "code" : 400, "message" : message }
         else:
             if errorStringCode in self.default_errrors:
-                predefCode = self.default_errrors[errorStringCode].http 
-                message = self.default_errrors[errorStringCode].message                   
+                err = self.default_errrors[errorStringCode]
+                predefCode = err['http']
+                message = err['description']                   
                 return {"id" : id, "code" : predefCode, "message" : message }
                 
         return {"id" : id, "code" : 400, "message" : message }
