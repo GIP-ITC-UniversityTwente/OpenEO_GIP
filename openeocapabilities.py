@@ -15,6 +15,12 @@ CAPABILITIES = {
         "description": "ITC-GIP OpenEO driver",
         "endpoints": [
             {
+                "path": "/credentials/basic",
+                "methods": [
+                    "GET"
+                ]
+            },
+            {
                 "path": "/service_types",
                 "methods": [
                     "GET"
