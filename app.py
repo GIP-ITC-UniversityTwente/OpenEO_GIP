@@ -5,6 +5,7 @@ import logging
 import common
 
 
+
 def initLogger():
     logFormatter = logging.Formatter("%(asctime)s [%(threadName)-12.12s] [%(levelname)-5.5s]  %(message)s")
     logger = logging.getLogger('openeo')
@@ -38,6 +39,7 @@ from flask_restful import Api
 from flask_cors import CORS
 from werkzeug.middleware.proxy_fix import ProxyFix
 from flask_httpauth import HTTPBasicAuth
+from flask import Flask, render_template
 from globals import globalsSingleton
 from openeocollections import OpenEOIPCollections
 from openeocapabilities import OpenEOIPCapabilities, OpenEOIPServices, OpenEOIPServiceTypes,replace_links_in_capabilities
@@ -53,7 +55,8 @@ from openeovalidate import OpenEOIPValidate
 from openeoudfruntimes import OpenEOUdfRuntimes
 from openeofiles import OpenEODownloadFile
 from datadownload import OpenEODataDownload
-import userdb
+from authentication import Authenitication
+
 
 from processmanager import globalProcessManager
 from threading import Thread
@@ -72,17 +75,6 @@ app.config['JSONIFY_PRETTYPRINT_REGULAR'] = True
 api = Api(app)
 
 auth = HTTPBasicAuth()
-
-##globalsSingleton.initGlobals()
-
-@auth.verify_password
-def verify_password(username, password):
-    r = request
-    userDB = userdb.UserDatabase()
-    userDB.openDataBase()    
-    if userDB:
-        return userDB.login(username, password)
-    return False
 
 @app.route('/')
 def index():
@@ -121,8 +113,8 @@ api.add_resource( OpenEOIPValidate,'/validation')
 api.add_resource( OpenEOUdfRuntimes,'/udf_runtimes')
 api.add_resource( OpenEODownloadFile,'/files/<string:filepath>')
 api.add_resource( OpenEODataDownload,'/download/<token>')
+api.add_resource( Authenitication,'/credentials/basic')
 
-##api.add_resource( OpenEODelete,'/jobs/<string:job_id>')
 CORS(app)
 
 def startProcesses():
