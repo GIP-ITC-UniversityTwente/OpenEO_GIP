@@ -53,7 +53,7 @@ def saveIdDatabase(idDatabse):
         pickle.dump(idDatabse, propsFile)
         propsFile.close() 
 
-def logMessage(level, message):
+def logMessage(level, message, user='default'):
       logger = logging.getLogger('openeo')
       logger.log(level, message)
 
@@ -62,7 +62,7 @@ def notRunnableError(name, job_name):
      logMessage(logging.ERROR, message)
      return message
 
-def makeFolder(path):
+def makeFolder(path, user='default'):
     try:
         if ( not os.path.exists(path)):
             logMessage(logging.INFO, 'could not open:'+ path)
