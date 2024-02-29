@@ -3,14 +3,10 @@ from flask_restful import Resource
 from authenticationdatabase import authenticationDB
 import hashlib
 from datetime import datetime, timedelta
-from globals import globalsSingleton
+from globals import globalsSingleton, authenticateError
 import functools
 
-def authenticateError():
-    err = globalsSingleton.errorJson('AuthenticationRequired', 0,'')
-    resp =  make_response(jsonify(err),err['code']) 
-    resp.headers['WWW-Authenticate'] = 'Bearer realm="Main"'
-    return resp
+
 
 def requires_authorization(f):
     @functools.wraps(f)
@@ -52,7 +48,7 @@ class Authenitication(Resource):
                                str(datetime.now())).encode('UTF-8'))
         hex = hash.hexdigest()
         endTime = datetime.now() + timedelta(days=1)
-        endTime = endTime.strftime("%Y/%m/%d %H:%M:%S")
+        endTime = endTime.strftime("%Y-%m-%d %H:%M:%S")
         authenticationDB.addToken(hex, auth.username, str(endTime))
         return make_response(jsonify({
                 'user_id': auth.username,
