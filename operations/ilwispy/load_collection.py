@@ -138,8 +138,12 @@ class LoadCollectionOperation(OpenEoOperation):
                 if layer != None: 
                     datapath = os.path.join(self.dataSource, layer.dataSource)
                     rband = ilwis.RasterCoverage(datapath)
-                    rc = ilwis.do("selection", rband, "envelope(" + env + ") with: " + bandIdxList)
-                    ilwisRasters.append(rc)
+                    ev = ilwis.Envelope("(" + env + ")")
+                    if not ev.equalsP(rband.envelope(), 0.001, 0.001, 0.001):
+                        rc = ilwis.do("selection", rband, "envelope(" + env + ") with: " + bandIdxList)
+                        ilwisRasters.append(rc)
+                    else:
+                        ilwisRasters.append(rband) 
 
             extra = self.constructExtraParams(self.inputRaster, self.temporalExtent, idx)
             outputRasters.extend(self.setOutput(ilwisRasters, extra)) 
@@ -155,7 +159,7 @@ class LoadCollectionOperation(OpenEoOperation):
             datapath = os.path.join(self.dataSource, self.inputRaster.bands[idx]['source'])                            
             rband = ilwis.RasterCoverage(datapath)
             ev = ilwis.Envelope("(" + env + ")")
-            if ev.equalsP(rband.envelope(), 0.001, 0.001, 0.001):
+            if not ev.equalsP(rband.envelope(), 0.001, 0.001, 0.001):
                 rc = ilwis.do("selection", rband, "envelope(" + env + ")" )
                 ilwisRasters.append(rc)
             else:
