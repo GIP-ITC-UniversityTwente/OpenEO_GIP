@@ -33,7 +33,7 @@ class OpenEOIPResult(AuthenticatedResource):
                 raise Exception(str(errors))
             
             if process.processGraph != None:
-                outputInfo = process.processGraph.run(process.job_id, None, None)
+                outputInfo = process.processGraph.run(process, None, None)
 
                 return common.makeResponse(outputInfo)
         except Exception as ex:
