@@ -9,6 +9,13 @@ import common
 import uuid
 import sqlite3
 from authenticationdatabase import authenticationDB
+from flask import jsonify, make_response
+
+def authenticateError():
+    err = globalsSingleton.errorJson('AuthenticationRequired', 0,'')
+    resp =  make_response(jsonify(err),err['code']) 
+    resp.headers['WWW-Authenticate'] = 'Bearer realm="Main"'
+    return resp
 
 def getOperation(operationName)        :
     if  operationName in globalsSingleton.operations:
