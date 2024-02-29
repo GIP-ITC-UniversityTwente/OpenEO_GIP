@@ -110,7 +110,7 @@ class AuthenticationDatabase:
             data = cursor.fetchone()
             if data != None:
                 endtime = data[0]
-                endTime = datetime.strptime(endtime, '%Y/%m/%d %H:%M:%S')
+                endTime = datetime.strptime(endtime, '%Y-%m-%d %H:%M:%S')
                 timeNow = datetime.now()
                 delta = endTime - timeNow
                 return delta.days < 1
@@ -141,6 +141,12 @@ class AuthenticationDatabase:
             self.dbConnection.execute(query,(name))
             query = """delete from tokens where username= ?"""
             self.dbConnection.execute(query,(name))
+
+    def clearOutOfDateTokes(self):
+        myLock = threading.Lock()
+        with myLock:
+            query = "delete from tokens where JULIANDAY(endtime) - JULIANDAY('now') < 0"
+            self.dbConnection.execute(query)
 
     def clearDatabase(self):
         myLock = threading.Lock()
