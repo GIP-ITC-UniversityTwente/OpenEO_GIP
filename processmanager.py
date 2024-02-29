@@ -6,6 +6,7 @@ import common
 import pickle
 from pathlib import Path
 import os
+from authenticationdatabase import authenticationDB
 
 def linkSection(begin, end):
         return {
@@ -196,7 +197,7 @@ class ProcessManager:
 
     def startProcesses(self):
         self.loadProcessTables()
-        startTimer = datetime.now()            
+        startTimerCheckTokens = startTimerDump = datetime.now()            
         while self.running:
             eoprocess = None
             with self.lockProcessQue:
@@ -215,9 +216,15 @@ class ProcessManager:
                 print(item['status'])                
                 self.changeOutputStatus(item)
             endTimer = datetime.now()
-            if (endTimer - startTimer).seconds > 120:
+            delta = endTimer - startTimerDump
+            if delta.seconds > 120:
                 self.dumpProcessTables()
-                startTimer = endTimer
+                startTimerDump = endTimer
+            delta = endTimer - startTimerCheckTokens
+            if delta.days > 1:
+                authenticationDB.clearOutOfDateTokes()
+                startTimerCheckTokens = endTimer
+
 
     def loadProcessTables(self):
         path = common.openeoip_config['data_locations']['system_files']['location']
