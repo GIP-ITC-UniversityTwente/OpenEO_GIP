@@ -89,11 +89,11 @@ def makeResponse(outputInfo):
                 with open(filename, 'rb') as file:
                     binary_data = file.read()
                     response = Response(binary_data,
-                                    mimetype=mimet,
+                                    mimetype=mimet[0],
                                     direct_passthrough=True)
             else:   
                 stream = BytesIO()
-                now = datetime.datetime.now()
+                now = datetime.now()
                 date_string = now.strftime("%Y%m%d%H%M%S")
                 date_int = int(date_string)
                 with ZipFile(stream, 'a') as zf:                                                         
