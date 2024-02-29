@@ -8,6 +8,8 @@ from eoreader.bands import *
 from pathlib import Path
 from userinfo import UserInfo
 from rasterdata import RasterData
+import common
+import logging
 
 class OpenEOIPCollections(Resource):
     def get(self):
@@ -64,6 +66,7 @@ def loadCollections():
                                 globalsSingleton.insertRasterInDatabase(raster) 
                                    
                         except Exception as ex:
+                           common.logMessage(logging.ERROR,str(ex))
                            continue
 
                     collectionJsonDict = raster.toShortDictDefinition()
