@@ -61,7 +61,7 @@ class BaseBinarymapCalcBase(OpenEoOperation):
             self.runnable = False
             self.rasterSizesEqual = True
 
-            if len(arguments) != 2:
+            if len(arguments) != 4: ##x,y,serverchannel, job_id
                 message =  "number of parameters is not correct in operation:" + self.name
                 common.logMessage(logging.ERROR,message)
                 return  createOutput(False,message,  constants.DTERROR)
