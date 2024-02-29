@@ -8,7 +8,7 @@ services:
     container_name: openeo
     volumes:
       - './:/app'
-      - './../data:/app/data'
+      - './../data2:/app/data'
       - './../config:/app/config'
       - './../properties:/app/properties'
     #environment:
