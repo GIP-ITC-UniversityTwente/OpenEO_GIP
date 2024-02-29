@@ -43,7 +43,7 @@ class ArrayElementOperation(OpenEoOperation):
     def run(self,openeojob, processOutput, processInput):
         if self.runnable:
             outputRaster = self.inputRasters[self.bandIndex]
-            return createOutput(constants.STATUSFINISHED, outputRaster, constants.DTRASTER)
+            return createOutput(constants.STATUSFINISHED, [outputRaster], constants.DTRASTER)
         
         return createOutput('error', "operation not runnable", constants.DTERROR)
            
