@@ -87,13 +87,11 @@ class ProcessGraph(OpenEoOperation):
             return createOutput(False, str(ex), constants.DTERROR)
 
     def run(self,openeojob, toServer, fromServer ):
-        try:
-            for key, processNode in self.outputNodes:
-                self.startNode = NodeExecution(processNode,self)
-                self.startNode.run(openeojob, toServer, fromServer)
-                return self.startNode.outputInfo
-        except Exception as ex:
-            return createOutput(False, str(ex), constants.DTERROR)
+        for key, processNode in self.outputNodes:
+            self.startNode = NodeExecution(processNode,self)
+            self.startNode.run(openeojob, toServer, fromServer)
+            return self.startNode.outputInfo
+
         
     def stop(self):
         if self.startNode != None:
@@ -205,7 +203,7 @@ class NodeExecution :
                     if refExecutionNode.run(openeojob, toServer, fromServer) == '':
                         referredNode[1].nodeValue = refExecutionNode.outputInfo
                         return referredNode[1].nodeValue['value']
-                    return 'hmm'
+                    raise Exception(refExecutionNode.outputInfo['value'])
         elif 'from_parameter' in parmKeyValue:
                 refNode = self.processNode.parentProcessGraph.resolveParameter(parmKeyValue[1])
                 if refNode['resolved'] != None:
