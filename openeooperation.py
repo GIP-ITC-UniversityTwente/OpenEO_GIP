@@ -230,11 +230,11 @@ class OpenEoOperation:
         put2Queue(processOutput, log)
     
     def logStartOperation(self, processOutput,openeojob):
-        common.logMessage(logging.INFO, 'started: ' + self.name + " with job name:" + openeojob.title)
+        common.logMessage(logging.INFO, 'started: ' + self.name + " with job name:" + openeojob.title,common.process_user)
         return self.logProgress(processOutput, openeojob.job_id, self.name,constants.STATUSRUNNING)
 
     def logEndOperation(self, processOutput,openeojob):
-        common.logMessage(logging.INFO, 'ended: ' + self.name + " with job name:" + openeojob.title)
+        common.logMessage(logging.INFO, 'ended: ' + self.name + " with job name:" + openeojob.title, common.process_user)
         return self.logProgress(processOutput, openeojob.job_id, 'finished ' + self.name,constants.STATUSFINISHED)
 
             
