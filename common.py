@@ -24,6 +24,7 @@ codesfile = open('./config/default_error_codes.json')
 default_errrors = json.load(codesfile) 
 
 raster_data_sets = None
+process_user = 'system'
 
 def getRasterDataSets():
     home = Path.home()
@@ -53,16 +54,16 @@ def saveIdDatabase(idDatabse):
         pickle.dump(idDatabse, propsFile)
         propsFile.close() 
 
-def logMessage(level, message, user='default'):
+def logMessage(level, message, user='system'):
       logger = logging.getLogger('openeo')
-      logger.log(level, message)
+      logger.log(level, '[ ' + user + ' ] '  + message)
 
 def notRunnableError(name, job_name):
      message = "operation not runnable:" + name + "job id:" + str(job_name)
      logMessage(logging.ERROR, message)
      return message
 
-def makeFolder(path, user='default'):
+def makeFolder(path, user='system'):
     try:
         if ( not os.path.exists(path)):
             logMessage(logging.INFO, 'could not open:'+ path)
