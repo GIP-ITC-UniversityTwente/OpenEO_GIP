@@ -63,7 +63,7 @@ class BaseBinarymapCalcBase(OpenEoOperation):
 
             if len(arguments) != 4: ##x,y,serverchannel, job_id
                 message =  "number of parameters is not correct in operation:" + self.name
-                common.logMessage(logging.ERROR,message)
+                common.logMessage(logging.ERROR,message,common.process_user)
                 return  createOutput(False,message,  constants.DTERROR)
             it = iter(arguments)
             self.p1 = arguments[next(it)]['resolved']
@@ -74,12 +74,12 @@ class BaseBinarymapCalcBase(OpenEoOperation):
             if not self.ismaps1: 
                 if math.isnan(self.p1):
                     message =  "the parameter a is not a number in operation:" + self.name
-                    common.logMessage(logging.ERROR, message)
+                    common.logMessage(logging.ERROR, message,common.process_user)
                     return createOutput(False, message, constants.DTERROR)
             if not self.ismaps2:
                 if math.isnan(self.p2):
                     message =  "the parameter b is not a number in operation:" + self.name
-                    common.logMessage(logging.ERROR, message)
+                    common.logMessage(logging.ERROR, message,common.process_user)
                     return createOutput(False, message, constants.DTERROR)                             
     
             self.runnable = True

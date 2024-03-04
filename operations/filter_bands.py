@@ -13,7 +13,7 @@ class FilterBands(OpenEoOperation):
             self.inpData = arguments['data']['resolved']
             if len(self.inpData) == 0:
                 message =  "invalid input. Number of rasters is 0 in operation:" + self.name
-                common.logMessage(logging.ERROR, message)
+                common.logMessage(logging.ERROR, message,common.process_user)
                 return message         
             if isinstance(self.inpData[0], RasterData):
                 if 'bands' in arguments:
@@ -28,7 +28,7 @@ class FilterBands(OpenEoOperation):
                         self.runnable = True
                     else:
                         message =  'Band list doesn match available bands'
-                        common.logMessage(logging.ERROR, message)
+                        common.logMessage(logging.ERROR, message,common.process_user)
                         return message                        
                 if 'wavelenghts' in arguments:
                     requestedWavelengths = arguments['wavelengths']['resolved']

@@ -29,7 +29,7 @@ def loadCollections():
     loc = globalsSingleton.openeoip_config['data_locations']['root_user_data_location']
     loc['location'] = os.path.join(loc['location'],user.username)
     data_locations.append(loc)
-
+    common.logMessage(logging.INFO, 'reading collections',common.process_user)
        
     allJson = {}
     allCollections = []
@@ -66,7 +66,7 @@ def loadCollections():
                                 globalsSingleton.insertRasterInDatabase(raster) 
                                    
                         except Exception as ex:
-                           common.logMessage(logging.ERROR,str(ex))
+                           common.logMessage(logging.ERROR,str(ex),common.process_user)
                            continue
 
                     collectionJsonDict = raster.toShortDictDefinition()
@@ -78,6 +78,7 @@ def loadCollections():
     allJson["links"] = globalsSingleton.openeoip_config['links']
 
     globalsSingleton.saveIdDatabase() 
+    common.logMessage(logging.INFO, 'finished reading collections',common.process_user)
 
     return allJson    
          
