@@ -76,6 +76,8 @@ class OpenEOProcess(multiprocessing.Process):
             self.log_level = get('log_level', request_json, 'all')        
             self.user = user
             processValues = request_json['process']
+            ##as we are running in a seperate process the value of common.process_user is unique for this process
+            common.process_user = user.username
         else:
             processValues = request_json
         self.spatialextent = []
@@ -201,7 +203,7 @@ class OpenEOProcess(multiprocessing.Process):
     def run(self, toServer):
         if self.processGraph != None:
             timeStart = str(datetime.now())
-            common.logMessage(logging.INFO, 'started job_id: ' + self.job_id + "with name: " + self.title)
+            common.logMessage(logging.INFO, 'started job_id: ' + self.job_id + "with name: " + self.title,common.process_user)
             outputinfo = self.processGraph.run(self, toServer, self.fromServer)
             timeEnd = str(datetime.now())
             if 'spatialextent' in outputinfo:
@@ -224,7 +226,7 @@ class OpenEOProcess(multiprocessing.Process):
             dict['end_datetime']  = timeEnd
             with open(path, "w") as fp:
                 json.dump(dict, fp)   
-            common.logMessage(logging.INFO,'finished job_id: ' + self.job_id )
+            common.logMessage(logging.INFO,'finished job_id: ' + self.job_id ,common.process_user)
     
   
         
