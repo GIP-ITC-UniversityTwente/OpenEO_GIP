@@ -1,5 +1,6 @@
 from flask_restful import Resource
 from flask import make_response, jsonify, request
+import common
 
 class WellKnown(Resource):
 
@@ -8,7 +9,7 @@ class WellKnown(Resource):
               
     def get(self):        
         version_list = list()
-        version_list.append({"url": "http://127.0.0.1:5000",
+        version_list.append({"url": common.openeoip_config['openeo_gip_root'],
                              "api_version": "1.2.0",
                              "production": False})
 
