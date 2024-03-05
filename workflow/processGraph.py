@@ -147,15 +147,18 @@ class NodeExecution :
             executeObj =  copy.deepcopy(processObj)
             args['serverChannel'] = toServer
             args['job_id'] = openeojob.job_id
-            message = executeObj.prepare(args)
+            try:
+                message = executeObj.prepare(args)
+            except (Exception, BaseException) as ex:
+                message = "job " +  openeojob.job_id + " failed as operation " + self.processNode.process_id + " raises error " + str(ex)
+                executeObj.logProgress(openeojob.job_id, message)
+                raise ex
+
             if  executeObj.runnable:
-                try:                
-                    self.outputInfo = executeObj.run(openeojob, toServer, fromServer) 
-                except Exception:
-                    return 'error'                    
+                self.outputInfo = executeObj.run(openeojob, toServer, fromServer) 
             else:                               
                 self.outputInfo =  createOutput(False, message, constants.DTERROR)
-                return False
+                return 'error'
         return ''
     
     def mapcalc(self, args, pgraph):
