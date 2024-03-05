@@ -32,7 +32,7 @@ class ReduceDimensionsOperation(OpenEoOperation):
             else:
                 self.logEndOperation(processOutput,openeojob)
                 return createOutput(constants.STATUSFINISHED, self.reducer['resolved'], constants.DTRASTER)
-        message = common.notRunnableError(openeojob.job_id)          
+        message = common.notRunnableError(self.name, openeojob.job_id)         
         return createOutput('error', message, constants.DTERROR)
         
 def registerOperation():

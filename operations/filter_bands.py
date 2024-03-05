@@ -48,7 +48,7 @@ class FilterBands(OpenEoOperation):
                                 outData.append(raster)
             self.logEndOperation(processOutput,openeojob)
             return createOutput(constants.STATUSFINISHED, outData, constants.DTRASTER)
-        common.notRunnableError(openeojob.job_id) 
+        common.notRunnableError(self.name, openeojob.job_id) 
         return createOutput('error', "operation not runnable", constants.DTERROR)   
 
 def registerOperation():

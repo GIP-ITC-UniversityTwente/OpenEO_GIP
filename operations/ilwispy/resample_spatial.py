@@ -74,7 +74,7 @@ class ResampleSpatial(OpenEoOperation):
             put2Queue(processOutput,{'progress' : 100, 'job_id' : openeojob.job_id, 'status' : 'finished'}) 
             self.logEndOperation(processOutput,openeojob)
             return createOutput(constants.STATUSFINISHED, outputRasters, constants.DTRASTER)  
-        message = common.notRunnableError(openeojob.job_id)
+        message = common.notRunnableError(self.name, openeojob.job_id) 
         return createOutput('error', message, constants.DTERROR)
         
 def registerOperation():

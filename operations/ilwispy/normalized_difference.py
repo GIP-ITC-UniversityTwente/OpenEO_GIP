@@ -30,7 +30,7 @@ class NormalizedDifference(OpenEoOperation):
             outputRasters.extend(self.setOutput([outputRc], self.extra))
             self.logEndOperation(processOutput,openeojob)
             return createOutput(constants.STATUSFINISHED, outputRasters, constants.DTRASTERLIST)
-        message = common.notRunnableError(openeojob.job_id)
+        message = common.notRunnableError(self.name, openeojob.job_id) 
         return createOutput('error', message, constants.DTERROR)
         
 def registerOperation():
