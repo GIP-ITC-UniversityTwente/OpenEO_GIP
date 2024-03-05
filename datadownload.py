@@ -55,7 +55,8 @@ class OpenEODataDownload(Resource):
                             outFile = os.path.join(fullpath, fn)
                             zf.write(outFile, os.path.basename(str(date_int) + ".zip"))
                         stream.seek(0)
-                        w = FileWrapper(stream)
+                        w = FileWrapper(stream) 
+                        
                         response = Response(w,
                                         mimetype="application/x-zip",
                                         direct_passthrough=True)
