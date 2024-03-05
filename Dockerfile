@@ -7,6 +7,8 @@ RUN pip install flask-restful
 RUN pip install flask_cors
 RUN pip install eoreader
 RUN pip install pystac>=1.0.0
+RUN pip install Flask-HTTPAuth
+RUN pip install pynacl
 
 COPY /ilwis /app/packages/
 
