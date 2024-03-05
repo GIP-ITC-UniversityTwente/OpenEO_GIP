@@ -47,12 +47,13 @@ class OpenEODataDownload(Resource):
                         return response
                 else:
                     stream = BytesIO()
-                    now = datetime.datetime.now()
+                    now = datetime.now()
                     date_string = now.strftime("%Y%m%d%H%M%S")
                     date_int = int(date_string)                    
                     with ZipFile(stream, 'a') as zf:                                                         
                         for fn in outFiles:
-                            zf.write(fn, os.path.basename(str(date_int) + ".zip"))
+                            outFile = os.path.join(fullpath, fn)
+                            zf.write(outFile, os.path.basename(str(date_int) + ".zip"))
                         stream.seek(0)
                         w = FileWrapper(stream)
                         response = Response(w,
