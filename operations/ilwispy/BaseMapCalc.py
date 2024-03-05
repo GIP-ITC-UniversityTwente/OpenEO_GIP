@@ -52,7 +52,7 @@ class BaseUnarymapCalc(OpenEoOperation):
             self.logEndOperation(processOutput,openeojob)
             put2Queue(processOutput,{'progress' : 100, 'job_id' : openeojob.job_id, 'status' : 'finished'}) 
             return out
-        message = common.notRunnableError(openeojob.job_id)   
+        message = common.notRunnableError(self.name, openeojob.job_id)   
         return createOutput('error', message, constants.DTERROR)
     
 class BaseBinarymapCalcBase(OpenEoOperation):
