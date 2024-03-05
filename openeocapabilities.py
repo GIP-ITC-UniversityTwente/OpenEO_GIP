@@ -3,11 +3,7 @@ from flask import make_response, jsonify, request
     
 from globals import globalsSingleton
 
-<<<<<<< HEAD
 OPENEO_GIP_ROOT = globalsSingleton.openeoip_config['openeo_gip_root']
-=======
-OPENEO_GIP_ROOT = "http://cityregions.roaming.utwente.nl:5000/"
->>>>>>> bef0dd6 (changes to reflect the change in location of the files/folders)
 
 CAPABILITIES = {
         "api_version": "1.2.0",
