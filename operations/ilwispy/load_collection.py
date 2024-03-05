@@ -91,7 +91,11 @@ class LoadCollectionOperation(OpenEoOperation):
                 sect = arguments['spatial_extent']['resolved']
                 if sect != None:
                     sext = [sect['west'], sect['south'], sect['east'], sect['north']]
-                    datapath = os.path.join(self.dataSource, self.inputRaster.bands[0]['source'])                            
+                    if self.inputRaster.grouping == 'layer':
+                        source = self.inputRaster.layers[0].dataSource
+                    else:
+                        source = self.inputRaster.bands[0].source                        
+                    datapath = os.path.join(path, source)                            
                     rband = ilwis.RasterCoverage(datapath)
                     csyLL = ilwis.CoordinateSystem("epsg:4326")
                     llenv = ilwis.Envelope(ilwis.Coordinate(sect['west'], sect['south']), ilwis.Coordinate(sect['east'], sect['north']))
@@ -185,7 +189,7 @@ class LoadCollectionOperation(OpenEoOperation):
 
             self.logEndOperation(processOutput,openeojob)
             return createOutput(constants.STATUSFINISHED, outputRasters, constants.DTRASTER)
-        message = common.notRunnableError(openeojob.job_id)
+        message = common.notRunnableError(self.name, openeojob.job_id) 
         return createOutput('error', message, constants.DTERROR)
            
 def registerOperation():
