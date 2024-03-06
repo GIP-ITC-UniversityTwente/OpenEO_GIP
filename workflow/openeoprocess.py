@@ -200,6 +200,7 @@ class OpenEOProcess(multiprocessing.Process):
         data = {"job_id": str(self.job_id), "status": "stop"}
         message = json.dumps(data)
         self.sendTo.send(message)
+        self.cleanup()
 
     def run(self, toServer):
         if self.processGraph != None:
