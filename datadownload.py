@@ -3,25 +3,24 @@ from flask import make_response, jsonify, request, Response
 from werkzeug.wsgi import FileWrapper
 from itsdangerous import URLSafeTimedSerializer
 from processmanager import globalProcessManager
-from datetime import datetime, timedelta
+from datetime import datetime
 from globals import globalsSingleton
 import common 
 import os
-import json
 import mimetypes
-from io import BytesIO
-from io import BytesIO
-from zipfile import ZipFile
+import logging
 
 class OpenEODataDownload(Resource):
     def get(self, token):
         ss = request.base_url
         secret = globalsSingleton.signed_url_secret 
         s = URLSafeTimedSerializer(secret)
-        idx = token.rfind('___')
-        if idx != -1:
-            folder_token = token[:idx]
+        parts = token.split('___')
+        if len(parts) == 2:
+            folder_token = parts[0]
+            resultName = parts[1]
             folder = ''
+            common.logMessage(logging.INFO,'prepare downloading',common.process_user) 
             try:
                 folder = s.loads(folder_token)['user_id']
                 now = datetime.now()
@@ -34,34 +33,20 @@ class OpenEODataDownload(Resource):
                 
                 path = common.openeoip_config['data_locations']['root_user_data_location']
                 path = path['location']
-                fullpath = os.path.join(path, folder)  
-                outFiles = [f for f in os.listdir(fullpath) if f != "jobmetadata.json"]                                 
-                if len(outFiles) == 1:
-                    outFile = os.path.join(fullpath, outFiles[0])
+                fullpath = os.path.join(path, folder) 
+                outFile = os.path.join(fullpath, resultName) 
+                if os.path.exists(outFile):
                     mimet = mimetypes.guess_type(outFile)
                     with open(outFile, 'rb') as file:
                         binary_data = file.read()
                         response = Response(binary_data,
                                     mimetype=mimet[0],
                                     direct_passthrough=True)
+                        common.logMessage(logging.INFO,'finsihed prepare downloading',common.process_user)
                         return response
-                else:
-                    stream = BytesIO()
-                    now = datetime.now()
-                    date_string = now.strftime("%Y%m%d%H%M%S")
-                    date_int = int(date_string)                    
-                    with ZipFile(stream, 'a') as zf:                                                         
-                        for fn in outFiles:
-                            outFile = os.path.join(fullpath, fn)
-                            zf.write(outFile, os.path.basename(str(date_int) + ".zip"))
-                        stream.seek(0)
-                        w = FileWrapper(stream) 
-                        
-                        response = Response(w,
-                                        mimetype="application/x-zip",
-                                        direct_passthrough=True)
-                        return response
-
-            except:
-                return None
+                common.logMessage(logging.INFO,'finsihed downloading',common.process_user)
+            except Exception as ex:
+                common.logMessage(logging.ERROR,'failed download result with error'+ str(ex),common.process_user) 
+                err = globalsSingleton.errorJson('FileNotFound', 'system','')
+                return make_response(jsonify(err),err.code) 
             return make_response(jsonify({ "errors": 'test'}), 200)
