@@ -112,7 +112,15 @@ class OpenEOJobResults(AuthenticatedResource):
                 
         except Exception as ex:
             err = globalsSingleton.errorJson(constants.CUSTOMERROR, job_id, str(ex))
-            return make_response(jsonify(err), err.code)      
+            return make_response(jsonify(err), err.code)
+
+   def processDeleteId(self, job_id, user):
+        try:
+            globalProcessManager.stopJob(job_id, user)        
+            res = makeBaseResponseDict(job_id,'canceled', 204,request.base_url,'job has been successfully deleted' )
+            return make_response(jsonify(res),204) 
+        except Exception as ex:
+            return make_response(makeBaseResponseDict(-1, 'error', 404, None, str(ex)))              
        
    def post(self, job_id):
         user = UserInfo(request)
@@ -121,7 +129,10 @@ class OpenEOJobResults(AuthenticatedResource):
    def get(self, job_id):
         user = UserInfo(request)
         host =  request.environ['HTTP_HOST']
-        return self.returnJobResultUrls(job_id, user, host)  
+        return self.returnJobResultUrls(job_id, user, host)
+   def delete(self, job_id):
+        user = UserInfo(request)
+        return self.processDeleteId(job_id, user)
    
 class OpenEOIJobByIdEstimate(AuthenticatedResource):
    def processGetEstimate(self, job_id, user):
@@ -148,14 +159,6 @@ class OpenEOMetadata4JobById(AuthenticatedResource):
             err = globalsSingleton.errorJson(constants.CUSTOMERROR, job_id, str(ex))
             return make_response(jsonify(err), err.code)  
         
-    def processDeleteId(self, job_id, user):
-        try:
-            globalProcessManager.stopJob(job_id, user)        
-            res = makeBaseResponseDict(job_id,'canceled', 204,request.base_url,'job has been successfully deleted' )
-            return make_response(jsonify(res),204) 
-        except Exception as ex:
-            return make_response(makeBaseResponseDict(-1, 'error', 404, None, str(ex)))
-        
     def processPatchId(self, job_id, user, request_json):
         try:
             status = globalProcessManager.removedCreatedJob(job_id)
@@ -177,10 +180,7 @@ class OpenEOMetadata4JobById(AuthenticatedResource):
     def get(self, job_id):
         return self.processGetJobId(job_id, request)
 
-    def delete(self, job_id):
-        user = UserInfo(request)
-        return self.processDeleteId(job_id, user)
-    
+      
     def patch(self, job_id):
         request_json = request.get_json()
         user = UserInfo(request)
