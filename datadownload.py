@@ -1,6 +1,5 @@
 from flask_restful import Resource
 from flask import make_response, jsonify, request, Response
-from werkzeug.wsgi import FileWrapper
 from itsdangerous import URLSafeTimedSerializer
 from processmanager import globalProcessManager
 from datetime import datetime
@@ -9,21 +8,27 @@ import common
 import os
 import mimetypes
 import logging
+from userinfo import UserInfo
 
 class OpenEODataDownload(Resource):
     def get(self, token):
-        ss = request.base_url
         secret = globalsSingleton.signed_url_secret 
+        user = UserInfo(request)
         s = URLSafeTimedSerializer(secret)
         parts = token.split('___')
         if len(parts) == 2:
             folder_token = parts[0]
             resultName = parts[1]
             folder = ''
-            common.logMessage(logging.INFO,'prepare downloading',common.process_user) 
+            common.logMessage(logging.INFO,'prepare downloading ' + resultName,user.username) 
             try:
                 folder = s.loads(folder_token)['user_id']
                 now = datetime.now()
+                if globalProcessManager.outputs[folder].eoprocess.user.username != user.username:
+                    common.logMessage(logging.ERROR,'credentials invalid for '+ resultName,user.username) 
+                    err = globalsSingleton.errorJson('CredentialsInvalid', user.username,'')
+                    return make_response(jsonify(err),err.code) 
+                
                 then = globalProcessManager.outputs[folder].availableStart
                 delta = now - then
                 n = delta.total_seconds()
@@ -42,9 +47,7 @@ class OpenEODataDownload(Resource):
                         response = Response(binary_data,
                                     mimetype=mimet[0],
                                     direct_passthrough=True)
-                        common.logMessage(logging.INFO,'finsihed prepare downloading',common.process_user)
                         return response
-                common.logMessage(logging.INFO,'finsihed downloading',common.process_user)
             except Exception as ex:
                 common.logMessage(logging.ERROR,'failed download result with error'+ str(ex),common.process_user) 
                 err = globalsSingleton.errorJson('FileNotFound', 'system','')
