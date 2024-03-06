@@ -43,6 +43,7 @@ def worker(openeoprocess, outputQueue):
 class OutputInfo:
     def __init__(self, eoprocess):
         self.eoprocess = eoprocess
+        self.pythonProcess = None
         self.progress = 0
         self.last_updated = str(datetime.now())
         self.output = None
@@ -117,6 +118,8 @@ class ProcessManager:
                 if value.eoprocess.user == user:
                     if job_id == str(value.eoprocess.job_id):
                         value.eoprocess.stop()
+                        self.outputs[job_id].pythonProcess.terminate()
+                        self.outputs[job_id].status = constants.STATUSSTOPPED 
                         return
                             
 
@@ -210,6 +213,7 @@ class ProcessManager:
                 p = Process(target=worker, args=(eoprocess,self.outputQueue))
                 self.createNewEmptyOutput(eoprocess)
                 self.outputs[str(eoprocess.job_id)].status = constants.STATUSRUNNING
+                self.outputs[str(eoprocess.job_id)].pythonProcess = p
                 p.start()
             if self.outputQueue.qsize() > 0:
                 item = self.outputQueue.get()
