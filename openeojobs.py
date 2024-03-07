@@ -154,7 +154,9 @@ class OpenEOMetadata4JobById(AuthenticatedResource):
         try:
             user = UserInfo(request)
             job = globalProcessManager.allJobsMetadata4User(user, job_id,request.base_url)
-            return make_response(jsonify(job),200)
+            if job != None and job['haserror']:
+                return make_response({'code' : job['code'], 'message' : job['message']},400)
+            return make_response(job,200)
         except Exception as ex:
             err = globalsSingleton.errorJson(constants.CUSTOMERROR, job_id, str(ex))
             return make_response(jsonify(err), err.code)  
