@@ -10,7 +10,7 @@ from eoreader.bands import *
 import posixpath
 import shutil
 import common
-
+import customexception
 
 class LoadCollectionOperation(OpenEoOperation):
     def __init__(self):
@@ -48,69 +48,96 @@ class LoadCollectionOperation(OpenEoOperation):
         os.rename(posixpath.dirname(outputs[0]), unpack_folder)
         return sourceList, unpackFolderName
 
+    def checkOverlap(self, toServer, job_id, envCube, envMap):
+        b1 = envMap.intersects(envCube)
+        b2 = envCube.intersects(envMap)
+        b3 = envMap.minCorner() in envCube 
+        b4 = envMap.maxCorner() in envCube 
+        b5 = envCube.minCorner() in envMap 
+        b5 = envCube.maxCorner() in envMap 
+        if not envMap.intersects(envCube):
+             s1 = str(envCube)
+             s2 = str(envMap)
+             self.handleError(toServer, job_id, 'east or west have invalid values', constants.ERRORPARAMETER) 
+
+    def checkSpatialExt(self, toServer, job_id, ext):
+        if 'north' in ext and 'south' in ext and 'east' in ext and 'west'in ext:
+            n = ext['north']
+            s = ext['south']
+            w = ext['west']
+            e = ext['east']
+            if n < s and abs(n) <= 90 and abs(s) <= 90:
+                self.handleError(toServer, job_id, 'north or south have invalid values', constants.ERRORPARAMETER)
+            if w > e and abs(w) <= 180 and abs(e) <= 180:
+                self.handleError(toServer, job_id, 'east or west have invalid values', constants.ERRORPARAMETER) 
+        else:
+            self.handleError(toServer, job_id, 'missing extents in extents definition', constants.ERRORPARAMETER)                               
+
 
     def prepare(self, arguments):
-        try:
-            self.runnable = False 
-            processOutput = None
-            job_id = None
-            if 'serverChannel' in arguments:
-                processOutput = arguments['serverChannel']
-                job_id = arguments['job_id']
-                           
-            fileIdDatabase = getRasterDataSets()          
-            self.inputRaster = fileIdDatabase[arguments['id']['resolved']]
-            if self.inputRaster == None:
-                return "NotFound"
+        self.runnable = False 
+        toServer = None
+        job_id = None
+        if 'serverChannel' in arguments:
+            toServer = arguments['serverChannel']
+            job_id = arguments['job_id']
+                        
+        fileIdDatabase = getRasterDataSets()          
+        self.inputRaster = fileIdDatabase[arguments['id']['resolved']]
+        if self.inputRaster == None:
+            return "NotFound"
+        
+        self.dataSource = ''
+        oldFolder = folder = self.inputRaster.dataFolder
+        if  self.inputRaster.type == 'file':
+            self.logProgress(toServer, job_id,"load collection : transforming data", constants.STATUSRUNNING)                   
+            folder = self.transformOriginalData(fileIdDatabase, folder, oldFolder)                  
             
-            self.dataSource = ''
-            oldFolder = folder = self.inputRaster.dataFolder
-            if  self.inputRaster.type == 'file':
-                self.logProgress(processOutput, job_id,"load collection : transforming data", constants.STATUSRUNNING)                   
-                folder = self.transformOriginalData(fileIdDatabase, folder, oldFolder)                  
-                
-            
-            if 'bands'in arguments :
-                if arguments['bands']['resolved'] != None:
-                    self.bandIdxs = self.inputRaster.getBandIndexes(arguments['bands']['resolved'])
-                else:
-                    self.bandIdxs.append(0)
+        
+        if 'bands'in arguments :
+            if arguments['bands']['resolved'] != None:
+                self.bandIdxs = self.inputRaster.getBandIndexes(arguments['bands']['resolved'])
             else:
                 self.bandIdxs.append(0)
+        else:
+            self.bandIdxs.append(0)
 
-            if 'temporal_extent' in arguments:
-                self.temporalExtent = arguments['temporal_extent']['resolved']
-                #if arguments['temporal_extent']['resolved'] != None:
-                self.lyrIdxs = self.inputRaster.getLayerIndexes(arguments['temporal_extent']['resolved'])
-               # else:
-               #     self.lyrIdxs.append(0)  
-            path = Path(folder).as_uri()
-            ilwis.setWorkingCatalog(path)
+        if 'temporal_extent' in arguments:
+            self.temporalExtent = arguments['temporal_extent']['resolved']
+            #if arguments['temporal_extent']['resolved'] != None:
+            self.lyrIdxs = self.inputRaster.getLayerIndexes(arguments['temporal_extent']['resolved'])
+            # else:
+            #     self.lyrIdxs.append(0)  
+        path = Path(folder).as_uri()
+        ilwis.setWorkingCatalog(path)
 
-            if 'spatial_extent' in arguments:
-                sect = arguments['spatial_extent']['resolved']
-                if sect != None:
-                    sext = [sect['west'], sect['south'], sect['east'], sect['north']]
-                    if self.inputRaster.grouping == 'layer':
-                        source = self.inputRaster.layers[0].dataSource
-                    else:
-                        source = self.inputRaster.bands[0].source                        
-                    datapath = os.path.join(path, source)                            
-                    rband = ilwis.RasterCoverage(datapath)
-                    csyLL = ilwis.CoordinateSystem("epsg:4326")
-                    llenv = ilwis.Envelope(ilwis.Coordinate(sect['west'], sect['south']), ilwis.Coordinate(sect['east'], sect['north']))
-                    e = str(rband.coordinateSystem().convertEnvelope(csyLL, llenv))
-                    env = e.split(' ')
-                    self.inputRaster.spatialExtent = [env[0], env[2], env[1], env[3]]
-           
-            self.runnable = True
-            self.rasterSizesEqual = True
+        if 'spatial_extent' in arguments:
+            sect = arguments['spatial_extent']['resolved']
+            if sect != None:
+                self.checkSpatialExt(toServer, job_id, sect)
+                sext = [sect['west'], sect['south'], sect['east'], sect['north']]
+                if self.inputRaster.grouping == 'layer':
+                    source = self.inputRaster.layers[0].dataSource
+                else:
+                    source = self.inputRaster.bands[0].source                        
+                datapath = os.path.join(path, source)                            
+                rband = ilwis.RasterCoverage(datapath)
+                csyLL = ilwis.CoordinateSystem("epsg:4326")
+                llenv = ilwis.Envelope(ilwis.Coordinate(sect['west'], sect['south']), ilwis.Coordinate(sect['east'], sect['north']))
+                envCube = rband.coordinateSystem().convertEnvelope(csyLL, llenv)
+                e = str(envCube)
+                e2 = str(rband.coordinateSystem().latlonEnvelope())
+                self.checkOverlap(toServer, job_id,envCube, rband.envelope())
+                
+                env = e.split(' ')
+                if env[0] == '?':
+                    self.handleError(toServer, job_id, 'unusable envelope found ' + str(sect),constants.ERRORPARAMETER)
+
+                self.inputRaster.spatialExtent = [env[0], env[2], env[1], env[3]]
+        
+        self.runnable = True
+        self.rasterSizesEqual = True
  
-        except Exception as ex:
-            return ""
-
-        return ""
-
     def transformOriginalData(self, fileIdDatabase, folder, oldFolder):
         self.dataSource = self.inputRaster.dataSource
                 
