@@ -5,6 +5,7 @@ import ilwis
 from rasterdata import *
 import logging
 import common
+import customexception
 
 
 operations1 = {}
@@ -236,6 +237,11 @@ class OpenEoOperation:
     def logEndOperation(self, processOutput,openeojob):
         common.logMessage(logging.INFO, 'ended: ' + self.name + " with job name:" + openeojob.title, common.process_user)
         return self.logProgress(processOutput, openeojob.job_id, 'finished ' + self.name,constants.STATUSFINISHED)
+    
+    def handleError(self, processOutput, job_id, message, code):
+        self.logProgress(processOutput, job_id, message, constants.STATUSERROR )
+        raise customexception.CustomException(code, message)
+
 
             
 
