@@ -2,6 +2,7 @@ from estimationnode import EstimationNode
 from openeooperation import *
 from constants import constants
 import copy
+import customexception
 ##from constants.constants import *
 
 class ProcessNode :
@@ -147,20 +148,15 @@ class NodeExecution :
             executeObj =  copy.deepcopy(processObj)
             args['serverChannel'] = toServer
             args['job_id'] = openeojob.job_id
-            try:
-                message = executeObj.prepare(args)
-            except (Exception, BaseException) as ex:
-                message = "job " +  openeojob.job_id + " failed as operation " + self.processNode.process_id + " raises error " + str(ex)
-                executeObj.logProgress(openeojob.job_id, message)
-                raise ex
+            executeObj.prepare(args)
 
             if  executeObj.runnable:
                 self.outputInfo = executeObj.run(openeojob, toServer, fromServer) 
-            else:                               
-                self.outputInfo =  createOutput(False, message, constants.DTERROR)
-                return 'error'
-        return ''
-    
+        else:
+            message = 'unknow operation ' + str(self.processNode.process_id + ". This operation is not implemented on the server")
+            common.logMessage(logging.ERROR, message, openeojob.user.username )
+            raise customexception.CustomException(constants.ERROROPERATION, message)
+     
     def mapcalc(self, args, pgraph):
         if self.checkBandMath(pgraph):
 
@@ -203,10 +199,9 @@ class NodeExecution :
             if referredNode != None:
                 if referredNode[1].nodeValue == None:
                     refExecutionNode = NodeExecution(referredNode[1], self.processGraph)
-                    if refExecutionNode.run(openeojob, toServer, fromServer) == '':
-                        referredNode[1].nodeValue = refExecutionNode.outputInfo
-                        return referredNode[1].nodeValue['value']
-                    raise Exception(refExecutionNode.outputInfo['value'])
+                    refExecutionNode.run(openeojob, toServer, fromServer)
+                    referredNode[1].nodeValue = refExecutionNode.outputInfo
+                    return referredNode[1].nodeValue['value']
         elif 'from_parameter' in parmKeyValue:
                 refNode = self.processNode.parentProcessGraph.resolveParameter(parmKeyValue[1])
                 if refNode['resolved'] != None:
