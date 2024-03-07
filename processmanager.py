@@ -49,6 +49,8 @@ class OutputInfo:
         self.output = None
         self.status = constants.STATUSQUEUED
         self.logs = []
+        self.code = ''
+        self.message = ''
         self.availableStart = None
 
     def isFinished(self):
@@ -153,17 +155,24 @@ class ProcessManager:
 
     def allJobsMetadata4User(self, user, job_id, baseurl):
         with self.lockOutput:
-            processes = []   
+            processes = []  
             for key,value in self.outputs.items():
                 if value.eoprocess.user == user or user.username == 'undefined':
                     if job_id == None or ( job_id == str(value.eoprocess.job_id)):
                         dict = value.eoprocess.toDict( job_id == None)
+                        dict['haserror'] = False
                         dict['progress'] = value.progress
                         dict['updated'] = value.last_updated
                         dict['status'] = value.status
                         if value.status == constants.STATUSJOBDONE:
                             dict['status'] = 'finished'
                             dict['progress'] = 'Job done'
+                        if value.status == constants.STATUSERROR:
+                            dict['status'] = 'finished'
+                            dict['progress'] = 'Job done'
+                            dict['haserror'] = True
+                            dict['message'] = value.message
+                            dict['code'] = value.code
                         dict['job_id'] = value.eoprocess.job_id
                         dict['submitted'] = value.eoprocess.submitted
                         dict["links"]  = {
@@ -175,8 +184,8 @@ class ProcessManager:
             if job_id == None: ## case were a list of metadata is requested 
                 return processes 
             if len(processes) == 1:                                       
-                return processes[0]  # case were only on job is queried   
-            return ''             
+                return processes[0] # case were only on job is queried   
+            return None            
 
     def alllogs4job(self, user, jobid):
         with self.lockOutput:
@@ -217,7 +226,6 @@ class ProcessManager:
                 p.start()
             if self.outputQueue.qsize() > 0:
                 item = self.outputQueue.get()
-                print(item['status'])                
                 self.changeOutputStatus(item)
             endTimer = datetime.now()
             delta = endTimer - startTimerDump
@@ -254,18 +262,24 @@ class ProcessManager:
 
 
     def changeOutputStatus(self, item):
-        
-        job_id = item['job_id']
-        if job_id in self.outputs:
-            type = item['type']
-            if type == 'progressevent':
-                self.outputs[job_id].progress = item['progress']
-                self.outputs[job_id].last_updated = str(datetime.now())
-                if item['status'] == constants.STATUSJOBDONE:
-                    self.outputs[job_id].status = constants.STATUSJOBDONE
-            if type == 'logginevent':
-                del item['type']
-                self.outputs[job_id].logs.append(item)
+        with self.lockOutput:
+            job_id = item['job_id']
+            if job_id in self.outputs:
+                type = item['type']
+                if type == 'progressevent':
+                    self.outputs[job_id].progress = item['progress']
+                    self.outputs[job_id].last_updated = str(datetime.now())
+                    if item['status'] == constants.STATUSJOBDONE:
+                        self.outputs[job_id].status = constants.STATUSJOBDONE
+                    if item['status'] == constants.STATUSERROR:
+                        self.outputs[job_id].status = constants.STATUSERROR  
+                        if 'message' in item:
+                            self.outputs[job_id].message = item['message']
+                        if 'code' in item :                           
+                            self.outputs[job_id].code = item['code']
+                if type == 'logginevent':
+                    del item['type']
+                    self.outputs[job_id].logs.append(item)
 
     def dumpProcessTables(self):
         #for the moment disabled

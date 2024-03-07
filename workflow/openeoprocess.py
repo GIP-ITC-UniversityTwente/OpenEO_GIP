@@ -10,6 +10,7 @@ import logging
 import common
 import os
 from openeooperation import put2Queue
+import customexception
 
 
 def get(key,values,  defaultValue):
@@ -230,9 +231,17 @@ class OpenEOProcess(multiprocessing.Process):
                 with open(path, "w") as fp:
                     json.dump(dict, fp)   
                 common.logMessage(logging.INFO,'finished job_id: ' + self.job_id ,common.process_user)
-            except  (Exception, BaseException) as ex:
-                put2Queue(toServer, 'failed job_id: ' + self.job_id + " with error " + str(ex))
-                common.logMessage(logging.ERROR,'failed job_id: ' + self.job_id + " with error " + str(ex),common.process_user)    
+            except  (Exception, BaseException, customexception.CustomException) as ex:
+                timeEnd = str(datetime.now()) 
+                code = ''               
+                if isinstance(ex, customexception.CustomException):
+                    code = ex.code
+                    message = ex.message
+                else:                    
+                    message = 'failed job_id: ' + self.job_id + " with error " + str(ex)
+                log = {'type' : 'progressevent', 'job_id': self.job_id, 'progress' : 'job finished' , 'last_updated' : timeEnd, 'status' : constants.STATUSERROR, 'message': message, 'code': code}   
+                toServer.put(log)
+                common.logMessage(logging.ERROR,message,common.process_user)    
     
   
         
