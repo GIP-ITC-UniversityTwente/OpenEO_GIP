@@ -27,7 +27,11 @@ STATUSSTOPPED = "canceled"
 STATUSFINISHED = "finished"
 STATUSJOBDONE = "jobdone"
 STATUSUNKNOWN = "unknown"
+STATUSERROR = 'error'
 CUSTOMERROR = "custom error"
+
+ERRORPARAMETER = 'ParameterError'
+ERROROPERATION = 'OperationError'
 
 
 
