@@ -51,14 +51,8 @@ class LoadCollectionOperation(OpenEoOperation):
     def checkOverlap(self, toServer, job_id, envCube, envMap):
         b1 = envMap.intersects(envCube)
         b2 = envCube.intersects(envMap)
-        b3 = envMap.minCorner() in envCube 
-        b4 = envMap.maxCorner() in envCube 
-        b5 = envCube.minCorner() in envMap 
-        b5 = envCube.maxCorner() in envMap 
-        if not envMap.intersects(envCube):
-             s1 = str(envCube)
-             s2 = str(envMap)
-             self.handleError(toServer, job_id, 'east or west have invalid values', constants.ERRORPARAMETER) 
+        if not (b1 or b2):
+            self.handleError(toServer, job_id, 'extents given and extent data dont overlap', constants.ERRORPARAMETER) 
 
     def checkSpatialExt(self, toServer, job_id, ext):
         if 'north' in ext and 'south' in ext and 'east' in ext and 'west'in ext:
