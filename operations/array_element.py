@@ -3,7 +3,6 @@ from operationconstants import *
 from constants import constants
 from rasterdata import *
 from common import getRasterDataSets
-import ilwis
 from pathlib import Path
 
 class ArrayElementOperation(OpenEoOperation):

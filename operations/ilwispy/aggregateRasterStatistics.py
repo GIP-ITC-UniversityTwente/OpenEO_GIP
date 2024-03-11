@@ -52,15 +52,11 @@ class MedianOperation(BaseAggregateData):
         self.kind = constants.PDPREDEFINED
 
     def prepare(self, arguments):
-        try:
-            self.base_prepareRaster(arguments)
-            self.method = 'median'
-            self.runnable = True
+        self.base_prepareRaster(arguments)
+        self.method = 'median'
+        self.runnable = True
 
-        except Exception as ex:
-            return ""
 
-        return ""
 
     def run(self,openeojob, processOutput, processInput):
         return self.base_run(openeojob, processOutput, processInput) 

@@ -13,6 +13,9 @@ class ResampleSpatial(OpenEoOperation):
 
     def prepare(self, arguments):
         self.runnable = False
+        if 'serverChannel' in arguments:
+            toServer = arguments['serverChannel']
+            job_id = arguments['job_id']         
 
         method = arguments['method']['resolved']
         if method == 'near':
@@ -22,11 +25,11 @@ class ResampleSpatial(OpenEoOperation):
         elif method == 'bilinear':
             self.method = 'bilinear'
         else:
-            return 'unsupported interpolation method: ' + method
+            self.handleError(toServer, job_id, 'method','unsupported interpolation method: ' + method, 'ProcessParameterInvalid')
         
         pixelSize  = arguments['resolution']['resolved']
         if pixelSize < 0:
-            return 'resolution must be zero or greater'        
+            self.handleError(toServer, job_id, 'resolution','resolution must be zero or greater', 'ProcessParameterInvalid')
 
         data = arguments['data']['resolved']
         for r in data:
@@ -40,22 +43,21 @@ class ResampleSpatial(OpenEoOperation):
                     else:
                         self.pixelSize = pixelSize 
                 else:
-                    return 'no valid raster data in operation resample_spatial'                                           
+                    self.handleError(toServer, job_id, 'Input Raster', 'invalid input. rasters are not valid', 'ProcessParameterInvalid')
            
 
         projection = arguments['projection']['resolved']
       
 
         if not isinstance(projection, int):
-            return 'only epsg numbers allowed as projection definition'
+            self.handleError(toServer, job_id, 'projection', 'only epsg numbers allowed as projection definition', 'ProcessParameterInvalid')
         
         self.csy = ilwis.CoordinateSystem('epsg:' + str(projection))
         if bool(self.csy) == False:
-            return 'Coordinate system invalid in resample_spatial'
+            self.handleError(toServer, job_id, 'projection', 'Coordinate system invalid in resample_spatial', 'ProcessParameterInvalid')
         
         self.runnable = True
 
-        return ""
               
 
     def run(self,openeojob, processOutput, processInput):

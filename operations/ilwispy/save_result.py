@@ -17,7 +17,7 @@ class SaveResultOperation(OpenEoOperation):
         self.data = arguments['data']['resolved']
         self.options = arguments['options']['resolved']
         self.runnable = True
-        return ""
+
               
 
     def run(self,openeojob, processOutput, processInput):

@@ -6,34 +6,33 @@ from rasterdata import RasterData
 
 class BaseUnarymapCalc(OpenEoOperation):
     def base_prepare(self, arguments, oper):
-        try:
-            self.runnable = False
-            self.rasterSizesEqual = True
-
-            if len(arguments) != 1:
-                return  createOutput(False,"number of parameters is not correct",  constants.DTERROR)
-            it = iter(arguments)
-            p1 = arguments[next(it)]['resolved']
-            if isinstance(p1, list):
-                rasterList = []
-                for ras in p1:
-                    if type(ras) is RasterData:
-                        extra = self.constructExtraParams(ras, ras.temporalExtent, 0)
-                        raster = ras.getRaster().rasterImp()
-                        rasterList.append({'raster' : raster, 'extra' : extra})
-                    self.parmValue = rasterList                        
-                        
-            else:
-                if math.isnan(p1):
-                    return createOutput(False, "the parameter a is not a number", constants.DTERROR)
-                self.parmValue = p1                        
-            self.operation = oper
-            if self.operation in ['pow']:
-                self.operation = 'power'
-            self.runnable = True                                      
+        self.runnable = False
+        self.rasterSizesEqual = True
+        if 'serverChannel' in arguments:
+            toServer = arguments['serverChannel']
+            job_id = arguments['job_id']  
+        if len(arguments) != 1:
+            self.handleError(toServer, job_id, 'Input raster','number of parameters is not correct', 'ProcessParameterInvalid')
+        it = iter(arguments)
+        p1 = arguments[next(it)]['resolved']
+        if isinstance(p1, list):
+            rasterList = []
+            for ras in p1:
+                if type(ras) is RasterData:
+                    extra = self.constructExtraParams(ras, ras.temporalExtent, 0)
+                    raster = ras.getRaster().rasterImp()
+                    rasterList.append({'raster' : raster, 'extra' : extra})
+                self.parmValue = rasterList                        
+                    
+        else:
+            if math.isnan(p1):
+                self.handleError(toServer, job_id, 'Input data',"the parameter a is not a number", 'ProcessParameterInvalid')
+            self.parmValue = p1                        
+        self.operation = oper
+        if self.operation in ['pow']:
+            self.operation = 'power'
+        self.runnable = True                                      
                 
-        except Exception as ex:
-            return ""
 
     def base_run(self,openeojob, processOutput, processInput):
         if self.runnable:

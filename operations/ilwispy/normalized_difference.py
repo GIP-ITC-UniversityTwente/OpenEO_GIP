@@ -11,15 +11,18 @@ class NormalizedDifference(OpenEoOperation):
         self.kind = constants.PDPREDEFINED
 
     def prepare(self, arguments):
-        self.runnable = True
+        self.runnable = False
+        if 'serverChannel' in arguments:
+            toServer = arguments['serverChannel']
+            job_id = arguments['job_id']        
         self.rasterSizesEqual = True
         self.inputRaster1 = arguments['x']['resolved']
         self.inputRaster2 = arguments['y']['resolved']
         if not( isinstance(self.inputRaster2, RasterData) and isinstance(self.inputRaster1, RasterData)):
-            return createOutput(False, "the parameter a is not a raster", constants.DTERROR)
+            self.handleError(toServer, job_id, 'Input raster','invalid input. rasters are not valid', 'ProcessParameterInvalid')
         
         self.createExtra(self.inputRaster1, 0) 
-        return ""
+        self.runnable = True
               
 
     def run(self,openeojob, processOutput, processInput):

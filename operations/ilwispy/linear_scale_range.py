@@ -12,18 +12,23 @@ class LinearScaleRangeOperation(OpenEoOperation):
 
     def prepare(self, arguments):
         self.runnable = True
+        if 'serverChannel' in arguments:
+            toServer = arguments['serverChannel']
+            job_id = arguments['job_id']
+
         self.rasterSizesEqual = True
         self.inpMax = arguments['inputMax']['resolved']
         self.inpMin = arguments['inputMin']['resolved']
         self.outMax = arguments['outputMax']['resolved']
         self.outMin = arguments['outputMin']['resolved']
+
         last_key = list(arguments)[-1]
         raster = arguments[last_key]['resolved']
         if not isinstance(raster, RasterData):
-            return 'invalid input. rasters are not valid'
+            self.handleError(toServer, job_id, 'Input raster','invalid input. rasters are not valid', 'ProcessParameterInvalid')
 
         if raster.getRaster().dataType() != ilwis.it.NUMERICDOMAIN:
-            return 'invalid datatype in raster. Must be numeric'
+            self.handleError(toServer, job_id, 'Input raster','invalid datatype in raster. Must be numeric', 'ProcessParameterInvalid')
         self.inputRaster = raster.getRaster().rasterImp()
         self.createExtra(raster, 0) 
         return ""

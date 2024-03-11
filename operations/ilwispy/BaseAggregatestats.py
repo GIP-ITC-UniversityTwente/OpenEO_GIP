@@ -7,19 +7,22 @@ import numpy
 
 class BaseAggregateData(OpenEoOperation):
     def base_prepareRaster(self, arguments):
-        try:
             self.runnable = False 
+            if 'serverChannel' in arguments:
+                toServer = arguments['serverChannel']
+                job_id = arguments['job_id']  
+
             inpData = arguments['data']['resolved']
             if len(inpData) == 0:
-                return 'invalid input. Number of rasters is 0'            
+                self.handleError(toServer, job_id, 'Input raster','invalid input. Number of rasters is 0', 'ProcessParameterInvalid')
             if isinstance(inpData[0], RasterData):
                 self.rasters = inpData
 
                 for rc in self.rasters:
                     if not rc:
-                        return 'invalid input. rasters are not valid'
+                        self.handleError(toServer, job_id, 'Input raster','invalid input. rasters are not valid', 'ProcessParameterInvalid')
                     if rc.getRaster().dataType() != ilwis.it.NUMERICDOMAIN:
-                        return 'invalid datatype in raster. Must be numeric'
+                       self.handleError(toServer, job_id, 'Input raster', 'invalid datatype in raster. Must be numeric', 'ProcessParameterInvalid')
     
                 self.rasterSizesEqual = self.checkSpatialDimensions(self.rasters)  
                 self.method = 'unknown'
@@ -27,11 +30,7 @@ class BaseAggregateData(OpenEoOperation):
                 self.array = arguments['data']
                 self.aggFunc = numpy.mean
             
-        except Exception as ex:
-            return ""
-
-        return ""
-      
+     
     def base_run(self,openeojob, processOutput, processInput):
         if self.runnable:
             self.logStartOperation(processOutput, openeojob)

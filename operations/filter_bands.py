@@ -8,34 +8,33 @@ class FilterBands(OpenEoOperation):
         self.loadOpenEoJsonDef('filter_bands.json') 
 
     def prepare(self, arguments):
-        try:
-            self.runnable = False 
-            self.inpData = arguments['data']['resolved']
-            if len(self.inpData) == 0:
-                message =  "invalid input. Number of rasters is 0 in operation:" + self.name
-                common.logMessage(logging.ERROR, message,common.process_user)
-                return message         
-            if isinstance(self.inpData[0], RasterData):
-                if 'bands' in arguments:
-                    requestedBands = arguments['bands']['resolved']
-                    foundCount = 0
-                    for item in self.inpData:
-                        for bandItem in item.bands:
-                            if bandItem['name'] in requestedBands:
-                                foundCount = foundCount + 1
-                    if foundCount == len(requestedBands):
-                        self.bands = requestedBands                    
-                        self.runnable = True
-                    else:
-                        message =  'Band list doesn match available bands'
-                        common.logMessage(logging.ERROR, message,common.process_user)
-                        return message                        
-                if 'wavelenghts' in arguments:
-                    requestedWavelengths = arguments['wavelengths']['resolved']
-                    
-
-        except:
-            return "error" 
+        self.runnable = False 
+        if 'serverChannel' in arguments:
+            toServer = arguments['serverChannel']
+            job_id = arguments['job_id']
+        self.inpData = arguments['data']['resolved']
+        if len(self.inpData) == 0:
+            message =  "invalid input. Number of rasters is 0 in operation:" + self.name
+            common.logMessage(logging.ERROR, message,common.process_user)
+            self.handleError(toServer, job_id, 'Input raster',message, 'ProcessParameterInvalid')
+            return message         
+        if isinstance(self.inpData[0], RasterData):
+            if 'bands' in arguments:
+                requestedBands = arguments['bands']['resolved']
+                foundCount = 0
+                for item in self.inpData:
+                    for bandItem in item.bands:
+                        if bandItem['name'] in requestedBands:
+                            foundCount = foundCount + 1
+                if foundCount == len(requestedBands):
+                    self.bands = requestedBands                    
+                    self.runnable = True
+                else:
+                    message =  'Band list doesn match available bands'
+                    common.logMessage(logging.ERROR, message,common.process_user)
+                    self.handleError(toServer, job_id, 'bands',message, 'ProcessParameterInvalid')                   
+            if 'wavelenghts' in arguments:
+                requestedWavelengths = arguments['wavelengths']['resolved']
 
     def run(self,openeojob, processOutput, processInput):
         if self.runnable:
