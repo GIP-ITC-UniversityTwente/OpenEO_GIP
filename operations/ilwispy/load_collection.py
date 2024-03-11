@@ -55,6 +55,9 @@ class LoadCollectionOperation(OpenEoOperation):
             self.handleError(toServer, job_id, 'extents','extents given and extent data dont overlap', 'ProcessParameterInvalid') 
 
     def checkSpatialExt(self, toServer, job_id, ext):
+        if ext == None:
+            return
+        
         if 'north' in ext and 'south' in ext and 'east' in ext and 'west'in ext:
             n = ext['north']
             s = ext['south']
@@ -68,6 +71,8 @@ class LoadCollectionOperation(OpenEoOperation):
             self.handleError(toServer, job_id, 'extents','missing extents in extents definition', 'ProcessParameterInvalid')                               
 
     def checkTemporalExtents(self, toServer, job_id, text):
+        if text == None:
+            return
         if len(text) != 2:
            self.handleError(toServer, job_id, 'temporal extents','array must have 2 values', 'ProcessParameterInvalid') 
         dt1 = parser.parse(text[0]) 
