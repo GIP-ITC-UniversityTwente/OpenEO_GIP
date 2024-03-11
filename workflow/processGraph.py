@@ -155,7 +155,7 @@ class NodeExecution :
         else:
             message = 'unknow operation ' + str(self.processNode.process_id + ". This operation is not implemented on the server")
             common.logMessage(logging.ERROR, message, openeojob.user.username )
-            raise customexception.CustomException(constants.ERROROPERATION, message)
+            raise customexception.CustomException(constants.ERROROPERATION, 'operation', message)
      
     def mapcalc(self, args, pgraph):
         if self.checkBandMath(pgraph):

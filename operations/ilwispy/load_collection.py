@@ -10,7 +10,7 @@ from eoreader.bands import *
 import posixpath
 import shutil
 import common
-import customexception
+from dateutil import parser
 
 class LoadCollectionOperation(OpenEoOperation):
     def __init__(self):
@@ -52,7 +52,7 @@ class LoadCollectionOperation(OpenEoOperation):
         b1 = envMap.intersects(envCube)
         b2 = envCube.intersects(envMap)
         if not (b1 or b2):
-            self.handleError(toServer, job_id, 'extents given and extent data dont overlap', constants.ERRORPARAMETER) 
+            self.handleError(toServer, job_id, 'extents','extents given and extent data dont overlap', 'ProcessParameterInvalid') 
 
     def checkSpatialExt(self, toServer, job_id, ext):
         if 'north' in ext and 'south' in ext and 'east' in ext and 'west'in ext:
@@ -61,12 +61,23 @@ class LoadCollectionOperation(OpenEoOperation):
             w = ext['west']
             e = ext['east']
             if n < s and abs(n) <= 90 and abs(s) <= 90:
-                self.handleError(toServer, job_id, 'north or south have invalid values', constants.ERRORPARAMETER)
+                self.handleError(toServer, job_id, 'extents', 'north or south have invalid values', 'ProcessParameterInvalid')
             if w > e and abs(w) <= 180 and abs(e) <= 180:
-                self.handleError(toServer, job_id, 'east or west have invalid values', constants.ERRORPARAMETER) 
+                self.handleError(toServer, job_id, 'extents', 'east or west have invalid values', 'ProcessParameterInvalid') 
         else:
-            self.handleError(toServer, job_id, 'missing extents in extents definition', constants.ERRORPARAMETER)                               
+            self.handleError(toServer, job_id, 'extents','missing extents in extents definition', 'ProcessParameterInvalid')                               
 
+    def checkTemporalExtents(self, toServer, job_id, text):
+        if len(text) != 2:
+           self.handleError(toServer, job_id, 'temporal extents','array must have 2 values', 'ProcessParameterInvalid') 
+        dt1 = parser.parse(text[0]) 
+        dt2 =  parser.parse(text[1])
+        dr1 = parser.parse(self.inputRaster.temporalExtent[0])
+        dr2 = parser.parse(self.inputRaster.temporalExtent[1])
+        if dt1 > dt2:
+            self.handleError(toServer, job_id, 'temporal extents','invalid extent', 'ProcessParameterInvalid')
+        if (dt1 < dr1 and dt2 < dr1) or ( dt1 > dr2 and dt2 > dr2):
+            self.handleError(toServer, job_id, 'temporal extents','extents dont overlap', 'ProcessParameterInvalid')
 
     def prepare(self, arguments):
         self.runnable = False 
@@ -97,6 +108,7 @@ class LoadCollectionOperation(OpenEoOperation):
             self.bandIdxs.append(0)
 
         if 'temporal_extent' in arguments:
+            self.checkTemporalExtents(toServer, job_id,arguments['temporal_extent']['resolved'])
             self.temporalExtent = arguments['temporal_extent']['resolved']
             #if arguments['temporal_extent']['resolved'] != None:
             self.lyrIdxs = self.inputRaster.getLayerIndexes(arguments['temporal_extent']['resolved'])
@@ -125,7 +137,7 @@ class LoadCollectionOperation(OpenEoOperation):
                 
                 env = e.split(' ')
                 if env[0] == '?':
-                    self.handleError(toServer, job_id, 'unusable envelope found ' + str(sect),constants.ERRORPARAMETER)
+                    self.handleError(toServer, job_id, 'unusable envelope found ' + str(sect), 'ProcessParameterInvalid')
 
                 self.inputRaster.spatialExtent = [env[0], env[2], env[1], env[3]]
         

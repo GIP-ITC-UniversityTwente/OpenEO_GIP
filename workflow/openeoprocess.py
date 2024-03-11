@@ -235,8 +235,8 @@ class OpenEOProcess(multiprocessing.Process):
                 timeEnd = str(datetime.now()) 
                 code = ''               
                 if isinstance(ex, customexception.CustomException):
-                    code = ex.code
-                    message = ex.message
+                    code = ex.jsonErr['code']
+                    message = ex.jsonErr['message']
                 else:                    
                     message = 'failed job_id: ' + self.job_id + " with error " + str(ex)
                 log = {'type' : 'progressevent', 'job_id': self.job_id, 'progress' : 'job finished' , 'last_updated' : timeEnd, 'status' : constants.STATUSERROR, 'message': message, 'code': code}   

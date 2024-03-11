@@ -80,6 +80,17 @@ def inspectFileType(filename):
          role = 'metadata'
     return type, role  
 
+def errorJson(errorStringCode, id, message):
+        if errorStringCode == CUSTOMERROR:
+            return {"id" : id, "code" : 400, "message" : message }
+        else:
+            if errorStringCode in default_errrors:
+                err = default_errrors[errorStringCode]
+                predefCode = err['http']
+                message = err['message']                   
+                return {"id" : id, "code" : predefCode, "message" : message }
+                
+        return {"id" : id, "code" : 400, "message" : message }
 
 def makeResponse(outputInfo):
     if outputInfo["status"] == STATUSFINISHED:

@@ -238,9 +238,9 @@ class OpenEoOperation:
         common.logMessage(logging.INFO, 'ended: ' + self.name + " with job name:" + openeojob.title, common.process_user)
         return self.logProgress(processOutput, openeojob.job_id, 'finished ' + self.name,constants.STATUSFINISHED)
     
-    def handleError(self, processOutput, job_id, message, code):
+    def handleError(self, processOutput, job_id, parameter, message, code):
         self.logProgress(processOutput, job_id, message, constants.STATUSERROR )
-        raise customexception.CustomException(code, message)
+        raise customexception.CustomException(code, job_id, parameter, message)
 
 
             
