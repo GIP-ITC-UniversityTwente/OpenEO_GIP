@@ -8,7 +8,7 @@ from multiprocessing import Pipe
 import json
 import logging
 import common
-import os
+import os, shutil
 from openeooperation import put2Queue
 import customexception
 
@@ -194,9 +194,11 @@ class OpenEOProcess(multiprocessing.Process):
         return dictForm  
 
     def cleanup(self):
-        ##TODO : remove data
-        a = 1
-
+        filePath = common.openeoip_config['data_locations']['root_user_data_location']
+        filePath = filePath['location'] + '/' + str(self.job_id)  
+        if os.path.isdir(filePath):
+            shutil.rmtree(filePath)
+  
     def stop(self):
         data = {"job_id": str(self.job_id), "status": "stop"}
         message = json.dumps(data)
@@ -214,8 +216,6 @@ class OpenEOProcess(multiprocessing.Process):
                     self.spatialextent = outputinfo['spatialextent']
                 log = {'type' : 'progressevent', 'job_id': self.job_id, 'progress' : 'job finished' , 'last_updated' : timeEnd, 'status' : constants.STATUSJOBDONE}   
                 toServer.put(log)
-                ##self.sendTo.close()
-                ##self.fromServer.close()
                 if outputinfo != None:
                     if outputinfo['status'] == constants.STATUSSTOPPED:
                         self.cleanup()
