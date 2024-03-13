@@ -45,7 +45,7 @@ class OutputInfo:
         self.eoprocess = eoprocess
         self.pythonProcess = None
         self.progress = 0
-        self.last_updated = str(datetime.now())
+        self.last_updated = datetime.now()
         self.output = None
         self.status = constants.STATUSQUEUED
         self.logs = []
@@ -162,7 +162,7 @@ class ProcessManager:
                         dict = value.eoprocess.toDict( job_id == None)
                         dict['haserror'] = False
                         dict['progress'] = value.progress
-                        dict['updated'] = value.last_updated
+                        dict['updated'] = str(value.last_updated)
                         dict['status'] = value.status
                         if value.status == constants.STATUSJOBDONE:
                             dict['status'] = 'finished'
@@ -207,9 +207,17 @@ class ProcessManager:
     def stop(self):
         self.running = False
 
+    def removeFromOutputs(self, key, whenTimer):
+        endTimer = datetime.now()
+        delta2 = endTimer - self.outputs[key].last_updated
+        if delta2.seconds > whenTimer:
+            out = self.outputs.pop(key)
+            out.cleanUp()
+                               
+
     def startProcesses(self):
         self.loadProcessTables()
-        startTimerCheckTokens = startTimerDump = datetime.now()            
+        startCheckRemoveOutput = startTimerCheckTokens = startTimerDump = datetime.now()            
         while self.running:
             eoprocess = None
             with self.lockProcessQue:
@@ -236,7 +244,17 @@ class ProcessManager:
             if delta.days > 1:
                 authenticationDB.clearOutOfDateTokes()
                 startTimerCheckTokens = endTimer
-
+            delta = endTimer - startCheckRemoveOutput
+            if delta.seconds > 60 * 60: 
+                ## as we are going to delete items in the outputs we iterate over a copy to prevent undef behavior 
+                for key,value in list(self.outputs.items()):
+                    if self.outputs[key].status == constants.STATUSSTOPPED:
+                        self.removeFromOutputs(key, 60*30)
+                    if self.outputs[key].status == constants.STATUSERROR:
+                        self.removeFromOutputs(key,60*60*24 )
+                    if self.outputs[key].status == constants.STATUSFINISHED:
+                        self.removeFromOutputs(key,60*60*24*4 )   
+                startCheckRemoveOutput = endTimer                      
 
     def loadProcessTables(self):
         path = common.openeoip_config['data_locations']['system_files']['location']
@@ -268,7 +286,7 @@ class ProcessManager:
                 type = item['type']
                 if type == 'progressevent':
                     self.outputs[job_id].progress = item['progress']
-                    self.outputs[job_id].last_updated = str(datetime.now())
+                    self.outputs[job_id].last_updated = datetime.now()
                     if item['status'] == constants.STATUSJOBDONE:
                         self.outputs[job_id].status = constants.STATUSJOBDONE
                     if item['status'] == constants.STATUSERROR:
