@@ -1,12 +1,14 @@
 from flask_restful import Resource
-from flask import make_response, jsonify, request, Response
+from flask import make_response, jsonify, request
 from constants.constants import *
 from workflow.openeoprocess import OpenEOProcess
 from userinfo import UserInfo
 from processmanager import makeBaseResponseDict
 from authentication import AuthenticatedResource
 import pathlib
+import logging
 import common
+from customexception import CustomException
 
 def getMimeType(filename):
     try:
@@ -31,12 +33,18 @@ class OpenEOIPResult(AuthenticatedResource):
             errors =  process.validate()
             if len(errors) > 0:
                 raise Exception(str(errors))
-            
+            common.logMessage(logging.INFO, 'started sync: ' + process.job_id , common.process_user)
             if process.processGraph != None:
                 outputInfo = process.processGraph.run(process, None, None)
-
+                common.logMessage(logging.INFO, 'ended sync: ' + process.job_id , common.process_user)
                 return common.makeResponse(outputInfo)
-        except Exception as ex:
+        except (Exception, CustomException) as ex:
+            code = 'unknow error'
+            if isinstance(ex, CustomException):
+                code = ex.jsonErr['code']
+                message = ex.jsonErr['message']
+                common.logMessage(logging.ERROR, 'error: ' + message , common.process_user)
+                return make_response(makeBaseResponseDict(process.job_id, 'error', code, None, message),int(code))
             return make_response(makeBaseResponseDict(-1, 'error', 404, None, str(ex)),400)
         
 
