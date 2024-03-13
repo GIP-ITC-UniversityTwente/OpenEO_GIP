@@ -93,6 +93,9 @@ def errorJson(errorStringCode, id, message):
         return {"id" : id, "code" : 400, "message" : message }
 
 def makeResponse(outputInfo):
+    if outputInfo == None:
+         return  {"id" : -1, "code" : 400, "message" : 'no output information' }
+    
     if outputInfo["status"] == STATUSFINISHED:
         if outputInfo["datatype"] == DTRASTER or outputInfo["datatype"] == DTRASTERLIST :
             if len(outputInfo["value"]) ==1:
