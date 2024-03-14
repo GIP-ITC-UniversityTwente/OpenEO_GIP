@@ -47,7 +47,6 @@ def testExceptionCondition2(p, expected, func, parm1, parm2, message):
 
 def testExceptionCondition1(p, expected, func, parm1, message):
       try:
-           p = configglobals.ErrorManager()
            obj = func(parm1)
            p.isTrue(expected, message)
            return obj
@@ -57,6 +56,10 @@ def testExceptionCondition1(p, expected, func, parm1, message):
 
 class BaseTest(unittest.TestCase):
     
+    def prepare(self, testdir):
+         print('started:' + testdir)
+         
+
     def decorateFunction(self, mod, fn) :
         self.decoration = mod + " ==> " + fn 
         print("\n" + self.decoration + "\n")
