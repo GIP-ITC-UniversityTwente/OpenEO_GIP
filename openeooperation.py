@@ -230,13 +230,19 @@ class OpenEoOperation:
         log = {'type' : 'progressevent', 'job_id': job_id, 'progress' : message , 'last_updated' : timenow, 'status' : status}   
         put2Queue(processOutput, log)
     
-    def logStartOperation(self, processOutput,openeojob):
+    def logStartOperation(self, processOutput,openeojob, extraMessage=""):
         common.logMessage(logging.INFO, 'started: ' + self.name + " with job name:" + openeojob.title,common.process_user)
-        return self.logProgress(processOutput, openeojob.job_id, self.name,constants.STATUSRUNNING)
+        if extraMessage == "":
+            return self.logProgress(processOutput, openeojob.job_id, self.name ,constants.STATUSRUNNING)
+        else:
+            return self.logProgress(processOutput, openeojob.job_id, self.name + ": " + extraMessage ,constants.STATUSRUNNING)
 
-    def logEndOperation(self, processOutput,openeojob):
+    def logEndOperation(self, processOutput,openeojob, extraMessage=""):
         common.logMessage(logging.INFO, 'ended: ' + self.name + " with job name:" + openeojob.title, common.process_user)
-        return self.logProgress(processOutput, openeojob.job_id, 'finished ' + self.name,constants.STATUSFINISHED)
+        if extraMessage == "":
+            return self.logProgress(processOutput, openeojob.job_id, 'finished ' + self.name,constants.STATUSFINISHED)
+        else:
+            return self.logProgress(processOutput, openeojob.job_id, 'finished ' + self.name +": " + extraMessage,constants.STATUSFINISHED)
     
     def handleError(self, processOutput, job_id, parameter, message, code):
         self.logProgress(processOutput, job_id, message, constants.STATUSERROR )
