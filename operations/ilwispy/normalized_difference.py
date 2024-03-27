@@ -18,19 +18,27 @@ class NormalizedDifference(OpenEoOperation):
         self.rasterSizesEqual = True
         self.inputRaster1 = arguments['x']['resolved']
         self.inputRaster2 = arguments['y']['resolved']
-        if not( isinstance(self.inputRaster2, RasterData) and isinstance(self.inputRaster1, RasterData)):
-            self.handleError(toServer, job_id, 'Input raster','invalid input. rasters are not valid', 'ProcessParameterInvalid')
+        if len(self.inputRaster1) != len(self.inputRaster2):
+            self.handleError(toServer, job_id, 'Input paremeter', 'raster list must have equal length between two lists', 'ProcessParameterInvalid')
+
+        for idx in range(len(self.inputRaster1)):           
+            if not( isinstance(self.inputRaster2[idx], RasterData) and isinstance(self.inputRaster1[idx], RasterData)):
+                self.handleError(toServer, job_id, 'Input raster','invalid input. rasters are not valid', 'ProcessParameterInvalid')
         
-        self.createExtra(self.inputRaster1, 0) 
+        self.createExtra(self.inputRaster1[0], 0) 
         self.runnable = True
               
 
     def run(self,openeojob, processOutput, processInput):
         if self.runnable:
             self.logStartOperation(processOutput, openeojob)
-            outputRc = ilwis.do("mapcalc", "(@1 - @2) / (@1 + @2)", self.inputRaster1.getRaster().rasterImp(), self.inputRaster2.getRaster().rasterImp())
-            outputRasters = []                
-            outputRasters.extend(self.setOutput([outputRc], self.extra))
+            outputRasters = []
+            for idx in range(len(self.inputRaster1)): 
+                r1 = self.inputRaster1[idx]
+                r2 = self.inputRaster2[idx]
+
+                outputRc = ilwis.do("mapcalc", "(@1 - @2) / (@1 + @2)", r1.getRaster().rasterImp(), r2.getRaster().rasterImp())
+                outputRasters.extend(self.setOutput([outputRc], self.extra))
             self.logEndOperation(processOutput,openeojob)
             return createOutput(constants.STATUSFINISHED, outputRasters, constants.DTRASTERLIST)
         message = common.notRunnableError(self.name, openeojob.job_id) 
