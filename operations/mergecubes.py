@@ -2,7 +2,9 @@ from openeooperation import *
 from operationconstants import *
 from constants import constants
 from rasterdata import RasterData
-from enum import Enum
+from globals import getOperation
+from workflow.processGraph import ProcessGraph
+import copy
 
 
 class MergeCubes(OpenEoOperation):
@@ -13,33 +15,89 @@ class MergeCubes(OpenEoOperation):
         self.runnable = False
         if 'serverChannel' in arguments:
             toServer = arguments['serverChannel']
-            job_id = arguments['job_id']          
+            job_id = arguments['job_id'] 
+        self.rasterSizesEqual = True                     
         self.targetRasters = arguments['cube1']['resolved'] 
         self.mergeRasters = arguments['cube2']['resolved']
-        self.mergeCases = []
-        lenTarget = len(self.targetRasters)
-        lenMerge = len(self.mergeRasters)
-        if lenTarget != lenMerge:
-            self.handleError(toServer, job_id, 'Input raster','Raster can not be merged due to incompatible numbers', 'ProcessParameterInvalid')
-        for idx in range(lenTarget):
+        if 'overlap_resolver' in arguments:
+            self.overlap_resolver = arguments['overlap_resolver']
+        fixedCount = -1
+        fixedCount = self.checkSublayerCount(toServer, job_id, self.targetRasters, fixedCount)
+        self.checkSublayerCount(toServer, job_id, self.mergeRasters, fixedCount)
+        self.mergeCases = self.checkMergeConditions(toServer, job_id) 
+                                    
+        self.runnable = True 
+
+    def checkMergeConditions(self, toServer, job_id):
+        mergeCases = []
+        usedEpsg = -1
+        for idx in range(len(self.targetRasters)):
             targetRaster = self.targetRasters[idx]
-            mergeRaster = self.mergeRasters[idx]                            
-            self.mergeCases.append({'target' : targetRaster, 'merge': mergeRaster, 'mergeCondition' :self.determineMergeCondition(targetRaster, mergeRaster)})
-        self.runnable = True     
+            if usedEpsg == -1:
+                usedEpsg = targetRaster.epsg
+            else:
+                if usedEpsg != targetRaster.epsg:
+                    self.handleError(toServer, job_id, 'Input raster', 'merge not possible. different geometries in target cube', 'ProcessParameterInvalid')                 
+            for idx2 in range(len(self.mergeRasters)):
+                mergeRaster = self.mergeRasters[idx2]                            
+                mergeCases.append({'target' : targetRaster, 'merge': mergeRaster, 'mergeCondition' :self.determineMergeCondition(targetRaster, mergeRaster)})
+        return mergeCases
+
+    def checkSublayerCount(self, toServer, job_id, rasters, fixedCount):
+        for rd in rasters:
+            for rl in rd.layers:
+                if fixedCount == -1:
+                    fixedCount = rl.sublayerCount
+                else:
+                    if fixedCount != rl.sublayerCount:
+                        self.handleError(toServer, job_id, 'Input raster','Raster can not be merged due to incompatible count', 'ProcessParameterInvalid')    
+        return fixedCount                        
 
 
-    def run(self,openeojob, processOutput, processInput):
+    def run(self,openeojob, toServer, fromServer):
         if self.runnable:
-            return None
-        lenTarget = len(self.targetRasters)
-        for idx in range(lenTarget):
-            ilwRaster = self.targerRaster[idx].getRaster().rasterImp()
-            rcClone = ilwRaster.clone()
-            mergeRaster = self.targerRaster[idx]
-            mergeIlwRaster = mergeRaster.getRaster().rasterImp()
-            rc = ilwis.do("mergeraster", rcClone, mergeIlwRaster)
+            self.logStartOperation(toServer, openeojob)
+            outputRasters = [] 
+            allUnique = True                
+            for mc in self.mergeCases:
+                nc = mc['mergeCondition']['nameclash']
+                allUnique = allUnique and not nc
+            if allUnique:
+                for raster in self.mergeRasters:
+                    outputRasters.append(raster)
+            else:
+                if not hasattr(self, 'overlap_resolver'):
+                    self.handleError(openeojob.job_id, toServer, 'overlap_resolver', 'missing process graph', 'ProcessParameterInvalid')
 
-        return createOutput('error', "operation not runnable", constants.DTERROR)  
+                for mc in self.mergeCases:
+                    if mc['mergeCondition']['nameclash']:
+                        outputRasters.append(self.combineRasters(openeojob, toServer, fromServer, mc))
+                    else:
+                        outputRasters.append(mc['merge'])                        
+                    
+            return createOutput(constants.STATUSFINISHED, outputRasters, constants.DTRASTERLIST)
+
+        message = common.notRunnableError(self.name, openeojob.job_id)
+        return createOutput('error', message, constants.DTERROR) 
+
+    def combineRasters(self, openeojob, toServer, fromServer, mc):
+        args = []
+        args.append(mc['target'].getRaster().rasterImp())
+        args.append(mc['merge'].getRaster().rasterImp())
+        mergedRaster = self.collectRasters(args)
+        extra = self.constructExtraParams(mc['target'], mc['target'].temporalExtent, 0)
+        rasterData = RasterData()
+        rasterData.fromRasterCoverage(mergedRaster, extra )
+
+        pgraph = self.overlap_resolver['resolved']['process_graph']
+        copyPg = copy.deepcopy(pgraph)
+        first = next(iter(copyPg))
+        copyPg[first]['arguments'] = {'data' : [rasterData]}
+        process = ProcessGraph(copyPg, [rasterData], getOperation)
+        oInfo = process.run(openeojob, toServer, fromServer)  
+        return oInfo['value'][0]
+            
+        
     
     def nameUnique(self, targetBands, name):
         for targetBand in targetBands:
@@ -48,11 +106,11 @@ class MergeCubes(OpenEoOperation):
         return True
                 
     def determineMergeCondition(self, targetRaster : RasterData, mergeRaster : RasterData):
-        result = {'nameclash' : [], 'sizesEqual' : False, 'projectionsUnequal' : False}
+        result = {'nameclash' : False, 'sizesEqual' : False, 'projectionsUnequal' : False}
 
         
         for mergeBand in mergeRaster.bands:
-            result['nameclash'].append({'name': mergeBand['name'], 'unique' : self.nameUnique(targetRaster.bands,mergeBand['name']) })
+            result['nameclash'] = not self.nameUnique(targetRaster.bands,mergeBand['name']) 
 
         result['projectionsUnequal'] = targetRaster.epsg != mergeRaster.epsg
         result['sizesEqual']  = self.checkSpatialDimensions([targetRaster, mergeRaster]) 
