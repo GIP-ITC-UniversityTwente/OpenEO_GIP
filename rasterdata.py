@@ -37,6 +37,8 @@ class RasterLayer:
         self.temporalExtent = temporalMetadata['extent']
         self.dataSource = temporalMetadata['source']
         self.index = idx
+        self.textsublayers = []
+        self.sublayerCount = 1
 
 class RasterImplementation:
     def __init__(self, rasterObject):
@@ -169,6 +171,9 @@ class RasterData:
         self.layers = []
         lyr = RasterLayer()
         lyr.temporalExtent = self.temporalExtent
+        if 'textsublayers' in extraParams:
+            lyr.textsublayers = extraParams['textsublayers']
+            lyr.sublayerCount = len(lyr.textsublayers)
         lyr.dataSource = self.dataSource
         lyr.index = 0
         self.layers.append(lyr)
