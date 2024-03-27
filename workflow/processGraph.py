@@ -3,7 +3,7 @@ from openeooperation import *
 from constants import constants
 import copy
 import customexception
-##from constants.constants import *
+import rasterdata
 
 class ProcessNode :
     constants.UNDEFINED = 0
@@ -115,7 +115,7 @@ class ProcessGraph(OpenEoOperation):
 
     def resolveParameter(self, parmKey):
         if parmKey in self.processArguments:
-            return self.processArguments[parmKey]
+            return {'resolved': self.processArguments[parmKey]}
         #assume its the process builder key/name which is unknown to us as its a client something
         return {'resolved': self.processArguments[0]}
 
@@ -139,7 +139,25 @@ class NodeExecution :
                         else:            
                             resolvedValue = self.resolveNode(openeojob, toServer, fromServer, (key, definition)) 
                 else:
-                    resolvedValue = self.resolveNode(openeojob, toServer, fromServer, (key, definition))                        
+                    resolvedValues = []
+                    if isinstance(definition, list):
+                        for elem in definition:
+                            if isinstance(elem, dict):
+                               
+                                for item in elem.items():
+                                    if item[0] in self.indirectKeys:
+                                        rv = self.resolveNode(openeojob, toServer, fromServer, item)
+                                        resolvedValues.append(rv)
+                                    else:            
+                                        rv = self.resolveNode(openeojob, toServer, fromServer, (key, definition))   
+                                        resolvedValues.append(rv)
+                                resolvedValue = resolvedValues                                                              
+                            else:                                    
+                                resolvedValue = self.resolveNode(openeojob, toServer, fromServer, (key, definition))  
+
+                    else:
+                        resolvedValue = self.resolveNode(openeojob, toServer, fromServer, (key, definition))  
+                     
                 args[key]['resolved'] = resolvedValue
 
         processObj = self.processGraph.getOperation(self.processNode.process_id)
@@ -210,7 +228,7 @@ class NodeExecution :
         elif 'reducer' in parmKeyValue:
             pgraph = parmKeyValue[1]['process_graph']
             args = self.processNode.localArguments
-            self.mapcalc(args,pgraph)
+            #self.mapcalc(args,pgraph)
             process = ProcessGraph(pgraph, args, self.processGraph.getOperation)
             self.outputInfo = process.run(openeojob, toServer, fromServer)
             return self.outputInfo['value']
