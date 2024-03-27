@@ -95,7 +95,7 @@ class LoadCollectionOperation(OpenEoOperation):
         fileIdDatabase = getRasterDataSets()          
         self.inputRaster = fileIdDatabase[arguments['id']['resolved']]
         if self.inputRaster == None:
-            return "NotFound"
+            self.handleError(toServer, job_id,'input raster not found', 'ProcessParameterInvalid')
         
         self.dataSource = ''
         oldFolder = folder = self.inputRaster.dataFolder
@@ -137,7 +137,6 @@ class LoadCollectionOperation(OpenEoOperation):
                 llenv = ilwis.Envelope(ilwis.Coordinate(sect['west'], sect['south']), ilwis.Coordinate(sect['east'], sect['north']))
                 envCube = rband.coordinateSystem().convertEnvelope(csyLL, llenv)
                 e = str(envCube)
-                e2 = str(rband.coordinateSystem().latlonEnvelope())
                 self.checkOverlap(toServer, job_id,envCube, rband.envelope())
                 
                 env = e.split(' ')
@@ -170,16 +169,21 @@ class LoadCollectionOperation(OpenEoOperation):
         saveIdDatabase(fileIdDatabase)
         return folder
    
-    def byLayer(self, bandIndexes, env):
+    def byLayer(self, processOutput,openeojob, bandIndexes, env):
         outputRasters = []
         for idx in bandIndexes:
             bandIdxList = 'rasterbands(' + str(idx) + ')'
             ilwisRasters = []
+            layerTempExtent = []
             for lyrIdx in self.lyrIdxs:
                 layer = self.inputRaster.idx2layer(lyrIdx)
                 if layer != None: 
                     datapath = os.path.join(self.dataSource, layer.dataSource)
+                    layerTempExtent.append(layer.temporalExtent)
                     rband = ilwis.RasterCoverage(datapath)
+                    if rband.size() == ilwis.Size(0,0,0):
+                        self.handleError(processOutput, openeojob.job_id, 'Input raster', 'invalid sub-band:' + datapath, 'ProcessParameterInvalid')
+
                     ev = ilwis.Envelope("(" + env + ")")
                     if not ev.equalsP(rband.envelope(), 0.001, 0.001, 0.001):
                         rc = ilwis.do("selection", rband, "envelope(" + env + ") with: " + bandIdxList)
@@ -188,11 +192,14 @@ class LoadCollectionOperation(OpenEoOperation):
                         ilwisRasters.append(rband) 
 
             extra = self.constructExtraParams(self.inputRaster, self.temporalExtent, idx)
+            extra['textsublayers'] = layerTempExtent
+            extra['name'] = layer.dataSource
             outputRasters.extend(self.setOutput(ilwisRasters, extra)) 
 
+        rr = outputRasters[0].getRaster().rasterImp()
         return outputRasters                   
 
-    def byBand(self, bandIndexes, env):
+    def byBand(self, processOutput,openeojob, bandIndexes, env):
         
         outputRasters = []        
         for idx in bandIndexes:
@@ -200,6 +207,8 @@ class LoadCollectionOperation(OpenEoOperation):
            ## bandIdxList = 'rasterbands(' + str(0) + ')'
             datapath = os.path.join(self.dataSource, self.inputRaster.bands[idx]['source'])                            
             rband = ilwis.RasterCoverage(datapath)
+            if rband.size() == ilwis.Size(0,0,0):
+                self.handleError(processOutput, openeojob.job_id, 'Input raster', 'invalid band:' + datapath, 'ProcessParameterInvalid')            
             ev = ilwis.Envelope("(" + env + ")")
             if not ev.equalsP(rband.envelope(), 0.001, 0.001, 0.001):
                 rc = ilwis.do("selection", rband, "envelope(" + env + ")" )
@@ -221,12 +230,13 @@ class LoadCollectionOperation(OpenEoOperation):
             env = str(ext[0]) + " " + str(ext[2]) + "," + str(ext[1]) + " " +str(ext[3])
 
             if self.inputRaster.grouping == 'layer':
-                outputRasters = self.byLayer(indexes, env)
+                outputRasters = self.byLayer(processOutput,openeojob, indexes, env)
             if self.inputRaster.grouping == 'band':                
-                outputRasters = self.byBand(indexes, env)
+                outputRasters = self.byBand(processOutput, openeojob, indexes, env)
 
             self.logEndOperation(processOutput,openeojob,self.inputRaster.title)
             return createOutput(constants.STATUSFINISHED, outputRasters, constants.DTRASTER)
+        
         message = common.notRunnableError(self.name, openeojob.job_id) 
         return createOutput('error', message, constants.DTERROR)
            
