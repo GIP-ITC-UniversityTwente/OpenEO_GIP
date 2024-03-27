@@ -135,6 +135,8 @@ class OpenEoOperation:
     def createOutput(self, idx, ilwisRaster, extra):
         rasterData = RasterData()
         rasterData.fromRasterCoverage(ilwisRaster, extra )
+        if 'name' in extra:
+            rasterData.title = extra['name']
         return rasterData
 
     def collectRasters(self, rasters):
@@ -163,13 +165,14 @@ class OpenEoOperation:
         grf = ilwis.GeoReference(rasters[0].coordinateSystem(), rasters[0].envelope() , rasters[0].size())
         rc = ilwis.RasterCoverage()
         rc.setGeoReference(grf) 
-        rc.setSize(ilwis.Size(rc.size().xsize, rc.size().ysize, 0))
+        rc.setSize(ilwis.Size(rc.size().xsize, rc.size().ysize, len(rasters)))
         dom = ilwis.NumericDomain("code=integer")
-        #rc.setStackDefinition(dom, stackIndexes)
+        rc.setStackDefinition(dom, stackIndexes)
+        p = rc.indexes()
         rc.setDataDef(dataDefRaster)
      
-       # for index in range(0, len(rasters)):
-       #     rc.setBandDefinition(index, rasters[index].datadef())
+        for index in range(0, len(rasters)):
+           rc.setBandDefinition(index, rasters[index].datadef())
 
         return rc            
 
