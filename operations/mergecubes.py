@@ -53,15 +53,21 @@ class MergeCubes(OpenEoOperation):
                         self.handleError(toServer, job_id, 'Input raster','Raster can not be merged due to incompatible count', 'ProcessParameterInvalid')    
         return fixedCount                        
 
+   
+
 
     def run(self,openeojob, toServer, fromServer):
         if self.runnable:
             self.logStartOperation(toServer, openeojob)
             outputRasters = [] 
-            allUnique = True                
+            allUnique = True  
             for mc in self.mergeCases:
                 nc = mc['mergeCondition']['nameclash']
                 allUnique = allUnique and not nc
+                se = mc['mergeCondition']['sizesEqual']
+                if not se:
+                    resampledRaster = self.resample(mc['target'], mc['merge'])
+                    mc['merge'] = resampledRaster
             if allUnique:
                 for raster in self.mergeRasters:
                     outputRasters.append(raster)

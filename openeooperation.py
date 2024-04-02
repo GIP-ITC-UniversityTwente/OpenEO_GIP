@@ -250,6 +250,20 @@ class OpenEoOperation:
     def handleError(self, processOutput, job_id, parameter, message, code):
         self.logProgress(processOutput, job_id, message, constants.STATUSERROR )
         raise customexception.CustomException(code, job_id, parameter, message)
+    
+    def resample(self,targetRaster, sourceRaster):
+        inputRaster = targetRaster.getRaster().rasterImp() 
+        env = inputRaster.envelope()
+        pixSize = targetRaster.getRaster().pixelSize()
+        projection = 'epsg:' + str(targetRaster.epsg)
+        csy = ilwis.CoordinateSystem(projection)
+        grf = ilwis.do('createcornersgeoreference', \
+                           env.minCorner().x, env.minCorner().y, env.maxCorner().x, env.maxCorner().y, \
+                           pixSize, csy, True, '.')
+        rm = sourceRaster.getRaster().rasterImp()
+        outputRc = ilwis.do("resample", rm, grf, 'nearestneighbour')
+        self.extra = self.constructExtraParams(targetRaster, targetRaster.temporalExtent, 0)  
+        return self.setOutput([outputRc], self.extra)[0]
 
 
             
