@@ -24,7 +24,7 @@ class BaseUnarymapCalc(OpenEoOperation):
                     extra = self.constructExtraParams(ras, ras.temporalExtent, 0)
                     raster = ras.getRaster().rasterImp()
                     rasterList.append({'raster' : raster, 'extra' : extra})
-                self.parmValue = rasterList                        
+            self.parmValue = rasterList                        
                     
         else:
             if math.isnan(p1):
