@@ -115,7 +115,7 @@ class ProcessGraph(OpenEoOperation):
 
     def resolveParameter(self, parmKey):
         if parmKey in self.processArguments:
-            return {'resolved': self.processArguments[parmKey]}
+            return {'resolved': self.processArguments[parmKey]['resolved']}
         #assume its the process builder key/name which is unknown to us as its a client something
         return {'resolved': self.processArguments[0]}
 
