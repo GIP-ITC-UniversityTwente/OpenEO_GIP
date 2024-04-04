@@ -9,6 +9,7 @@ RUN pip install eoreader
 RUN pip install pystac>=1.0.0
 RUN pip install Flask-HTTPAuth
 RUN pip install pynacl
+RUN pip install jsonschema
 
 COPY /ilwis /app/packages/
 
@@ -19,6 +20,7 @@ RUN pip install pyqt5
 RUN apt-get update && apt-get install -y binutils libproj-dev gdal-bin
 RUN apt-get install libgdal-dev -y
 COPY . /app
+
 
 EXPOSE 5000
 
