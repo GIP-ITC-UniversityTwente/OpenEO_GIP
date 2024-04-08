@@ -189,19 +189,15 @@ class OpenEoOperation:
         for rc in rasters:
             if pixelSize == 0:
                 pixelSize = rc.getRaster().pixelSize()
+                extent = rc.spatialExtent                
             else:
-                if allSame:
-                    allSame = pixelSize == rc.getRaster().pixelSize()
-                spExtentTarget = rc.spatialExtent
-                if len(extent) == 0:
-                    extent = rc.spatialExtent
-                else:  
-                    extentTest = rc.spatialExtent                  
-                    allSame = {
-                            extent[0] == extentTest[0] and  
-                            extent[1] == extentTest[1] and 
-                            extent[2] == extentTest[2] and
-                            extent[3] == extentTest[3]} 
+                allSame = pixelSize == rc.getRaster().pixelSize()
+                extentTest = rc.spatialExtent                  
+                allSame = allSame and \
+                    extent[0] == extentTest[0] and \
+                    extent[1] == extentTest[1] and \
+                    extent[2] == extentTest[2] and \
+                    extent[3] == extentTest[3] 
             if not allSame:
                 break
                                                    
