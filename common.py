@@ -13,6 +13,12 @@ from zipfile import ZipFile
 import os
 from datetime import datetime
 
+possible_time_formats = [
+    "%Y-%m-%d %H:%M:%S",  # Format 1: YYYY-MM-DD HH:MM:SS
+    "%m/%d/%Y %I:%M %p",   # Format 2: MM/DD/YYYY HH:MM AM/PM
+    "%Y-%m-%d"             # Format 3: YYYY-MM-DD
+    # Add more formats as needed
+]
 lock = Lock()
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -126,4 +132,14 @@ def makeResponse(outputInfo):
             response.headers['Content-Type'] = 'string'
 
         return response
-    return None            
+    return None 
+
+
+def string2datetime(inpTimeString):
+    for fmt in possible_time_formats:
+        try:
+            parsed_datetime = datetime.strptime(inpTimeString, fmt)
+            return parsed_datetime
+        except ValueError:
+            continue  # If parsing fails, try the next format
+    return None
