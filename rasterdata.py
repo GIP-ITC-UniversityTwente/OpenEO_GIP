@@ -415,3 +415,32 @@ class RasterData:
                 
     def getRaster(self):
         return self.raster
+    
+def matchesTemporalExtent(existingLayers: list[RasterLayer], tobeCheckedLayers : list[RasterLayer]):
+    if len(existingLayers) != len(tobeCheckedLayers):
+        return False
+    for i in range(len(existingLayers)):
+        if existingLayers[i].sublayerCount != tobeCheckedLayers[i].sublayerCount:
+            return False
+        for j in range(len(existingLayers[i].textsublayers)):
+            d00 = existingLayers[i].textsublayers[j][0]
+            d01 = existingLayers[i].textsublayers[j][1]
+            d10 = tobeCheckedLayers[i].textsublayers[j][0]
+            d11 = tobeCheckedLayers[i].textsublayers[j][1]
+            if d00 != d10:
+                return False
+            if d01 != d11:
+                return False
+    return True  
+
+def matchBands(existingBands : list, toBeCheckedBands : list):
+    if len(existingBands) != len(toBeCheckedBands):
+        return False
+    for i in range(len(existingBands)):
+        b1 = existingBands[i]
+        b2 = toBeCheckedBands[i]
+        if b1['name'] != b2['name'] or b1['type'] != b2['type']:
+            return False
+
+    return True
+    
