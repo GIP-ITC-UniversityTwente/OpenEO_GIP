@@ -20,10 +20,10 @@ class FilterBands(OpenEoOperation):
             return message         
         if isinstance(self.inpData[0], RasterData):
             if 'bands' in arguments:
-                requestedBands = arguments['bands']['resolved']
+                requestedBands = arguments['eo:bands']['resolved']
                 foundCount = 0
                 for item in self.inpData:
-                    for bandItem in item.bands:
+                    for bandItem in item['eo:bands']:
                         if bandItem['name'] in requestedBands:
                             foundCount = foundCount + 1
                 if foundCount == len(requestedBands):
@@ -36,12 +36,12 @@ class FilterBands(OpenEoOperation):
             if 'wavelenghts' in arguments:
                 requestedWavelengths = arguments['wavelengths']['resolved']
 
-    def run(self,openeojob, processOutput, processInput):
+    def run(self,openeojob , processOutput, processInput):
         if self.runnable:
             self.logStartOperation(processOutput, openeojob)
             outData = []
             for raster in self.inpData:
-                    for bandItem in raster.bands:
+                    for bandItem in raster['eo:bands']:
                         if self.bands != None:
                             if bandItem['name'] in self.bands:
                                 outData.append(raster)

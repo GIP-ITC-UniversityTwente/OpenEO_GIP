@@ -29,7 +29,7 @@ class ArrayElementOperation(OpenEoOperation):
         if 'label' in arguments:
             self.bandIndex = -1
             for idx in range(len(self.inputRasters)):
-                for item in self.inputRasters[idx].bands:
+                for item in self.inputRasters[idx]['eo:bands']:
                     if item['name'] == arguments['label']['resolved']:
                         self.bandIndex = idx
                         break
@@ -40,7 +40,9 @@ class ArrayElementOperation(OpenEoOperation):
    
     def run(self,openeojob, processOutput, processInput):
         if self.runnable:
+            self.logStartOperation(processOutput, openeojob)
             outputRaster = self.inputRasters[self.bandIndex]
+            self.logEndOperation(processOutput,openeojob)
             return createOutput(constants.STATUSFINISHED, [outputRaster], constants.DTRASTER)
         
         return createOutput('error', "operation not runnable", constants.DTERROR)

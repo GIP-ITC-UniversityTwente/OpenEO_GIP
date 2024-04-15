@@ -93,7 +93,7 @@ class MergeCubes(OpenEoOperation):
         mergedRaster = self.collectRasters(args)
         extra = self.constructExtraParams(mc['target'], mc['target'].temporalExtent, 0)
         rasterData = RasterData()
-        rasterData.fromRasterCoverage(mergedRaster, extra )
+        rasterData.load(mergedRaster, 'ilwisraster', extra )
 
         pgraph = self.overlap_resolver['resolved']['process_graph']
         copyPg = copy.deepcopy(pgraph)

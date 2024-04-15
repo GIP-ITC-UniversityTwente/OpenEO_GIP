@@ -134,9 +134,9 @@ class OpenEoOperation:
 
     def createOutput(self, idx, ilwisRaster, extra):
         rasterData = RasterData()
-        rasterData.fromRasterCoverage(ilwisRaster, extra )
+        rasterData.load(ilwisRaster, 'ilwisraster', extra )
         if 'name' in extra:
-            rasterData.title = extra['name']
+            rasterData['title'] = extra['name']
         return rasterData
 
     def collectRasters(self, rasters):
@@ -180,7 +180,7 @@ class OpenEoOperation:
         att = {'type' : 'float'}
         att = {'name' : 'calculated band ' + str(idx)}
         att = {'details' : {}}
-        self.extra = { 'temporalExtent' : r.temporalExtent, 'bands' : [att], 'epsg' : r.epsg}
+        self.extra = { 'temporalExtent' : r['temporalExtent'], 'bands' : [att], 'epsg' : r['proj:epsg']}
      
     def checkSpatialDimensions(self, rasters):
         pixelSize = 0
@@ -188,11 +188,11 @@ class OpenEoOperation:
         extent = []       
         for rc in rasters:
             if pixelSize == 0:
-                pixelSize = rc.getRaster().pixelSize()
-                extent = rc.spatialExtent                
+                pixelSize = rc.getRaster().geoReference().pixelSize()
+                extent = rc['spatialExtent']               
             else:
-                allSame = pixelSize == rc.getRaster().pixelSize()
-                extentTest = rc.spatialExtent                  
+                allSame = pixelSize == rc.getRaster().geoReference().pixelSize()
+                extentTest = rc['spatialExtent']                 
                 allSame = allSame and \
                     extent[0] == extentTest[0] and \
                     extent[1] == extentTest[1] and \
@@ -220,28 +220,28 @@ class OpenEoOperation:
     def constructExtraParams(self, raster, temporalExtent, index):
          bands = []
          bands.append(raster.index2band(index))
-         extra = { 'temporalExtent' : temporalExtent, 'bands' : bands, 'epsg' : raster.epsg} 
+         extra = { 'temporalExtent' : temporalExtent, 'bands' : bands, 'epsg' : raster['proj:epsg'], 'details': bands[0]['details'], 'name' : bands[0]['name']} 
 
          return extra
     
-    def logProgress(self, processOutput, job_id, message,  status):
+    def logProgress(self, processOutput, job_id, message,  status, progress=0):
         timenow = str(datetime.now())
-        log = {'type' : 'progressevent', 'job_id': job_id, 'progress' : message , 'last_updated' : timenow, 'status' : status}   
+        log = {'type' : 'progressevent', 'job_id': job_id, 'progress' : message , 'last_updated' : timenow, 'status' : status, 'progress' : progress, 'current_operation' : self.name}   
         put2Queue(processOutput, log)
     
     def logStartOperation(self, processOutput,openeojob, extraMessage=""):
         common.logMessage(logging.INFO, 'started: ' + self.name + " with job name:" + openeojob.title,common.process_user)
         if extraMessage == "":
-            return self.logProgress(processOutput, openeojob.job_id, self.name ,constants.STATUSRUNNING)
+            return self.logProgress(processOutput, openeojob.job_id, self.name ,constants.STATUSRUNNING, 0)
         else:
-            return self.logProgress(processOutput, openeojob.job_id, self.name + ": " + extraMessage ,constants.STATUSRUNNING)
+            return self.logProgress(processOutput, openeojob.job_id, self.name + ": " + extraMessage ,constants.STATUSRUNNING, 0)
 
     def logEndOperation(self, processOutput,openeojob, extraMessage=""):
         common.logMessage(logging.INFO, 'ended: ' + self.name + " with job name:" + openeojob.title, common.process_user)
         if extraMessage == "":
-            return self.logProgress(processOutput, openeojob.job_id, 'finished ' + self.name,constants.STATUSFINISHED)
+            return self.logProgress(processOutput, openeojob.job_id, 'finished ' + self.name,constants.STATUSFINISHED,100)
         else:
-            return self.logProgress(processOutput, openeojob.job_id, 'finished ' + self.name +": " + extraMessage,constants.STATUSFINISHED)
+            return self.logProgress(processOutput, openeojob.job_id, 'finished ' + self.name +": " + extraMessage,constants.STATUSFINISHED,100)
     
     def handleError(self, processOutput, job_id, parameter, message, code):
         self.logProgress(processOutput, job_id, message, constants.STATUSERROR )
@@ -269,7 +269,7 @@ def createOutput(status, value, datatype, format='')        :
 
 def messageProgress(processOutput, job_id, progress) :
     if processOutput != None:
-        processOutput.put({'type': 'progressevent','progress' : progress, 'job_id' : job_id, 'status' : constants.STATUSRUNNING}) 
+        processOutput.put({'type': 'progressevent','progress' : progress, 'job_id' : job_id, 'status' : constants.STATUSRUNNING, 'current_operation' : 'dummy'}) 
 
 
 

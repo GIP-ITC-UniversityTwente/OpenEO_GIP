@@ -57,12 +57,12 @@ def loadCollections():
                         try:
                             raster = RasterData()                    
 
-                            if Path(fullPath).suffix == ".metadata":
-                                raster.fromMetadataFile(fullPath)
+                            if Path(fullPath).suffix != ".metadata":
+                                raster.load(fullPath, 'eoreader', extraMetadataAll)
                             else:    
-                                raster.fromEoReader(fullPath)
+                                raster.load(fullPath, 'metadata')
 
-                            if raster.id != None:
+                            if raster['id'] != None:
                                 globalsSingleton.insertRasterInDatabase(raster) 
                                    
                         except Exception as ex:

@@ -11,7 +11,7 @@ class IfOperation(OpenEoOperation):
         def checkData(self, data):
 
                 if type(data) is RasterData:
-                        extra = self.constructExtraParams(data, data.temporalExtent, 0)
+                        extra = self.constructExtraParams(data, data['temporalExtent'], 0)
                         raster = data.getRaster().rasterImp()
                         return {'raster' : raster, 'extra' : extra}
 

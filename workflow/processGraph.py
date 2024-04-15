@@ -44,13 +44,8 @@ class ProcessGraph(OpenEoOperation):
         for processKey,processValues in source_graph.items():
             grNode = ProcessNode(self, processValues, processKey)
             self.processGraph[processKey] = grNode
-            
-        self.determineOutputNodes(self.processGraph)
 
-    def determineOutputNodes(self, nodes):
-        for node in nodes.items():
-            if hasattr(node[1], 'result'):
-                self.outputNodes.append(node)
+        self.determineOutputNodes(self.processGraph)
 
     def validateNode(self, node):
         errors = []

@@ -2,6 +2,7 @@ from openeooperation import *
 from operationconstants import *
 from constants import constants
 
+
 import openeo
 
 
@@ -35,9 +36,9 @@ class ResampleSpatial(OpenEoOperation):
         for r in data:
             if r.isValid():
                 if type(r) is RasterData:
-                    self.extra = self.constructExtraParams(r, r.temporalExtent, 0)                 
-                    self.inputRaster = r.getRaster().rasterImp()                  
-                    pixSize = r.getRaster().pixelSize()
+                    self.extra = self.constructExtraParams(r, r['temporalExtent'], 0)                 
+                    self.inputRaster = r.getRaster()                  
+                    pixSize = r.getRaster().geoReference().pixelSize()
                     if pixSize == 0:
                         self.pixelSize = pixSize
                     else:
@@ -60,12 +61,12 @@ class ResampleSpatial(OpenEoOperation):
 
               
 
-    def run(self,openeojob, processOutput, processInput):
+    def run(self,openeojob , processOutput, processInput):
         if self.runnable:
             self.logStartOperation(processOutput, openeojob)
-            put2Queue(processOutput, {'progress' : 0, 'job_id' : openeojob.job_id, 'status' : 'running'})
+            ##put2Queue(processOutput, {'progress' : 0, 'job_id' : openeojob.job_id, 'status' : 'running'})
             
-            env = self.inputRaster.envelope()
+            env : ilwis.Envelope = self.inputRaster.envelope()
             grf = ilwis.do('createcornersgeoreference', \
                            env.minCorner().x, env.minCorner().y, env.maxCorner().x, env.maxCorner().y, \
                            self.pixelSize, self.csy, True, '.')
@@ -73,7 +74,7 @@ class ResampleSpatial(OpenEoOperation):
             outputRc = ilwis.do("resample", self.inputRaster, grf, self.method)
             outputRasters = []                
             outputRasters.extend(self.setOutput([outputRc], self.extra))
-            put2Queue(processOutput,{'progress' : 100, 'job_id' : openeojob.job_id, 'status' : 'finished'}) 
+            ##put2Queue(processOutput,{'progress' : 100, 'job_id' : openeojob.job_id, 'status' : 'finished'}) 
             self.logEndOperation(processOutput,openeojob)
             return createOutput(constants.STATUSFINISHED, outputRasters, constants.DTRASTER)  
         message = common.notRunnableError(self.name, openeojob.job_id) 

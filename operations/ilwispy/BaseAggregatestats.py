@@ -37,9 +37,9 @@ class BaseAggregateData(OpenEoOperation):
             if hasattr(self, 'rasters'):
                 outputRasters = []
                 for rc in self.rasters:
-                    raster = rc.getRaster().rasterImp()
+                    raster = rc.getRaster()
                     outputRc = ilwis.do("aggregaterasterstatistics", raster,self.method)
-                    extra = self.constructExtraParams(rc, rc.temporalExtent, 0)
+                    extra = self.constructExtraParams(rc, rc['temporalExtent'], 0)
                     outputRasters.extend(self.setOutput([outputRc], extra))
 
                 self.logEndOperation(processOutput,openeojob)

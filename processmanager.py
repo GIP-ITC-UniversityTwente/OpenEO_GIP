@@ -52,6 +52,7 @@ class OutputInfo:
         self.code = ''
         self.message = ''
         self.availableStart = None
+        self.current_operation = '?'
 
     def isFinished(self):
         return self.progress == 1
@@ -161,7 +162,12 @@ class ProcessManager:
                     if job_id == None or ( job_id == str(value.eoprocess.job_id)):
                         dict = value.eoprocess.toDict( job_id == None)
                         dict['haserror'] = False
-                        dict['progress'] = value.progress
+                        ## the operation actually running is piggybagged in the progess string as
+                        ## this string is in practive less usefull as it is on a poling timer so progress may be 'lost' as message
+                        if value.current_operation != '?':
+                           dict['progress'] = value.current_operation
+                        else:                            
+                            dict['progress'] = value.progress
                         dict['updated'] = str(value.last_updated)
                         dict['status'] = value.status
                         if value.status == constants.STATUSJOBDONE:
@@ -287,6 +293,7 @@ class ProcessManager:
                 if type == 'progressevent':
                     self.outputs[job_id].progress = item['progress']
                     self.outputs[job_id].last_updated = datetime.now()
+                    self.outputs[job_id].current_operation = item['current_operation']
                     if item['status'] == constants.STATUSJOBDONE:
                         self.outputs[job_id].status = constants.STATUSJOBDONE
                     if item['status'] == constants.STATUSERROR:

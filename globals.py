@@ -70,7 +70,7 @@ class Globals :
                 self.databseConn.close()
 
     def insertRasterInDatabase(self, raster):
-        self.internal_database[raster.id] = raster
+        self.internal_database[raster['id']] = raster
 
     def filepath2raster(self, filename):
         items = self.internal_database.items()
@@ -90,8 +90,8 @@ class Globals :
             p = item[0]
             if p == id:
                 raster = item[1]
-                mttime = datetime.datetime.fromtimestamp(os.path.getmtime(raster.dataSource))
-                if mttime == raster.lastmodified:
+                mttime = datetime.datetime.fromtimestamp(os.path.getmtime(raster['dataSource']))
+                if mttime == raster['lastmodified']:
                     return raster
         return None        
     

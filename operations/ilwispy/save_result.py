@@ -20,7 +20,7 @@ class SaveResultOperation(OpenEoOperation):
 
               
 
-    def run(self,openeojob, processOutput, processInput):
+    def run(self,openeojob , processOutput, processInput):
         if self.runnable:
             self.logStartOperation(processOutput, openeojob)
             filePath = openeoip_config['data_locations']['root_user_data_location']
@@ -30,11 +30,11 @@ class SaveResultOperation(OpenEoOperation):
             env = ilwis.Envelope()
             if self.data != None:
                 for d in self.data:
-                    name = d.getRaster().name()
+                    name = d['title']
                     name = name.replace('_ANONYMOUS', 'raster')
                     outpath = filePath + '/' + name
-                    d.getRaster().rasterImp().store("file://" + outpath,self.format, "gdal")
-                    envTemp = d.getRaster().rasterImp().envelope()
+                    d.getRaster().store("file://" + outpath,self.format, "gdal")
+                    envTemp = d.getRaster().envelope()
                     if not env:
                         env = envTemp
                     else:

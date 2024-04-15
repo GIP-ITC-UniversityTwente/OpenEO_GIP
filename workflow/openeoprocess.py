@@ -47,7 +47,7 @@ class OpenEOParameter:
                     self.spatial_organization.append((tp, get('axis', dimensions, '')))
                 if tp == 'geometry':
                     self.spatial_organization.append((tp, get('geometry', dimensions, '')))
-                if tp in ['bands', 'temporal', 'other']:
+                if tp in ['eo:bands', 'temporal', 'other']:
                     self.spatial_organization.append(tp, tp)
 
     def toDict(self):
@@ -214,7 +214,7 @@ class OpenEOProcess(multiprocessing.Process):
                 timeEnd = str(datetime.now())
                 if 'spatialextent' in outputinfo:
                     self.spatialextent = outputinfo['spatialextent']
-                log = {'type' : 'progressevent', 'job_id': self.job_id, 'progress' : 'job finished' , 'last_updated' : timeEnd, 'status' : constants.STATUSJOBDONE}   
+                log = {'type' : 'progressevent', 'job_id': self.job_id, 'progress' : 'job finished' , 'last_updated' : timeEnd, 'status' : constants.STATUSJOBDONE, 'current_operation' : '?'}   
                 toServer.put(log)
                 if outputinfo != None:
                     if outputinfo['status'] == constants.STATUSSTOPPED:
@@ -239,7 +239,7 @@ class OpenEOProcess(multiprocessing.Process):
                     message = ex.jsonErr['message']
                 else:                    
                     message = 'failed job_id: ' + self.job_id + " with error " + str(ex)
-                log = {'type' : 'progressevent', 'job_id': self.job_id, 'progress' : 'job finished' , 'last_updated' : timeEnd, 'status' : constants.STATUSERROR, 'message': message, 'code': code}   
+                log = {'type' : 'progressevent', 'job_id': self.job_id, 'progress' : 'job finished' , 'last_updated' : timeEnd, 'status' : constants.STATUSERROR, 'message': message, 'code': code, 'current_operation' : '?'}   
                 toServer.put(log)
                 common.logMessage(logging.ERROR,message,common.process_user)    
     

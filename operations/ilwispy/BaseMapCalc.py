@@ -21,8 +21,8 @@ class BaseUnarymapCalc(OpenEoOperation):
             rasterList = []
             for ras in p1:
                 if type(ras) is RasterData:
-                    extra = self.constructExtraParams(ras, ras.temporalExtent, 0)
-                    raster = ras.getRaster().rasterImp()
+                    extra = self.constructExtraParams(ras, ras['temporalExtent'], 0)
+                    raster = ras.getRaster()
                     rasterList.append({'raster' : raster, 'extra' : extra})
             self.parmValue = rasterList                        
                     
@@ -39,7 +39,7 @@ class BaseUnarymapCalc(OpenEoOperation):
     def base_run(self,openeojob, processOutput, processInput):
         if self.runnable:
             self.logStartOperation(processOutput, openeojob)
-            put2Queue(processOutput, {'progress' : 0, 'job_id' : openeojob.job_id, 'status' : 'running'})
+            ##put2Queue(processOutput, {'progress' : 0, 'job_id' : openeojob.job_id, 'status' : 'running'})
             if isinstance(self.parmValue, list):
                 outputRasters = []                                
                 for item in self.parmValue:
@@ -51,7 +51,7 @@ class BaseUnarymapCalc(OpenEoOperation):
                 c = eval('math.' + self.operation + '(' + self.parmValue + ')')
                 out = createOutput(constants.STATUSFINISHED, c, constants.DTNUMBER)
             self.logEndOperation(processOutput,openeojob)
-            put2Queue(processOutput,{'progress' : 100, 'job_id' : openeojob.job_id, 'status' : 'finished'}) 
+            ##put2Queue(processOutput,{'progress' : 100, 'job_id' : openeojob.job_id, 'status' : 'finished'}) 
             return out
         message = common.notRunnableError(self.name, openeojob.job_id)   
         return createOutput('error', message, constants.DTERROR)
@@ -100,7 +100,7 @@ class BaseBinarymapCalcBase(OpenEoOperation):
         for idx in range(len(rasters)):
             r = rasters[idx]
             self.createExtra(r, idx) 
-            rasterImpl = r.getRaster().rasterImp()
+            rasterImpl = r.getRaster()
             rasterImpls.append(rasterImpl)
         return rasterImpls            
 
@@ -109,7 +109,7 @@ class BaseBinarymapCalcBase(OpenEoOperation):
     def base_run(self,openeojob, processOutput, processInput):
         if self.runnable:
             self.logStartOperation(processOutput, openeojob)
-            put2Queue(processOutput, {'progress' : 0, 'job_id' : openeojob.job_id, 'status' : 'running'})
+            ##put2Queue(processOutput, {'progress' : 0, 'job_id' : openeojob.job_id, 'status' : 'running'})
 
             outputRasters = [] 
             oper = '@1' + self.operation + '@2' 
@@ -142,7 +142,7 @@ class BaseBinarymapCalcBase(OpenEoOperation):
               
                 
             self.logEndOperation(processOutput,openeojob)
-            put2Queue(processOutput,{'progress' : 100, 'job_id' : openeojob.job_id, 'status' : 'finished'}) 
+            ##put2Queue(processOutput,{'progress' : 100, 'job_id' : openeojob.job_id, 'status' : 'finished'}) 
             return out
         common.notRunnableError(openeojob.job_id)   
         return createOutput('error', "operation no runnable", constants.DTERROR)                        

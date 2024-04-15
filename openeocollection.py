@@ -3,7 +3,7 @@ from flask_restful import Resource
 from globals import globalsSingleton
 from eoreader.bands import *
 from openeocollections import loadCollections
-from rasterdata import RasterData
+#from rasterdata import RasterData
 from processmanager import makeBaseResponseDict
 import logging
 import common

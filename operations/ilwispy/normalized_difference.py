@@ -37,7 +37,7 @@ class NormalizedDifference(OpenEoOperation):
                 r1 = self.inputRaster1[idx]
                 r2 = self.inputRaster2[idx]
 
-                outputRc = ilwis.do("mapcalc", "(@1 - @2) / (@1 + @2)", r1.getRaster().rasterImp(), r2.getRaster().rasterImp())
+                outputRc = ilwis.do("mapcalc", "(@1 - @2) / (@1 + @2)", r1.getRaster(), r2.getRaster())
                 outputRasters.extend(self.setOutput([outputRc], self.extra))
             self.logEndOperation(processOutput,openeojob)
             return createOutput(constants.STATUSFINISHED, outputRasters, constants.DTRASTERLIST)
