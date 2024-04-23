@@ -73,7 +73,7 @@ class MergeCubes(OpenEoOperation):
                     outputRasters.append(raster)
             else:
                 if not hasattr(self, 'overlap_resolver'):
-                    self.handleError(openeojob.job_id, toServer, 'overlap_resolver', 'missing process graph', 'ProcessParameterInvalid')
+                    self.handleError(toServer, openeojob.job_id, 'overlap_resolver', 'missing process graph', 'ProcessParameterInvalid')
 
                 for mc in self.mergeCases:
                     if mc['mergeCondition']['nameclash']:
