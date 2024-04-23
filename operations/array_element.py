@@ -17,33 +17,60 @@ class ArrayElementOperation(OpenEoOperation):
         if 'serverChannel' in arguments:
             toServer = arguments['serverChannel']
             job_id = arguments['job_id']
-            
-        self.inputRasters = arguments['data']['resolved'] 
-        if self.inputRasters == None:
-            self.handleError(toServer, job_id, 'Input raster','No input raster found', 'ProcessParameterInvalid')
+        self.inputRasters = None
 
-        if 'index' in arguments:
-            self.bandIndex = arguments['index']['resolved']  
-            if len(self.inputRasters) <= self.bandIndex:
-                self.handleError(toServer, job_id, 'band index',"Number of raster bands doesnt match given index", 'ProcessParameterInvalid')
-        if 'label' in arguments:
+        inpData = arguments['data']['resolved'] 
+        if not isinstance(inpData, list) and len(inpData > 0):
+             self.handleError(toServer, job_id, 'Input raster','Invalid input list', 'ProcessParameterInvalid')  
+        self.rasterCase = isinstance(inpData[0], RasterData)
+        if self.rasterCase:
+            self.inputRasters = inpData
+            if self.inputRasters == None:
+                self.handleError(toServer, job_id, 'Input raster','No input raster found', 'ProcessParameterInvalid')
             self.bandIndex = -1
-            for idx in range(len(self.inputRasters)):
-                for item in self.inputRasters[idx]['eo:bands']:
-                    if item['name'] == arguments['label']['resolved']:
-                        self.bandIndex = idx
-                        break
-            if self.bandIndex == -1:
-                self.handleError(toServer, job_id, 'band label',"label can't be found", 'ProcessParameterInvalid')
+            if isinstance(inpData[0], RasterData):
+                idx = self.args2bandIndex(toServer, job_id, inpData, arguments )
+                if idx == -1:
+                    self.handleError(toServer, job_id, 'band label or index',"label or index can't be found", 'ProcessParameterInvalid')
+                self.inputRasters = inpData                
+                self.bandIndex = idx  
+            
+
+        else:
+            self.array1 = inpData
+            self.index = arguments['index']['resolved'] 
+            if self.index >= len(self.array1):
+                self.handleError(toServer, job_id, 'index',"greater than length list/array", 'ProcessParameterInvalid') 
+        
         self.runnable = True
 
    
     def run(self,openeojob, processOutput, processInput):
         if self.runnable:
             self.logStartOperation(processOutput, openeojob)
-            outputRaster = self.inputRasters[self.bandIndex]
-            self.logEndOperation(processOutput,openeojob)
-            return createOutput(constants.STATUSFINISHED, [outputRaster], constants.DTRASTER)
+            if self.rasterCase:
+                outputRaster = self.inputRasters[self.bandIndex]
+                self.logEndOperation(processOutput,openeojob)
+                return createOutput(constants.STATUSFINISHED, [outputRaster], constants.DTRASTER)
+            else:
+                a = self.array1[self.index]
+                t = DTUNKNOWN
+                if isinstance(a, int):
+                    t = DTINTEGER
+                if  isinstance(a, float):                    
+                    t = DTFLOAT
+                if  isinstance(a, str):
+                    t = DTSTRING                    
+                if  isinstance(a, list):
+                    t == DTLIST
+                if  isinstance(a, bool):
+                    t == DTBOOL 
+                if  isinstance(a, dict):
+                    t == DTDICT 
+                if  isinstance(a, RasterData):
+                    t == DTRASTER                                         
+
+                return createOutput(constants.STATUSFINISHED, a, t)
         
         return createOutput('error', "operation not runnable", constants.DTERROR)
            
