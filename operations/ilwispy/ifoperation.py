@@ -56,5 +56,5 @@ class IfOperation(OpenEoOperation):
         
                 return createOutput('error', "operation no runnable", constants.DTERROR)  
 
-def registerOperation():
-     return IfOperation()    
+##def registerOperation():
+##     return IfOperation()    
