@@ -163,7 +163,7 @@ class ProcessManager:
                         dict = value.eoprocess.toDict( job_id == None)
                         dict['haserror'] = False
                         ## the operation actually running is piggybagged in the progess string as
-                        ## this string is in practive less usefull as it is on a poling timer so progress may be 'lost' as message
+                        ## this string is in practice less usefull as it is on a polling timer so progress may be 'lost' as message
                         if value.current_operation != '?':
                            dict['progress'] = value.current_operation
                         else:                            
