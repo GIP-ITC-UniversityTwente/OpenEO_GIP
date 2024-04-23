@@ -279,6 +279,8 @@ class OpenEoOperation:
     
     def type2type(a):
         t = DTUNKNOWN
+        if a == None:
+            return t
         if isinstance(a, int):
             t = DTINTEGER
         elif  isinstance(a, float):                    
