@@ -61,11 +61,12 @@ class BaseBinarymapCalcBase(OpenEoOperation):
         try:
             self.runnable = False
             self.rasterSizesEqual = True
+            if 'serverChannel' in arguments:
+                toServer = arguments['serverChannel']
+                job_id = arguments['job_id']
 
             if len(arguments) != 4: ##x,y,serverchannel, job_id
-                message =  "number of parameters is not correct in operation:" + self.name
-                common.logMessage(logging.ERROR,message,common.process_user)
-                return  createOutput(False,message,  constants.DTERROR)
+                self.handleError(toServer,job_id, 'band math', "number of parameters is not correct in operation", 'ProcessParameterInvalid')
             it = iter(arguments)
             self.p1 = arguments[next(it)]['resolved']
             self.p2 = arguments[next(it)]['resolved']
@@ -74,15 +75,10 @@ class BaseBinarymapCalcBase(OpenEoOperation):
 
             if not self.ismaps1: 
                 if math.isnan(self.p1):
-                    message =  "the parameter a is not a number in operation:" + self.name
-                    common.logMessage(logging.ERROR, message,common.process_user)
-                    return createOutput(False, message, constants.DTERROR)
+                    self.handleError(toServer,job_id, 'band math', "the parameter a is not a number in operation", 'ProcessParameterInvalid')
             if not self.ismaps2:
                 if math.isnan(self.p2):
-                    message =  "the parameter b is not a number in operation:" + self.name
-                    common.logMessage(logging.ERROR, message,common.process_user)
-                    return createOutput(False, message, constants.DTERROR)                             
-    
+                    self.handleError(toServer,job_id, 'band math', "the parameter a is not a number in operation", 'ProcessParameterInvalid')
             self.runnable = True
 
             if self.ismaps1:
@@ -100,8 +96,10 @@ class BaseBinarymapCalcBase(OpenEoOperation):
         for idx in range(len(rasters)):
             r = rasters[idx]
             self.createExtra(r, idx) 
-            rasterImpl = r.getRaster()
-            rasterImpls.append(rasterImpl)
+            for band in r['eo:bands']:
+                rasterImpl = r.getRaster(band)
+                if rasterImpl:
+                    rasterImpls.append(rasterImpl)
         return rasterImpls            
 
    
