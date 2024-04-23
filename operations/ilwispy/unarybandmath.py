@@ -239,6 +239,7 @@ def registerOperation():
      funcs.append(TanHOperation())
      funcs.append(LnOperation())             
      funcs.append(PowerOperation())
-     funcs.append(SqrtOperation())     
+     funcs.append(SqrtOperation())    
+     funcs.append(ExpOperation())     
 
      return funcs
