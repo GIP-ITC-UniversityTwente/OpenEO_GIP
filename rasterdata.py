@@ -213,10 +213,10 @@ class RasterData(dict):
             layer['temporalExtent'] = self['temporalExtent']
             layer['layerIndex'] = 0 
             lyrs['all'] = layer           
-            for index in range(1, len(textsublayers)):
+            for index in range(0, len(textsublayers)):
                 layer = RasterLayer() 
                 layer['source'] = '' # calculated or derived product there is no source
-                layer['temporalExtent'] = extraParams['temporalExtent']
+                layer['temporalExtent'] = textsublayers[index]
                 layer['layerIndex'] = index
                 layer['eo:cloud_cover'] = 0                
                 lyrs[str(layer['temporalExtent'])] = layer
@@ -363,6 +363,8 @@ class RasterData(dict):
                 first = parser.parse(temporalExtent[0])
                 last = parser.parse(temporalExtent[1])
                 for layer in self['layers'].items():
+                    if layer[0] == 'all':
+                        continue
                     layerTempFirst = parser.parse(layer[1]['temporalExtent'][0])
                     layerTempLast = parser.parse(layer[1]['temporalExtent'][1])
                     if layerTempFirst >=  first and layerTempLast <= last:
@@ -437,6 +439,8 @@ class RasterLayer(dict):
         self.temporalExtent = temporalMetadata['extent']
         self.dataSource = temporalMetadata['source']
         self.index = idx
+
+   
 
 """
     def toDict(self):
