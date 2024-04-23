@@ -276,6 +276,24 @@ class OpenEoOperation:
         outputRc = ilwis.do("resample", rm, grf, 'nearestneighbour')
         self.extra = self.constructExtraParams(targetRaster, targetRaster.temporalExtent, 0)  
         return self.setOutput([outputRc], self.extra)[0]
+    
+    def type2type(a):
+        t = DTUNKNOWN
+        if isinstance(a, int):
+            t = DTINTEGER
+        elif  isinstance(a, float):                    
+            t = DTFLOAT
+        elif  isinstance(a, str):
+            t = DTSTRING                    
+        elif  isinstance(a, list):
+            t == DTLIST
+        elif  isinstance(a, bool):
+            t == DTBOOL 
+        elif  isinstance(a, dict):
+            t == DTDICT 
+        elif  isinstance(a, RasterData):
+            t == DTRASTER 
+        return t                            
 
 
             

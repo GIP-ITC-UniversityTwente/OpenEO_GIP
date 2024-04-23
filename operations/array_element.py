@@ -54,23 +54,7 @@ class ArrayElementOperation(OpenEoOperation):
                 return createOutput(constants.STATUSFINISHED, [outputRaster], constants.DTRASTER)
             else:
                 a = self.array1[self.index]
-                t = DTUNKNOWN
-                if isinstance(a, int):
-                    t = DTINTEGER
-                if  isinstance(a, float):                    
-                    t = DTFLOAT
-                if  isinstance(a, str):
-                    t = DTSTRING                    
-                if  isinstance(a, list):
-                    t == DTLIST
-                if  isinstance(a, bool):
-                    t == DTBOOL 
-                if  isinstance(a, dict):
-                    t == DTDICT 
-                if  isinstance(a, RasterData):
-                    t == DTRASTER                                         
-
-                return createOutput(constants.STATUSFINISHED, a, t)
+                return createOutput(constants.STATUSFINISHED, a, self.type2type(a))
         
         return createOutput('error', "operation not runnable", constants.DTERROR)
            
