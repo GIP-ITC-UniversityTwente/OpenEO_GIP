@@ -23,9 +23,11 @@ class ArrayCreate(OpenEoOperation):
 
     def run(self,openeojob, processOutput, processInput):
         if self.runnable:
+            self.logStartOperation(processOutput, openeojob)
             a = []
             for i in range(self.repeat):
                 a = a + self.array
+            self.logEndOperation(processOutput,openeojob)                
             return createOutput(constants.STATUSFINISHED, a, DTLIST)
         
         return createOutput('error', "operation no runnable", constants.DTERROR )  

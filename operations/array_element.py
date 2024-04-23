@@ -54,6 +54,7 @@ class ArrayElementOperation(OpenEoOperation):
                 return createOutput(constants.STATUSFINISHED, [outputRaster], constants.DTRASTER)
             else:
                 a = self.array1[self.index]
+                self.logEndOperation(processOutput,openeojob)
                 return createOutput(constants.STATUSFINISHED, a, self.type2type(a))
         
         return createOutput('error', "operation not runnable", constants.DTERROR)
