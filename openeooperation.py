@@ -147,8 +147,7 @@ class OpenEoOperation:
 
         for index in range(0, len(rasters)):
             iter = rasters[index].begin()
-            ilwisRaster.addBand(index, iter)
-
+            ilwisRaster.addBand(index, iter) ## will add to the end
         return ilwisRaster
 
     def createNewRaster(self, rasters):
@@ -168,7 +167,6 @@ class OpenEoOperation:
         rc.setSize(ilwis.Size(rc.size().xsize, rc.size().ysize, len(rasters)))
         dom = ilwis.NumericDomain("code=integer")
         rc.setStackDefinition(dom, stackIndexes)
-        p = rc.indexes()
         rc.setDataDef(dataDefRaster)
      
         for index in range(0, len(rasters)):
@@ -216,6 +214,23 @@ class OpenEoOperation:
                     count = count + 1
 
         return outputRasters 
+    
+    def args2bandIndex(self, toServer, job_id, rasterDatas, arguments):
+        bandIndex = -1
+        if 'index' in arguments:
+            bandIndex = arguments['index']['resolved']  
+            if len(rasterDatas) <= bandIndex:
+                self.handleError(toServer, job_id, 'band index',"Number of raster bands doesnt match given index", 'ProcessParameterInvalid')
+            return bandIndex
+                        
+        if 'label' in arguments:
+            for idx in range(len(rasterDatas)):
+                for item in rasterDatas[idx]['eo:bands'].values():
+                    if item['name'] == arguments['label']['resolved']:
+                        return idx
+                        break
+        return bandIndex
+      
 
     def constructExtraParams(self, raster, temporalExtent, index):
          bands = []
@@ -244,6 +259,7 @@ class OpenEoOperation:
             return self.logProgress(processOutput, openeojob.job_id, 'finished ' + self.name +": " + extraMessage,constants.STATUSFINISHED,100)
     
     def handleError(self, processOutput, job_id, parameter, message, code):
+        message = message + ": " + self.name
         self.logProgress(processOutput, job_id, message, constants.STATUSERROR )
         raise customexception.CustomException(code, job_id, parameter, message)
     
