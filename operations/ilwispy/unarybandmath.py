@@ -218,7 +218,18 @@ class ExpOperation(BaseUnarymapCalc):
         return ""
 
     def run(self,openeojob, processOutput, processInput):
-        return self.base_run(openeojob, processOutput, processInput)           
+        return self.base_run(openeojob, processOutput, processInput) 
+
+class NotOperation(BaseUnarymapCalc):
+    def __init__(self):
+        self.loadOpenEoJsonDef('not.json')
+
+    def prepare(self, arguments):
+        self.base_prepare(arguments, 'not')
+        return ""
+
+    def run(self,openeojob, processOutput, processInput):
+        return self.base_run(openeojob, processOutput, processInput)                  
 
 def registerOperation():
      funcs = []
@@ -241,5 +252,6 @@ def registerOperation():
      funcs.append(PowerOperation())
      funcs.append(SqrtOperation())    
      funcs.append(ExpOperation())     
+     funcs.append(NotOperation())  
 
      return funcs
