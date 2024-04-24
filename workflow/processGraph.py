@@ -135,6 +135,7 @@ class NodeExecution :
                             resolvedValue = self.resolveNode(openeojob, toServer, fromServer, (key, definition)) 
                 else:
                     resolvedValues = []
+                    resolvedValue = []
                     if isinstance(definition, list):
                         for elem in definition:
                             if isinstance(elem, dict) and not isinstance(elem, RasterData):
