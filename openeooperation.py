@@ -277,7 +277,7 @@ class OpenEoOperation:
         self.extra = self.constructExtraParams(targetRaster, targetRaster.temporalExtent, 0)  
         return self.setOutput([outputRc], self.extra)[0]
     
-    def type2type(a):
+    def type2type(self, a):
         t = DTUNKNOWN
         if a == None:
             return t
@@ -297,7 +297,10 @@ class OpenEoOperation:
             t == DTRASTER 
         return t                            
 
-
+    def getMandatoryParam(self, toServer, job_id, args, key):
+        if key in args:
+            return args[key]['resolved']
+        self.handleError(toServer, job_id, "parameter", "missing parameter:" + key, 'ProcessParameterInvalid')
             
 
 def createOutput(status, value, datatype, format='')        :
