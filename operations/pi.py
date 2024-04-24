@@ -3,9 +3,9 @@ from operationconstants import *
 from constants import constants
 
 
-class E(OpenEoOperation):
+class Pi(OpenEoOperation):
     def __init__(self):
-        self.loadOpenEoJsonDef('e.json')
+        self.loadOpenEoJsonDef('pi.json')
         self.kind = constants.PDPREDEFINED
                         
 
@@ -15,11 +15,11 @@ class E(OpenEoOperation):
     def run(self,openeojob, processOutput, processInput):
         if self.runnable:
             self.logStartOperation(processOutput, openeojob)
-            e = 2.71828182845904523536028747135266249
+            pi = 3,14159265358979323846
             self.logEndOperation(processOutput,openeojob)                      
-            return createOutput(constants.STATUSFINISHED, e, DTFLOAT)
+            return createOutput(constants.STATUSFINISHED, pi, DTFLOAT)
         
         return createOutput('error', "operation no runnable", constants.DTERROR )  
 
 def registerOperation():
-   return E()   
+   return Pi()   
