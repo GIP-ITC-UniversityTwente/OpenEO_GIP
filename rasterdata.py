@@ -96,6 +96,7 @@ class RasterData(dict):
         self.setSummariesValue('constellation', prod.stac)
         self.setSummariesValue('instrument', prod)
         self['eo:cloud_cover'] = prod.get_cloud_cover()  
+        self['rasterImplementation'] = {}
          
 
         bands = {}
@@ -104,7 +105,6 @@ class RasterData(dict):
             band = RasterBand()
             band.fromEoReader(eoband, bandIndex)
             if eoband[1] != None:
-                band['rasterImplementation'] = None     
                 bands[band['name']] = band
                 bandIndex = bandIndex + 1 
 
@@ -154,6 +154,7 @@ class RasterData(dict):
         self['spatialExtent'] = [xext[0], xext[1], yext[0], yext[1]]
         self['eo:bands'] = {}
         self['eo:cloud_cover'] = DTUNKNOWN
+        self['rasterImplementation'] = {}
         
         bands = getMandatoryValue("bands", ext)
         bdns = {}
@@ -164,7 +165,6 @@ class RasterData(dict):
             band['details'] = bands[idx]['details']
             band['bandIndex'] = idx
             band['type'] = bands[idx]['type']
-            band['rasterImplementation'] = None
             bdns[band['name']] = band
         self['eo:bands'] = bdns
         if 'summaries' in metadata:
@@ -195,14 +195,7 @@ class RasterData(dict):
         self['dataSource'] = url
         self['dataFolder'] = head
         self['eo:bands'] = {}
-        band = RasterBand()
-        band['name'] = extraParams['bands'][0]['name']
-        band['normalizedbandname'] = extraParams['bands'][0]['name']
-        band['details'] = extraParams['bands'][0]['details']
-        band['bandIndex'] = 0
-        band['type'] = 'float'
-        band['rasterImplementation'] = ilwisRaster
-        self['eo:bands'][band['name']] = band
+        self['rasterImplementation'] = {extraParams['bands'][0]['name'] : ilwisRaster}
         
         self.layerIndex = 0
         if 'textsublayers' in extraParams:
@@ -372,6 +365,15 @@ class RasterData(dict):
 
             return idxs
     
+    def getLayers(self):
+        result = []
+        first = True
+        for layer in self['layers'].values():
+            if not first:
+                result.append(layer['temporalExtent'])
+            first = False                
+        return result
+
     def index2band(self, idx):
         for b in self['eo:bands'].items():
             if b[1]['bandIndex'] == int(idx):
@@ -385,11 +387,13 @@ class RasterData(dict):
                 return layer[1]
         return None  
     
-    def getRaster(self, bandName=''):
-        if bandName == '':
-            bandName = next(iter(self['eo:bands']))
-        if bandName in self['eo:bands']:
-            return self['eo:bands'][bandName]['rasterImplementation']
+    def getRaster(self, implName=''):
+        if implName == '':
+           if len(self['rasterImplementation']) > 0:
+                implName = next(iter(self['rasterImplementation']))
+        if implName in self['rasterImplementation']:
+            return self['rasterImplementation'][implName]
+        
         return None
     
 class RasterBand(dict):
@@ -440,45 +444,6 @@ class RasterLayer(dict):
         self.dataSource = temporalMetadata['source']
         self.index = idx
 
-   
-
-"""
-    def toDict(self):
-        
-        meta = {}
-        meta['type'] = 'Collection'
-        meta['title'] = self.title
-        meta['id'] = self.id
-        meta['description'] = self.description
-        meta['license'] = self.license
-        meta['keywords'] = self.keywords
-        meta['providers'] = self.providers
-        meta['links'] = self.links
-        meta['projection'] = { 'epsg': self.epsg}
-        meta['grouping'] = 'band'
-        dimensions = {}
-        dimensions['bounding_box'] = self.boundingbox
-        dimensions['t'] = [{'extent': self.temporalExtent, 'source' : 'all'}]
-        dimensions['t'].append({'extent': self.temporalExtent, 'source' : self.id + ".metadata"})
-        dimensions['x'] = {'extent' : [self.spatialExtent[0], self.spatialExtent[1]], 'reference_system' : self.epsg}
-        dimensions['y'] = {'extent' : [self.spatialExtent[2], self.spatialExtent[3]], 'reference_system' : self.epsg}
-        bs = []
-        for band in self.bands:
-            bs.append(band.toDict())
-
-        dimensions['eo:bands'] = bs        
-        meta['dimensions'] = dimensions
-        head = os.path.split(self.dataFolder)
-        meta['data_folder'] = head[1]
-        if hasattr(self, 'summaries'):
-            meta['summaries'] = self.summaries
-
-        return meta            
-"""
-   
-
- 
-    
 def matchesTemporalExtent(existingLayers: list[RasterLayer], tobeCheckedLayers : list[RasterLayer]):
     if len(existingLayers) != len(tobeCheckedLayers):
         return False
