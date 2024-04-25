@@ -220,12 +220,6 @@ class NodeExecution :
                 if refNode['resolved'] != None:
                     return refNode['resolved'] 
                 return self.resolveNode(openeojob, toServer, fromServer, refNode)  
-        elif 'reducer' in parmKeyValue:
-            pgraph = parmKeyValue[1]['process_graph']
-            args = self.processNode.localArguments
-            #self.mapcalc(args,pgraph)
-            process = ProcessGraph(pgraph, args, self.processGraph.getOperation)
-            self.outputInfo = process.run(openeojob, toServer, fromServer)
-            return self.outputInfo['value']
+       
         else:
             return parmKeyValue[1]                                              
