@@ -1,5 +1,6 @@
 from constants import constants
 from operations.ilwispy.BaseAggregatestats import BaseAggregateData
+import numpy
 
 class MaxOperation(BaseAggregateData):
     def __init__(self):
@@ -15,6 +16,7 @@ class MaxOperation(BaseAggregateData):
             if isinstance(p1, list):
                 self.base_prepareRaster(arguments)
                 self.method = 'max'
+                self.aggFunc = numpy.max
             self.runnable = True
 
         except Exception as ex:
@@ -33,8 +35,10 @@ class MeanOperation(BaseAggregateData):
 
     def prepare(self, arguments):
         try:
-            self.base_prepareRaster(arguments)
             self.method = 'mean'
+            self.aggFunc = numpy.mean            
+            self.base_prepareRaster(arguments)
+ 
             self.runnable = True
 
         except Exception as ex:
@@ -52,8 +56,10 @@ class MedianOperation(BaseAggregateData):
         self.kind = constants.PDPREDEFINED
 
     def prepare(self, arguments):
+        self.method = 'median' 
+        self.aggFunc = numpy.median       
         self.base_prepareRaster(arguments)
-        self.method = 'median'
+    
         self.runnable = True
 
 
@@ -69,8 +75,10 @@ class MinOperation(BaseAggregateData):
 
     def prepare(self, arguments):
         try:
-            self.base_prepareRaster(arguments)
             self.method = 'min'
+            self.aggFunc = numpy.min            
+            self.base_prepareRaster(arguments)
+ 
             self.runnable = True
 
         except Exception as ex:
@@ -89,8 +97,10 @@ class SumOperation(BaseAggregateData):
 
     def prepare(self, arguments):
         try:
-            self.base_prepareRaster(arguments)
             self.method = 'sum'
+            self.aggFunc = numpy.sum
+            self.base_prepareRaster(arguments)
+   
             self.runnable = True
 
         except Exception as ex:
@@ -108,8 +118,9 @@ class VarianceOperation(BaseAggregateData):
 
     def prepare(self, arguments):
         try:
-            self.base_prepareRaster(arguments)
             self.method = 'variance'
+            self.aggFunc = numpy.var            
+            self.base_prepareRaster(arguments)
             self.runnable = True
 
         except Exception as ex:
@@ -128,8 +139,9 @@ class StandardDevOperation(BaseAggregateData):
 
     def prepare(self, arguments):
         try:
-            self.base_prepareRaster(arguments)
             self.method = 'standarddev'
+            self.aggFunc = numpy.std
+            self.base_prepareRaster(arguments)
             self.runnable = True
 
         except Exception as ex:

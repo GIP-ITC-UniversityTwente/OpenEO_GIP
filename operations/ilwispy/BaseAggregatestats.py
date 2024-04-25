@@ -26,11 +26,9 @@ class BaseAggregateData(OpenEoOperation):
     
                 self.rasterSizesEqual = self.checkSpatialDimensions(self.rasters)  
                 self.method = 'unknown'
-            elif type(arguments['data']) is numpy.array: ## will this work, ftm no testable case
-                self.array = arguments['data']
-                self.aggFunc = numpy.mean
-            
-     
+            elif isinstance(inpData ,list):
+                self.array = inpData
+    
     def base_run(self,openeojob, processOutput, processInput):
         if self.runnable:
             self.logStartOperation(processOutput, openeojob)
@@ -44,5 +42,10 @@ class BaseAggregateData(OpenEoOperation):
 
                 self.logEndOperation(processOutput,openeojob)
                 return createOutput(constants.STATUSFINISHED, outputRasters, constants.DTRASTER)
+            elif hasattr(self, 'array'):
+                result = self.aggFunc(self.array)
+                self.logEndOperation(processOutput,openeojob)
+                return createOutput(constants.STATUSFINISHED, result, self.type2type(result))
+
         message = common.notRunnableError(self.name, openeojob.job_id) 
         return createOutput('error', message, constants.DTERROR)      
