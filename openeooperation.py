@@ -174,9 +174,9 @@ class OpenEoOperation:
 
         return rc            
 
-    def createExtra(self, r, idx):
+    def createExtra(self, r : RasterData, idx):
         att = {'type' : 'float', 'name' : 'calculated band ' + str(idx),'details' : {} }
-        self.extra = { 'temporalExtent' : r['temporalExtent'], 'bands' : [att], 'epsg' : r['proj:epsg']}
+        self.extra = { 'temporalExtent' : r['temporalExtent'], 'bands' : [att], 'epsg' : r['proj:epsg'], 'textsublayers' : r.getLayers()}
      
     def checkSpatialDimensions(self, rasters):
         pixelSize = 0
@@ -213,7 +213,7 @@ class OpenEoOperation:
 
         return outputRasters 
     
-    def args2bandIndex(self, toServer, job_id, rasterDatas, arguments):
+    def findRasterData(self, toServer, job_id, rasterDatas : list, arguments):
         bandIndex = -1
         if 'index' in arguments:
             bandIndex = arguments['index']['resolved']  
@@ -223,12 +223,13 @@ class OpenEoOperation:
                         
         if 'label' in arguments:
             for idx in range(len(rasterDatas)):
-                for item in rasterDatas[idx]['eo:bands'].values():
-                    if item['name'] == arguments['label']['resolved']:
+                for key in rasterDatas[idx]['rasterImplementation'].keys():
+                    if key == arguments['label']['resolved']:
                         return idx
                         break
         return bandIndex
-      
+    
+    
 
     def constructExtraParams(self, raster, temporalExtent, index):
          bands = []
