@@ -20,7 +20,7 @@ class ArrayElementOperation(OpenEoOperation):
         self.inputRasters = None
 
         inpData = arguments['data']['resolved'] 
-        if not isinstance(inpData, list) and len(inpData > 0):
+        if not isinstance(inpData, list) and len(inpData) > 0:
              self.handleError(toServer, job_id, 'Input raster','Invalid input list', 'ProcessParameterInvalid')  
         self.rasterCase = isinstance(inpData[0], RasterData)
         if self.rasterCase:
