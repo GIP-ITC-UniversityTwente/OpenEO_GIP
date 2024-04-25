@@ -4,6 +4,7 @@ from constants import constants
 from workflow import processGraph
 from globals import getOperation
 import common
+import copy
 
 class ReduceDimensionsOperation(OpenEoOperation):
     def __init__(self):
@@ -13,7 +14,7 @@ class ReduceDimensionsOperation(OpenEoOperation):
 
     def prepare(self, arguments):
         self.runnable = False
-        self.reducer= arguments['reducer']
+        self.reducer= arguments['reducer']['resolved']
         self.data = arguments['data']
         self.runnable = True
         return ""
@@ -22,16 +23,14 @@ class ReduceDimensionsOperation(OpenEoOperation):
     def run(self,openeojob, processOutput, processInput):
         if self.runnable:
             self.logStartOperation(processOutput, openeojob)
-            if self.reducer['resolved'] == None:
-                pgraph = self.reducer['process_graph']
-                args = self.data['base']
-                process = processGraph.ProcessGraph(pgraph, args, getOperation)
-                output =  process.run(openeojob, processOutput, processInput)
-                self.logEndOperation(processOutput,openeojob)
-                return output
-            else:
-                self.logEndOperation(processOutput,openeojob)
-                return createOutput(constants.STATUSFINISHED, self.reducer['resolved'], constants.DTRASTER)
+            pgraph = self.reducer['process_graph']
+           ## copyPg = copy.deepcopy(pgraph)
+           ## first = next(iter(copyPg))
+           ## copyPg[first]['arguments'] = {'data' : self.data}
+            process = processGraph.ProcessGraph(pgraph, {'data' : self.data}, getOperation)
+            output =  process.run(openeojob, processOutput, processInput)
+            self.logEndOperation(processOutput,openeojob)
+            return createOutput(constants.STATUSFINISHED, output['value'], self.type2type(output))
         message = common.notRunnableError(self.name, openeojob.job_id)         
         return createOutput('error', message, constants.DTERROR)
         
