@@ -175,9 +175,7 @@ class OpenEoOperation:
         return rc            
 
     def createExtra(self, r, idx):
-        att = {'type' : 'float'}
-        att = {'name' : 'calculated band ' + str(idx)}
-        att = {'details' : {}}
+        att = {'type' : 'float', 'name' : 'calculated band ' + str(idx),'details' : {} }
         self.extra = { 'temporalExtent' : r['temporalExtent'], 'bands' : [att], 'epsg' : r['proj:epsg']}
      
     def checkSpatialDimensions(self, rasters):
