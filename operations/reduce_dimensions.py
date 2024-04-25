@@ -16,6 +16,7 @@ class ReduceDimensionsOperation(OpenEoOperation):
         self.runnable = False
         self.reducer= arguments['reducer']['resolved']
         self.data = arguments['data']
+        self.dimension = arguments['dimension']['resolved']
         self.runnable = True
         return ""
               
@@ -24,9 +25,6 @@ class ReduceDimensionsOperation(OpenEoOperation):
         if self.runnable:
             self.logStartOperation(processOutput, openeojob)
             pgraph = self.reducer['process_graph']
-           ## copyPg = copy.deepcopy(pgraph)
-           ## first = next(iter(copyPg))
-           ## copyPg[first]['arguments'] = {'data' : self.data}
             process = processGraph.ProcessGraph(pgraph, {'data' : self.data}, getOperation)
             output =  process.run(openeojob, processOutput, processInput)
             self.logEndOperation(processOutput,openeojob)
