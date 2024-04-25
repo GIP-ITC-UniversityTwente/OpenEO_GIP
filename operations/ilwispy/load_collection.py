@@ -18,7 +18,6 @@ import copy
 class LoadCollectionOperation(OpenEoOperation):
     def __init__(self):
         self.loadOpenEoJsonDef('load_collection.json')
-        ##print('aaaaaaaaaaaa '+ openeo.testingvar)
 
         self.kind = constants.PDPREDEFINED
         self.bandIdxs = []
