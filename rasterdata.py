@@ -196,9 +196,9 @@ class RasterData(dict):
         self['dataFolder'] = head
         self['eo:bands'] = {}
         band = RasterBand()
-        band['name'] = extraParams['name']
-        band['normalizedbandname'] = extraParams['name']
-        band['details'] = extraParams['details']
+        band['name'] = extraParams['bands'][0]['name']
+        band['normalizedbandname'] = extraParams['bands'][0]['name']
+        band['details'] = extraParams['bands'][0]['details']
         band['bandIndex'] = 0
         band['type'] = 'float'
         band['rasterImplementation'] = ilwisRaster
