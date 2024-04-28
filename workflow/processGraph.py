@@ -29,7 +29,9 @@ class ProcessNode :
                
             self.nodeType = ProcessNode.OPERATION 
             self.nodeValue = None
-
+# the container for the actual process graph. A process graph is  split up into a sequence of
+# nodes. One node is marked as the output node which creates the outptu of the graph. Process graphs are 
+# strictly linear, no loops no branches
 class ProcessGraph(OpenEoOperation):
 
     def __init__(self, source_graph, arguments, getOperation):
@@ -47,6 +49,7 @@ class ProcessGraph(OpenEoOperation):
 
         self.determineOutputNodes(self.processGraph)
 
+    # helper function for the validatgraph method
     def validateNode(self, node):
         errors = []
         for arg in node.localArguments.items():
@@ -63,7 +66,9 @@ class ProcessGraph(OpenEoOperation):
              errors.append("missing \'operation\' " + node.process_id  )
 
         return errors             
-
+    
+    # validates a graph. this is basically indetical to running the graph without actually executing
+    # any operations in it. As such it is limited to the input values as given when starting the process.
     def validateGraph(self):
             errors = []
             for node in self.outputNodes:
@@ -73,6 +78,8 @@ class ProcessGraph(OpenEoOperation):
     def prepare(self, arguments):
         return ""
     
+    # estimates the costs of a running a graph. atm the moment this is only a skeleton implemenations
+    # as the sematics of costs have yet to be defined
     def estimate(self):
         try:
             for node in self.outputNodes:
@@ -82,13 +89,17 @@ class ProcessGraph(OpenEoOperation):
         except Exception as ex:
             return createOutput(False, str(ex), constants.DTERROR)
 
+    # executes the graph. Note in practice there is only one outputNode but basically it can handle multiple
+    # output nodes
     def run(self,openeojob, toServer, fromServer ):
         for key, processNode in self.outputNodes:
+            # a node execution instance starts 'parsing' the information stored in the process node
+            # and tries to fill out all the unknowns in there
             self.startNode = NodeExecution(processNode,self)
             self.startNode.run(openeojob, toServer, fromServer)
             return self.startNode.outputInfo
 
-        
+    # stops the running of the process graph    
     def stop(self):
         if self.startNode != None:
             self.startNode.stop()
@@ -96,13 +107,13 @@ class ProcessGraph(OpenEoOperation):
     def processGraph(self):
         return self.sourceGraph
     
-
+    # translates the a given id to an actual graphNode. All nodes have a unique id (for this graph)
     def id2node(self, id):
         for node in self.processGraph.items():
             if node[0] == id:
                 return node
         return None            
-
+    # an output node is identified by havingf a 'result' attribute
     def determineOutputNodes(self, nodes):
         for node in nodes.items():
             if hasattr(node[1], 'result'):

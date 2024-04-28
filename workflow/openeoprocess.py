@@ -18,7 +18,8 @@ def get(key,values,  defaultValue):
         return values[key]
     return defaultValue
 
-
+# helper class for the process graph to store the passed parameter values(process) and use
+# them while executing the process
 class OpenEOParameter:
     def __init__(self, parm):
         self.schema = parm['schema']
@@ -63,7 +64,9 @@ class OpenEOParameter:
             return parmDict                
 
 
-
+# any processing request will be started as an OpenEOProcess in a seperate process in python
+# the main activity is running the process graph(see the 'run' method). The rest of the attributes of this class
+# exist for adminstrative and management purposes.
 class OpenEOProcess(multiprocessing.Process):
     def __init__(self, user, request_json, id):
 
@@ -88,6 +91,7 @@ class OpenEOProcess(multiprocessing.Process):
         self.processGraph = ProcessGraph(get('process_graph', processValues, None), None, getOperation)
         self.submitted = str(datetime.now())
         self.status = constants.STATUSCREATED
+        # from here basically parse the http request and store its values in the class instance
         self.updated =  ''
         self.id = get('id', processValues, '')
         self.summary = get('summary', processValues, '')
@@ -138,6 +142,8 @@ class OpenEOProcess(multiprocessing.Process):
 
         self.sendTo, self.fromServer = Pipe() #note: these pipes are only used for ouput to the child process
 
+    # starts the validation of a process graph. This can only happen after the OpenEOProcess has been
+    # created and a process graph has been created
     def validate(self):
         errorsdict = []
         errors = self.processGraph.validateGraph()
@@ -146,11 +152,13 @@ class OpenEOProcess(multiprocessing.Process):
             
         return errorsdict             
 
+    # helper function for the toDict method. ensure that only existing attributes are used
     def setItem(self, key, dict):
         if hasattr(self, key):
             dict[key] = getattr(self, key)
         return dict
-    
+     # helper function for the toDict method. ensure that only existing attributes are used and a default 
+     # can be used if neeeded
     def setItem2(self, key, dict, alt):
         if hasattr(self, alt):
             dict[key] = getattr(self, alt)
@@ -159,6 +167,8 @@ class OpenEOProcess(multiprocessing.Process):
     def estimate(self, user):
         return self.processGraph.estimate()
 
+    # translates the info of this class to a dict. This dict is the basis for the metadata file that is dumped
+    # in the output folder.
     def toDict(self, short=True):
         dictForm = {}
         dictForm['id'] = str(self.job_id)
@@ -191,8 +201,9 @@ class OpenEOProcess(multiprocessing.Process):
             dictForm['log_level'] = self.log_level
             dictForm['spatialextent'] = self.spatialextent
 
-        return dictForm  
-
+        return dictForm 
+     
+    # removes all results of a certain job and removes the folder
     def cleanup(self):
         filePath = common.openeoip_config['data_locations']['root_user_data_location']
         filePath = filePath['location'] + '/' + str(self.job_id)  
@@ -205,16 +216,20 @@ class OpenEOProcess(multiprocessing.Process):
         self.sendTo.send(message)
         self.cleanup()
 
+    # executes the process graph and is the end point for all raised exceptions that occur while running
+    # the process graph.
     def run(self, toServer):
         if self.processGraph != None:
             try:
                 timeStart = str(datetime.now())
                 common.logMessage(logging.INFO, 'started job_id: ' + self.job_id + "with name: " + self.title,common.process_user)
+                # start the process
                 outputinfo = self.processGraph.run(self, toServer, self.fromServer)
                 timeEnd = str(datetime.now())
                 if 'spatialextent' in outputinfo:
                     self.spatialextent = outputinfo['spatialextent']
                 log = {'type' : 'progressevent', 'job_id': self.job_id, 'progress' : 'job finished' , 'last_updated' : timeEnd, 'status' : constants.STATUSJOBDONE, 'current_operation' : '?'}   
+                # communicate to the main server process that a job has finished
                 toServer.put(log)
                 if outputinfo != None:
                     if outputinfo['status'] == constants.STATUSSTOPPED:
@@ -223,6 +238,7 @@ class OpenEOProcess(multiprocessing.Process):
                         self.status = constants.STATUSJOBDONE                      
                 else:                    
                     self.status = constants.STATUSJOBDONE 
+                # dump a metadata file with info about the just finished process graph in the output folder                    
                 path = common.openeoip_config['data_locations']['root_user_data_location']
                 path = os.path.join(path['location'] + '/' + str(self.job_id + "/jobmetadata.json") )                                   
                 dict = self.toDict(False) 
@@ -232,6 +248,9 @@ class OpenEOProcess(multiprocessing.Process):
                     json.dump(dict, fp)   
                 common.logMessage(logging.INFO,'finished job_id: ' + self.job_id ,common.process_user)
             except  (Exception, BaseException, customexception.CustomException) as ex:
+                # end point for all exceptions. There maybe no exception handlers in the running
+                # of the graph (unless really, really needed) as it is assumed that an 'stopping' error
+                # ends up here
                 timeEnd = str(datetime.now()) 
                 code = ''               
                 if isinstance(ex, customexception.CustomException):
@@ -240,6 +259,7 @@ class OpenEOProcess(multiprocessing.Process):
                 else:                    
                     message = 'failed job_id: ' + self.job_id + " with error " + str(ex)
                 log = {'type' : 'progressevent', 'job_id': self.job_id, 'progress' : 'job finished' , 'last_updated' : timeEnd, 'status' : constants.STATUSERROR, 'message': message, 'code': code, 'current_operation' : '?'}   
+                # communicate to the main server process that an error has occured in a certain job
                 toServer.put(log)
                 common.logMessage(logging.ERROR,message,common.process_user)    
     
