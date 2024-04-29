@@ -141,9 +141,7 @@ class ProcessManager:
                 else:
                     return constants.STATUSQUEUED
         return constants.STATUSUNKNOWN                
-                
-
-
+    
     def getProcess(self, user, job_id):
         for i in range(len(self.processQueue)):
             if str(self.processQueue[i].job_id) == job_id:
@@ -153,7 +151,8 @@ class ProcessManager:
                 return item.eoprocess
         return None            
 
-
+    # creates a dict which contains meta infortmation for a certain job. This function is used by the
+    # http API (jobs/{id}) to report status to python client (or any client)
     def allJobsMetadata4User(self, user, job_id, baseurl):
         with self.lockOutput:
             processes = []  
@@ -220,12 +219,15 @@ class ProcessManager:
             out = self.outputs.pop(key)
             out.cleanUp()
                                
-
+    # this is the main function that handels process graph management. It starts, communicates with and stops
+    # the process graphs that are requested. When created processes are put on a queue and started when there
+    # is 'room' to do so. At the moment this is always, but might be more constrained in the future.
     def startProcesses(self):
         self.loadProcessTables()
         startCheckRemoveOutput = startTimerCheckTokens = startTimerDump = datetime.now()            
         while self.running:
             eoprocess = None
+            # get a requested process of the process queue
             with self.lockProcessQue:
                 if not len(self.processQueue) == 0:
                     for p in self.processQueue:
@@ -233,20 +235,31 @@ class ProcessManager:
                             eoprocess = self.processQueue.pop()
                             break
             if eoprocess != None:
+                # create a new process objects and create its output representation. Once the process
+                # is started basicall all info about the running process is in the output object. This includes
+                # log information, errors and ofc output products
                 p = Process(target=worker, args=(eoprocess,self.outputQueue))
                 self.createNewEmptyOutput(eoprocess)
+                # the process gets now the status of running, before it was queued
                 self.outputs[str(eoprocess.job_id)].status = constants.STATUSRUNNING
                 self.outputs[str(eoprocess.job_id)].pythonProcess = p
+                # start the process
                 p.start()
             if self.outputQueue.qsize() > 0:
+                # see if there is any communication from processes. This is stored in 'items'
+                # which contain the necessary info about what the information is to which process]
+                # it belongs. one by one they are removed from the outputque and used to
+                # update the output objects
                 item = self.outputQueue.get()
                 self.changeOutputStatus(item)
             endTimer = datetime.now()
             delta = endTimer - startTimerDump
             if delta.seconds > 120:
+                # for the moment not relevant
                 self.dumpProcessTables()
                 startTimerDump = endTimer
             delta = endTimer - startTimerCheckTokens
+            # next section will remove security tokens if they are too long in the outputs
             if delta.days > 1:
                 authenticationDB.clearOutOfDateTokes()
                 startTimerCheckTokens = endTimer
@@ -284,7 +297,9 @@ class ProcessManager:
                             elif output[1].status == constants.STATUSRUNNING:
                                 self.processQueue.append(output[1].eoprocess)                        
 
-
+    # based on the information from the processes the values in the outputs list will be updated
+    # note that other API calls (http api that is) do use this table (outputs) to figure out what 
+    # the current status of a certain process is
     def changeOutputStatus(self, item):
         with self.lockOutput:
             job_id = item['job_id']

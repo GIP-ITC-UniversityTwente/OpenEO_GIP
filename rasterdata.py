@@ -51,7 +51,13 @@ def createNewRaster(rasters):
         rc.setBandDefinition(index, rasters[index].datadef())
 
     return rc 
-
+# class that collects all metadata and binary data of a dataset. A RasterData is multidimensional,
+# though limited to 4 dimensions atm. I can use .metadat files, primarr satlite data and 
+# Ilwis.RasterCoverage objects to creates its metadata/data structure. Apart from adminstrative members
+# it contains three main lists of objects that define its meaning
+# 1) Layers. Used for t-dimension. Temporal information
+# 2) Bands. user for spectral information. bands dimension
+# 3) rasterImplementation. The actual data objects which can be used in operations or transformed and downloaded.
 class RasterData(dict):
     def load( self, layerDataLink, method = 'eoreader', extra = None ) :      
         if method == 'eoreader':
@@ -67,7 +73,6 @@ class RasterData(dict):
             self['type'] = 'file'
             self.fromEOReader(prod)
         if method == 'ilwisraster':
-           
             self.fromIlwisRaster(layerDataLink, extra)
         if method == 'metadata':
             metafile = open(layerDataLink)
@@ -100,7 +105,6 @@ class RasterData(dict):
         self.setSummariesValue('instrument', prod)
         self['eo:cloud_cover'] = prod.get_cloud_cover()  
         self['rasterImplementation'] = {}
-         
 
         bands = {}
         bandIndex = 0
@@ -114,6 +118,7 @@ class RasterData(dict):
         self['eo:bands'] = bands  
         lyrs = {} 
         layer = RasterLayer()
+        # layer 0 is a special layer as its the extent all the layers
         layer['temporalExtent'] = self['temporalExtent']
         layer['dataSource'] = 'all'
         layer['layerIndex'] = 0
@@ -204,6 +209,7 @@ class RasterData(dict):
         if 'textsublayers' in extraParams:
             textsublayers = extraParams['textsublayers']
             lyrs = {} 
+            # layer 0 is a special layer as its the extent all the layers
             layer = RasterLayer() 
             layer['source'] = 'all'
             layer['temporalExtent'] = self['temporalExtent']
@@ -218,7 +224,10 @@ class RasterData(dict):
                 lyrs[str(layer['temporalExtent'])] = layer
             self['layers'] =lyrs        
 
-
+    # extra metadata is metadata that is stored in a seperate file and contains metadata that
+    # is presetn in the STAC specs but not can be directly found in the primary satelite data
+    # e.g. license or owner ship. This method constructs this extrametadata (if present) and returns
+    # it to the main loader and adds its metadata to the rest
     def loadExtraMetadata(self, datapath, name)  :
         headpath = os.path.split(datapath)[0]
         filename = os.path.split(datapath)[1]
@@ -232,6 +241,7 @@ class RasterData(dict):
                 extraMetadata = extraMetadataAll[filename]
         return extraMetadata
     
+
     def setSummariesValue(self, key, source):
         if hasattr(source,key):
             p = getattr(source, key)
@@ -302,6 +312,7 @@ class RasterData(dict):
 
         return filename             
 
+    # translates the spatial extent to a json format. Used to translate a rasterdata instance to a dict
     def getJsonExtent(self):
         bbox = self['spatialExtent']
         epsg = self['proj:epsg']
@@ -317,6 +328,7 @@ class RasterData(dict):
 
         return { 'x' : x, 'y' : y, 't' : t, 'bands' : { 'type' : 'bands', 'values' : eobandlist}}        
 
+    # translates the spatial extent to a json format. Used to translate a rasterdata instance to a dict
     def getExtentEOReader(self, prod):
        proj = prod.stac.proj
        bbox = proj.bbox
@@ -335,6 +347,7 @@ class RasterData(dict):
 
        return { 'x' : x, 'y' : y, 't' : t, 'bands' : { 'type' : 'bands', 'values' : bandlist}}
     
+    #translate a list of bandnames to its corresponding indexes
     def getBandIndexes(self, requestedBands):
         idxs = []
         for reqBandName in requestedBands:
@@ -349,6 +362,7 @@ class RasterData(dict):
                 idx = idx + 1
         return idxs           
 
+    #translates a list of temporal extents to its corresponding layer indexes
     def getLayerIndexes(self, temporalExtent):
             idxs = []
             if temporalExtent == None:
@@ -367,7 +381,8 @@ class RasterData(dict):
                         idxs.append(layer[1]['layerIndex'])
 
             return idxs
-    
+    # gets all the layers of a rasterdata instance except for the first. The
+    # first has a special meaning as its the temporal extent of all the layers
     def getLayers(self):
         result = []
         first = True
@@ -377,6 +392,7 @@ class RasterData(dict):
             first = False                
         return result
 
+    # translates an index to an actual band instance
     def index2band(self, idx):
         for b in self['eo:bands'].items():
             if b[1]['bandIndex'] == int(idx):
@@ -384,21 +400,27 @@ class RasterData(dict):
                 return b[1]
         return None                    
 
+    #translates an index to an actual layer index
     def idx2layer(self, index):
         for layer in self['layers'].items():
             if layer[1]['layerIndex'] == index:
                 return layer[1]
         return None  
     
+    #gets a raster implementation for this RasterData objects. Note that if it contain multiple
+    #implementation ( meaning multiple bands) you must include a band name. If its just a layer based
+    # implementation there will only be one impl ( ilwisrasters are 3D)
     def getRaster(self, implName=''):
-        if implName == '':
+        if implName == '': # if the name is empty it is assumed that first raster implementation
+                           # ( and often the only) is implied
            if len(self['rasterImplementation']) > 0:
                 implName = next(iter(self['rasterImplementation']))
         if implName in self['rasterImplementation']:
             return self['rasterImplementation'][implName]
         
         return None
-    
+# stores the metadata for a seperate band. Note that the details section can contain
+# sensor specific information about this band    
 class RasterBand(dict):
     def toDict(self):
         d = {}
