@@ -5,6 +5,7 @@ import copy
 import customexception
 import rasterdata
 
+
 class ProcessNode :
     constants.UNDEFINED = 0
     OPERATION = 1
@@ -13,7 +14,7 @@ class ProcessNode :
 
     def __init__(self, parentProcessGraph, nodeDict, nodeName):
         self.nodeName = nodeName ## just for easy identification; doesnt play a role on this level
-        self.parentProcessGraph = parentProcessGraph
+        self.parentProcessGraph = parentProcessGraph # the owner of this process Node; might be a sub process
         for key, pValue in nodeDict.items():
             if key == 'process_id':
                 self.process_id = pValue
@@ -131,106 +132,122 @@ class NodeExecution :
         self.processNode = processNode
         self.processGraph = processGraph
         self.outputInfo = None
-        self.indirectKeys = ['from_parameter', 'from_node', 'reducer']
+        self.indirectKeys = ['from_parameter', 'from_node']
 
+    def handleError(self, openeojob, message, type):
+        common.logMessage(logging.ERROR, message, openeojob.user.username )
+        raise customexception.CustomException(self.processNode.process_id, constants.ERROROPERATION, type, message)        
+
+    # this method together with  the support method resolveNode do the heavy lifting for executing
+    # the process graph. One can see an execution node as a sub process with a input(s) and one output of the 
+    # whole graph. Each input maybe 'resolved' (has an actual value) or not. If it is not resolved resolvedNode 
+    # method will be used to find its values (see there for logic). Based on the form of the (unresolved) parameter 
+    # in the 'base' definition a ptah will be chosen how to resolve the (unresolved) parameter. This is a recursive
+    # process as the unresolved parameter often comes from a previous, yet unexecuted, ExecutioNode. In this way the 
+    # execution trickles up to chain until it arrives at a node from which all the parameters are resolved. It
+    # can then execute the node and make the parameter 'resolved' with an actual value. Now the previous node in 
+    # the chain can execute. etc..
     def run(self,openeojob, toServer, fromServer):
         args = self.processNode.localArguments
         for key, parmDef in args.items():
             if parmDef['resolved'] == None:
-                definition = parmDef['base']
-                if isinstance(definition, dict):
-                   for item in definition.items():
+                parmDefinition = parmDef['base']
+                if isinstance(parmDefinition, dict):
+                   # the unresolved parameter is complex and of dict form. We now must try understand
+                   # what is defined in the dict
+                   for item in parmDefinition.items():
+                        # an item in the dict maybe of the indirect form; meaning they refer to a previous calculated
+                        # or set value. this refers to the from_parameter and from_node form
                         if item[0] in self.indirectKeys:
                             resolvedValue = self.resolveNode(openeojob, toServer, fromServer, item)
-                        else:            
-                            resolvedValue = self.resolveNode(openeojob, toServer, fromServer, (key, definition)) 
+                        else: # mostely direct value. The reason why the direct value isn't set directly is
+                            # that if the value is a complex form the resolveNode will still calculate its value
+                            # correctly. In practice though this will often be single direct value           
+                            resolvedValue = self.resolveNode(openeojob, toServer, fromServer, (key, parmDefinition)) 
                 else:
                     resolvedValues = []
                     resolvedValue = []
-                    if isinstance(definition, list):
-                        for elem in definition:
+                    # the unresolved parameter is complex and of list form. We now must try understand
+                    # what is defined in the list. Often this is simply a list of direct values
+                    if isinstance(parmDefinition, list):
+                        for elem in parmDefinition:
                             if isinstance(elem, dict) and not isinstance(elem, RasterData):
+                                # similar to the earlier 'dict' case but now the calculated values
+                                # are aggregated into a list
                                 for item in elem.items():
                                     if item[0] in self.indirectKeys:
                                         rv = self.resolveNode(openeojob, toServer, fromServer, item)
                                         resolvedValues.append(rv)
                                     else:            
-                                        rv = self.resolveNode(openeojob, toServer, fromServer, (key, definition))   
+                                        rv = self.resolveNode(openeojob, toServer, fromServer, (key, parmDefinition))   
                                         resolvedValues.append(rv)
                                 resolvedValue = resolvedValues                                                              
-                            else:                                    
-                                resolvedValue = self.resolveNode(openeojob, toServer, fromServer, (key, definition))  
+                            else: # direct value; see comments in the dict branch as this is a similar case                                   
+                                resolvedValue = self.resolveNode(openeojob, toServer, fromServer, (key, parmDefinition))  
 
-                    else:
-                        resolvedValue = self.resolveNode(openeojob, toServer, fromServer, (key, definition))  
+                    else: # a direct value
+                        resolvedValue = self.resolveNode(openeojob, toServer, fromServer, (key, parmDefinition))  
                      
                 args[key]['resolved'] = resolvedValue
-
+        # if we arrive at this stage all parameters have now a value(resolved) and we can execute the node
+        # each node has a process_id which should be the name of a defined process on the server. e.g. load_collection.
+        # if not the executions stops and the process graph fails
         processObj = self.processGraph.getOperation(self.processNode.process_id)
         if  processObj != None:
-            ##arguments = self.processNode.argumentValues
+            # we make a deep copy of the predefined process as we are going to fill in values and we don't
+            # want the system definition of the process to be poluted
             executeObj =  copy.deepcopy(processObj)
+            # adding some 'system' parameters. They are not strictly needed for the process but facilitate
+            # communication services and error handling with the rest of the server
             args['serverChannel'] = toServer
             args['job_id'] = openeojob.job_id
+            # the prepare checks if all the parameters are valid. A resolved value might still be nonsense within
+            # the semantics of the process. This also makes the run only concentrate on 'running' the node and not
+            # to worry about validity of the input.
             executeObj.prepare(args)
-
+            # the result of prepare should be that a process is now runnable
             if  executeObj.runnable:
                 self.outputInfo = executeObj.run(openeojob, toServer, fromServer) 
-        else:
+        else: # we couldn't find the operation. Execution of the process graph will stop
             message = 'unknow operation ' + str(self.processNode.process_id + ". This operation is not implemented on the server")
-            common.logMessage(logging.ERROR, message, openeojob.user.username )
-            raise customexception.CustomException(self.processNode.process_id, constants.ERROROPERATION, 'operation', message)
-     
-    def mapcalc(self, args, pgraph):
-        if self.checkBandMath(pgraph):
+            self.handleError(openeojob, message, 'operation')
 
-            flow = []
-            for processKey,processValues in pgraph.items():
-                node = {'id' : None, 'operation': None, 'referred_parm' : [], 'values' : []}
-                for pkey, pValue in processValues.items():
-                    if pkey == 'process_id':
-                        node['id'] = processKey
-                        node['operation'] = pValue
-                    elif pkey == 'arguments':
-                        for key, value in pValue.items():
-                            if key == 'data':
-                                if 'from_parameter' in value:
-                                    node['referred_parm'].append(value['from_parameter'])
-                            elif isinstance(value, dict) and 'from_node' in value:
-                                node['values'].append('@@'+ value['from_node'])
-                            else:
-                                node['values'].append(value)
-                flow.append(node)
-
-
-    def checkBandMath(self, pgraph):
-        bandmathOperation = True
-        bandmathOperations = [ 'multiply', 'subtract', 'divide', 'add']
-        for processKey,processValues in pgraph.items():
-            for key, pValue in processValues.items():
-                if key == 'process_id':
-                    if not pValue in bandmathOperations:
-                        if pValue != 'array_element':
-                            bandmathOperation = False 
-
-        return bandmathOperation                                                                                                                
-
-   
+    # resolve node does the actual 'resolving'. There are three case here
+    # 1) It is a 'from_node' case. in this case the requested value comes from another node
+    #    as it is a referrer the (referred) node will not be calculated else it would have been a direct value
+    #    so we simply locate the node and execute it.
+    # 2) It is a parameter of the (sub)process. That means the value must be present in the 'parent' (sub)process
+    #    as that process calls this (sub) process. It maybe resolved or not. If resolved we can return it if not
+    #    we simply resolve the parameter and return the result
+    # 3) direct value. No resolves needed
+    # Note that the system has been setup in this way to be flexible in handling different cases/uses of process graphs. 
+    # process graphs are not only the one that starts an openeo operartion but can also be parameters of individual 
+    # sub processes which first have to execute (and give a resolved value) before a sub process can execute
     def resolveNode(self,openeojob, toServer, fromServer, parmKeyValue):
-        if 'from_node' in parmKeyValue:
+        if 'from_node' in parmKeyValue: # value is value of another node
             referredNodeName = parmKeyValue[1]
-            referredNode = self.processGraph.id2node(referredNodeName)
+            referredNode = self.processGraph.id2node(referredNodeName) # find the node
             if referredNode != None:
                 if referredNode[1].nodeValue == None:
+                    # create a new execution node based on the found node and run it to get a resolved value
+                    # in this way the nodeVlaue will be filled and subsequent calls will use tha already 
+                    # calcualted value
                     refExecutionNode = NodeExecution(referredNode[1], self.processGraph)
                     refExecutionNode.run(openeojob, toServer, fromServer)
                     referredNode[1].nodeValue = refExecutionNode.outputInfo
-                    return referredNode[1].nodeValue['value']
-        elif 'from_parameter' in parmKeyValue:
+                return referredNode[1].nodeValue['value']
+            else: # should never happen, but anyway
+                self.handleError(openeojob, "Node can not be found", 'resolved node')
+        # a value that has been set for this sub process. The previous case refers to another node, 
+        # this case the actual value refers to a value present in the calling process (which might be resolved or not)
+        elif 'from_parameter' in parmKeyValue: 
+                # get the value 
                 refNode = self.processNode.parentProcessGraph.resolveParameter(parmKeyValue[1])
+                # if it is resolved we are done
                 if refNode['resolved'] != None:
                     return refNode['resolved'] 
+                # if not we resolve it
                 return self.resolveNode(openeojob, toServer, fromServer, refNode)  
        
-        else:
+        else: # direct value case; no indirections
             return parmKeyValue[1]                                              

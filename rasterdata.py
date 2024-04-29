@@ -7,6 +7,7 @@ from dateutil import parser
 import ilwis
 from constants.constants import *
 
+# gets a value from a dict and if no value is present it returns a default value
 def getValue(key, extraMetaData, defValue):
         if extraMetaData == None:
             return defValue
@@ -15,6 +16,7 @@ def getValue(key, extraMetaData, defValue):
             return extraMetaData[key]
         return defValue
 
+# gets a value from a dict and if no value is present it raised an exception
 def getMandatoryValue(key, extraMetaData):
         if extraMetaData == None:
             raise Exception("missing mandatory key in metadata :" + key)
@@ -25,6 +27,7 @@ def getMandatoryValue(key, extraMetaData):
 
 def isPrimitive(obj):
     return not hasattr(obj, '__dict__')
+
 
 def createNewRaster(rasters):
     stackIndexes = []

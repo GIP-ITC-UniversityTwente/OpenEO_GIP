@@ -23,7 +23,7 @@ class LoadCollectionOperation(OpenEoOperation):
         self.bandIdxs = []
         self.lyrIdxs = []
 
-    def unpack(self, data, folder):
+    def unpackOriginalData(self, data, folder):
         #os.mkdir(folder)
         reader = Reader()
         prod = reader.open(data)
@@ -56,15 +56,18 @@ class LoadCollectionOperation(OpenEoOperation):
         if not (b1 or b2):
             self.handleError(toServer, job_id, 'extents','extents given and extent data dont overlap', 'ProcessParameterInvalid') 
 
+    # checks if extents are valid. must contain 'north', 'south', 'east', 'west' and the values must legal and correctly
+    # positioned among themselves
     def checkSpatialExt(self, toServer, job_id, ext):
         if ext == None:
             return
         
-        if 'north' in ext and 'south' in ext and 'east' in ext and 'west'in ext:
+        if 'north' in ext and 'south' in ext and 'east' in ext and 'west'in ext: # all directions there
             n = ext['north']
             s = ext['south']
             w = ext['west']
             e = ext['east']
+            # correctly positioned and have legal value(s)
             if n < s and abs(n) <= 90 and abs(s) <= 90:
                 self.handleError(toServer, job_id, 'extents', 'north or south have invalid values', 'ProcessParameterInvalid')
             if w > e and abs(w) <= 180 and abs(e) <= 180:
@@ -72,11 +75,13 @@ class LoadCollectionOperation(OpenEoOperation):
         else:
             self.handleError(toServer, job_id, 'extents','missing extents in extents definition', 'ProcessParameterInvalid')                               
 
+    # checks if a given temporal extent makes sense given the input data
     def checkTemporalExtents(self, toServer, job_id, text):
         if text == None:
             return
         if len(text) != 2:
            self.handleError(toServer, job_id, 'temporal extents','array must have 2 values', 'ProcessParameterInvalid') 
+        # convert between a string representation of date-time to a python representation of date-time           
         dt1 = parser.parse(text[0]) 
         dt2 =  parser.parse(text[1])
         dr1 = parser.parse(self.inputRaster['temporalExtent'][0])
@@ -86,6 +91,8 @@ class LoadCollectionOperation(OpenEoOperation):
         if (dt1 < dr1 and dt2 < dr1) or ( dt1 > dr2 and dt2 > dr2):
             self.handleError(toServer, job_id, 'temporal extents','extents dont overlap', 'ProcessParameterInvalid')
 
+    # checks if the given parameters makes senses given the input data. It may also convert data to a more suitable
+    # (performant) format if needed.
     def prepare(self, arguments):
         self.runnable = False 
         toServer = None
@@ -96,25 +103,32 @@ class LoadCollectionOperation(OpenEoOperation):
                         
         fileIdDatabase = getRasterDataSets()          
         self.inputRaster = fileIdDatabase[arguments['id']['resolved']]
+        # the requested data could not be found on the server
         if self.inputRaster == None:
             self.handleError(toServer, job_id,'input raster not found', 'ProcessParameterInvalid')
         
         self.dataSource = ''
         oldFolder = folder = self.inputRaster['dataFolder']
-        if  self.inputRaster['type'] == 'file':
+        # we don't want 'file' at this stage as it is slow. File can in this case be understood as primary
+        # satelite data. unpacking the compressed formats is time consuming. So we transform the original data 
+        # a 'metadata' format. Unpack everything and create a .metadata file for this data set. From now only the 
+        # .metadata format will be used which has much better performance. 
+        if  self.inputRaster['type'] == 'file': 
             self.logProgress(toServer, job_id,"load collection : transforming data", constants.STATUSRUNNING)                   
             folder = self.transformOriginalData(fileIdDatabase, folder, oldFolder)                  
             
         
         if 'bands'in arguments :
-            if arguments['bands']['resolved'] != None:
+            if arguments['bands']['resolved'] != None: #translate band names to indexes as they are easier to work with
                 self.bandIdxs = self.inputRaster.getBandIndexes(arguments['bands']['resolved'])
-            else:
+            else: # default band = 0
                 self.bandIdxs.append(0)
-        else:
+        else: # default band = 0
             self.bandIdxs.append(0)
 
         if 'temporal_extent' in arguments:
+            # if there is no overlap between temporal extent given and the temporal extent of the actual data
+            # an error will thrown as no processing is possible
             self.checkTemporalExtents(toServer, job_id,arguments['temporal_extent']['resolved'])
             self.temporalExtent = arguments['temporal_extent']['resolved']
             #if arguments['temporal_extent']['resolved'] != None:
@@ -127,6 +141,8 @@ class LoadCollectionOperation(OpenEoOperation):
         if 'spatial_extent' in arguments:
             sect = arguments['spatial_extent']['resolved']
             if sect != None:
+                # the parameter spatial_extent is giving in latlon. To see if its values makes sense in
+                # the context of the input data its value must be translated to the SRS of the input data.
                 self.checkSpatialExt(toServer, job_id, sect)
                 source = self.inputRaster.idx2layer(1)['source']                     
                 datapath = os.path.join(path, source)                            
@@ -135,24 +151,31 @@ class LoadCollectionOperation(OpenEoOperation):
                 llenv = ilwis.Envelope(ilwis.Coordinate(sect['west'], sect['south']), ilwis.Coordinate(sect['east'], sect['north']))
                 envCube = rband.coordinateSystem().convertEnvelope(csyLL, llenv)
                 e = str(envCube)
+                # if there is no overlap between input data and spatial_extent an error will be thrown as
+                # any processing is pointless.
                 self.checkOverlap(toServer, job_id,envCube, rband.envelope())
                 
                 env = e.split(' ')
-                if env[0] == '?':
+                if env[0] == '?': # apparently something went wrong with the conversion. Might be an impossible transformation
                     self.handleError(toServer, job_id, 'unusable envelope found ' + str(sect), 'ProcessParameterInvalid')
 
                 self.inputRaster['spatialExtent'] = [env[0], env[2], env[1], env[3]]
         
-        if 'properties' in arguments:
+        if 'properties' in arguments: # filter properties
             self.properties =  arguments['properties']['resolved']
             
         self.runnable = True
         self.rasterSizesEqual = True
  
+    # unpacks primairy satelite data. creates a metadata file that represents the file and 
+    # creates a folder where all the unpacked binary data of the satellite data resides. The orignal
+    # data will be moved to a seperate folder and no longer be visible to the system
     def transformOriginalData(self, fileIdDatabase, folder, oldFolder):
         self.dataSource = self.inputRaster['dataSource']
-                
-        sourceList, unpack_folder = self.unpack(self.dataSource, folder)
+
+        # unpck the original data. EOReader will do this an create a folder where all the data resides
+        # basically we use all this but we are going to move and remove some stuff for convenience
+        sourceList, unpack_folder = self.unpackOriginalData(self.dataSource, folder)
         for band in self.inputRaster['eo:bands'].items():
             source = sourceList[band[1]['name']]
             band['source'] = source
@@ -161,15 +184,19 @@ class LoadCollectionOperation(OpenEoOperation):
         self.inputRaster['dataFolder'] = folder
         self.dataSource = folder
         newDataSource = self.inputRaster.toMetadataFile(oldFolder)
+        # move the original data to a folder 'original_data'. It is now invisble to the system
         mvfolder = os.path.join(oldFolder, 'original_data')
         file_name = os.path.basename(self.inputRaster['dataSource'])
         common.makeFolder(mvfolder)
         shutil.move(self.inputRaster['dataSource'], mvfolder + "/" + file_name) 
+        #internal databse up to tdata to reflect the new (transformed) data
         self.inputRaster['dataSource'] = newDataSource
         fileIdDatabase[self.inputRaster['id']] = self.inputRaster
         saveIdDatabase(fileIdDatabase)
         return folder
-   
+    
+    # the properties parameter is basically a filter on metadata of a dataset. That filter has 
+    # the form of a (sub) process graph
     def checkProps(self, openeojob, toServer, fromServer, bandIndexes : list, layer : RasterLayer):
         for prop in self.properties.items():
             for idx in bandIndexes:
@@ -192,7 +219,10 @@ class LoadCollectionOperation(OpenEoOperation):
                     return oInfo['value']
         return True
 
-
+    ## this method selects the data as defined by the input parameters. Gathers it and , if possible, 
+    # creates one or more 3D rasters that are passed through the system. Rasters are per band (if needed)
+    # as bands represent different physical properties of a set of layers (t dimension). Each band can have
+    # multiple layers which represent the temporal extent. 
     def selectData(self, processOutput,openeojob, bandIndexes, env):
         outputRasters = []
         for bandIndex in bandIndexes:
@@ -204,6 +234,7 @@ class LoadCollectionOperation(OpenEoOperation):
                 if layer != None:
                     valueOk = False 
                     hasProp = hasattr(self, 'properties')
+                    # if we have a property filter we must check if this raster satisfies the condition(s)
                     if hasProp:
                         valueOk = self.checkProps(openeojob, processOutput,None, bandIndexes, layer)
                     ## only add layers that either don't have the property or if they have if must match the condition                        
@@ -214,6 +245,8 @@ class LoadCollectionOperation(OpenEoOperation):
                             self.handleError(processOutput, openeojob.job_id, 'Input raster', 'invalid sub-band:' + layer['source'], 'ProcessParameterInvalid')
 
                         ev = ilwis.Envelope("(" + env + ")")
+                        # if the requested enevelope doesn't match the envelope of the inputdata we execute the 'select'
+                        # operation to get a portion of the raster that we need
                         if not ev.equalsP(rband.envelope(), 0.001, 0.001, 0.001):
                             rc = ilwis.do("selection", rband, "envelope(" + env + ") with: " + bandIdxList)
                             if rc.size() != ilwis.Size(0,0,0):

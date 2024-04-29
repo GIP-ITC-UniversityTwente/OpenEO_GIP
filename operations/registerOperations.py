@@ -7,6 +7,10 @@ import json
 import logging
 import common
 
+# this method traverse the 'operations' folder to find all source modules that implement the
+# registerOperation method. If so it will call the registerOperation method which will create a 
+# class instance for that operation which holds the metadata of an operation. This object is stored 
+# with as key the operation id and can be usud for executing the operation (given the correct parameters)
 def initOperationMetadata(getOperation):
 
 # Specify the subdirectory path
@@ -15,11 +19,14 @@ def initOperationMetadata(getOperation):
     current_dir = os.path.dirname(os.path.abspath(__file__))
     subfolders = [ f.path for f in os.scandir(current_dir) if f.is_dir() ]
     for folder in subfolders:
+        # find all sources in the subfolder which implement the registerOperation method and register them
         operationsMetaData = loadOperationsFolder(folder, operationsMetaData)                   
 
+    # find all sources in the main folder which implement the registerOperation method and register them
     operationsMetaData = loadOperationsFolder(current_dir,operationsMetaData)
     common.logMessage(logging.INFO, 'finished registering operations')
     
+    # udfs
     rootLocation = os.path.join(os.path.dirname(__file__), '..')
     rootLocation = os.path.abspath(rootLocation)
     configFileLocation = os.path.join(rootLocation, 'config/config.json')

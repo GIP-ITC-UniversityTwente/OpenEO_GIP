@@ -33,6 +33,8 @@ default_errrors = json.load(codesfile)
 raster_data_sets = None
 process_user = 'system'
 
+# gets all rasterdata sets that are registered in the system
+# this is basically a cached value for performance reasons and consitency
 def getRasterDataSets():
     home = Path.home()
     loc = openeoip_config['data_locations']['system_files']
@@ -49,11 +51,14 @@ def getRasterDataSets():
             raster_data_sets =  pickle.loads(data) 
     return raster_data_sets
 
+# registers a data set in the system
 def saveIdDatabase(idDatabse):
         home = Path.home()
+        # retrieve the root syste, location from the config
         loc = openeoip_config['data_locations']['system_files']
         sytemFolder = os.path.join(home, loc['location'])
         propertiesFolder = os.path.join(home, sytemFolder)
+        # if the property folder doesnt exist create it
         if ( not os.path.exists(propertiesFolder)):
             os.makedirs(propertiesFolder)
         propsPath = os.path.join(propertiesFolder, 'id2filename.table')
@@ -61,6 +66,7 @@ def saveIdDatabase(idDatabse):
         pickle.dump(idDatabse, propsFile)
         propsFile.close() 
 
+# sets a message in the logger
 def logMessage(level, message, user='system'):
       logger = logging.getLogger('openeo')
       logger.log(level, '[ ' + user + ' ] '  + message)
