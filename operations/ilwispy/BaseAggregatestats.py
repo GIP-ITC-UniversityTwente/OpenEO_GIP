@@ -21,11 +21,10 @@ class BaseAggregateData(OpenEoOperation):
                 for rc in self.rasters:
                     if not rc:
                         self.handleError(toServer, job_id, 'Input raster','invalid input. rasters are not valid', 'ProcessParameterInvalid')
-                    if rc.getRaster().dataType() != ilwis.it.NUMERICDOMAIN:
+                    if rc.getRaster().datadef().domain().ilwisType() != ilwis.it.NUMERICDOMAIN:
                        self.handleError(toServer, job_id, 'Input raster', 'invalid datatype in raster. Must be numeric', 'ProcessParameterInvalid')
     
                 self.rasterSizesEqual = self.checkSpatialDimensions(self.rasters)  
-                self.method = 'unknown'
             elif isinstance(inpData ,list):
                 self.array = inpData
     
