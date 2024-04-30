@@ -19,7 +19,7 @@ class OpenEOIPCollection(Resource):
                 # if no result then there is no file for this id
                 if raster == None:
                     common.logMessage(logging.ERROR, "internal error, id and filename dont match for:" + name, common.process_user )
-                    return { "error" : "internal error, id and filename dont match for:" + name}
+                    return make_response(makeBaseResponseDict(-1, 'error', 400, None, "internal error, id and filename dont match for:" + name),400)
    
             longDict = raster.toLongDictDefinition()
             return make_response(jsonify(longDict),200)
