@@ -223,7 +223,7 @@ class OpenEOProcess(multiprocessing.Process):
             try:
                 timeStart = str(datetime.now())
                 common.logMessage(logging.INFO, 'started job_id: ' + self.job_id + "with name: " + self.title,common.process_user)
-                # start the process
+                # start the process graph
                 outputinfo = self.processGraph.run(self, toServer, self.fromServer)
                 timeEnd = str(datetime.now())
                 if 'spatialextent' in outputinfo:
@@ -248,8 +248,8 @@ class OpenEOProcess(multiprocessing.Process):
                     json.dump(dict, fp)   
                 common.logMessage(logging.INFO,'finished job_id: ' + self.job_id ,common.process_user)
             except  (Exception, BaseException, customexception.CustomException) as ex:
-                # end point for all exceptions. There maybe no exception handlers in the running
-                # of the graph (unless really, really needed) as it is assumed that an 'stopping' error
+                # end point for all exceptions. There should be no exception handlers in the running
+                # of the graph (unless really, really needed) as it is assumed that a 'stopping' error
                 # ends up here
                 timeEnd = str(datetime.now()) 
                 code = ''               
