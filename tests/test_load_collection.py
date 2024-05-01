@@ -38,7 +38,7 @@ class TestLoadCollection(basetests.BaseTest):
 
     def test_01_SpatialExtent(self): 
         self.prepare(sys._getframe().f_code.co_name)
-
+      
         spat_ext = {"eest": -119.2201, "south": 35.959, "east":  -119.0861, "north": 36.0574}
         basetests.testExceptionCondition1(self, False, lambda r1 : runLoadCollection(spat_ext=r1), spat_ext,"load_collection. illegal bounds,eest")
 
