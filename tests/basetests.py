@@ -2,6 +2,7 @@ import unittest
 import configglobals
 
 
+
 def testExceptionCondition6(p, expected,func, parm1, parm2, parm3, parm4, parm5, parm6, message):
       try:
            obj = func(parm1, parm2, parm3, parm4, parm5, parm6)
@@ -56,16 +57,16 @@ def testExceptionCondition1(p, expected, func, parm1, message):
 
 class BaseTest(unittest.TestCase):
     
-    def prepare(self, testdir):
+     def prepare(self, testdir):
          print('started:' + testdir)
          
 
-    def decorateFunction(self, mod, fn) :
+     def decorateFunction(self, mod, fn) :
         self.decoration = mod + " ==> " + fn 
         print("\n" + self.decoration + "\n")
 
 
-    def isEqual(self, str1, str2, msg):
+     def isEqual(self, str1, str2, msg):
         cls = configglobals.ErrorManager()
         cls.incTestCount()
         result = 'SUCCESS'
@@ -75,7 +76,7 @@ class BaseTest(unittest.TestCase):
 
         print(f'{cls.testCount():5} {msg:65}  {result}')
 
-    def isAlmostEqualNum(self, num1, num2, delta, msg) :
+     def isAlmostEqualNum(self, num1, num2, delta, msg) :
         cls = configglobals.ErrorManager()
         cls.incTestCount()
         result = 'SUCCESS'
@@ -86,7 +87,7 @@ class BaseTest(unittest.TestCase):
         print(f'{cls.testCount():5} {msg:65}  {result}')
 
  
-    def isTrue(self, b, msg):
+     def isTrue(self, b, msg):
         cls = configglobals.ErrorManager()
         cls.incTestCount() 
         result = 'FAIL'
@@ -96,7 +97,7 @@ class BaseTest(unittest.TestCase):
             cls.addErrorNumber(cls.testCount())         
         print(f'{cls.testCount():5} {msg:65}  {result}')
 
-    def isFalse(self, b, msg):
+     def isFalse(self, b, msg):
         cls = configglobals.ErrorManager()
         cls.incTestCount() 
         result = 'SUCCESS'
@@ -104,8 +105,8 @@ class BaseTest(unittest.TestCase):
             cls.addErrorNumber(cls.testCount())  
             result = 'FAIL'
         print(f'{cls.testCount():5} {msg:65}  {result}')
-                     
-
+        
+ 
    
 
 
