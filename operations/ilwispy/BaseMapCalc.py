@@ -96,7 +96,7 @@ class BaseBinarymapCalcBase(OpenEoOperation):
         for idx in range(len(rasters)):
             r = rasters[idx]
             self.createExtra(r, idx) 
-            for band in r['eo:bands']:
+            for band in r['rasterImplementation']:
                 rasterImpl = r.getRaster(band)
                 if rasterImpl:
                     rasterImpls.append(rasterImpl)
