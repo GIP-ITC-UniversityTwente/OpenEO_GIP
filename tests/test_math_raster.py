@@ -24,10 +24,7 @@ def execUnaryMathRaster(oper, name):
     expr = 'oeo.' + oper + '(cube_s1.band("B02"))'
     cube_s2 = cube_s1.apply(lambda : eval(expr))
     name = name + ".tif"
-    try:
-        cube_s2.download(name)
-    except Exception as ex:
-        print(ex)
+    cube_s2.download(name)
     basetests.testCheckSum('math', name, name)
 
 def execBinaryMathRasterAlt(oper, name):
