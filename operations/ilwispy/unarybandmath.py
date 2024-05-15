@@ -249,7 +249,6 @@ def registerOperation():
      funcs.append(SinHOperation())      
      funcs.append(TanHOperation())
      funcs.append(LnOperation())             
-     funcs.append(PowerOperation())
      funcs.append(SqrtOperation())    
      funcs.append(ExpOperation())     
      funcs.append(NotOperation())  
