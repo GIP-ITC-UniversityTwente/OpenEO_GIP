@@ -7,9 +7,10 @@ import openeo.rest.datacube
 from openeo.processes import ProcessBuilder, sum
 import constants.constants as cc
 
+
 conn = openeo.connect("http://127.0.0.1:5000")
 conn.authenticate_basic("tester", "pwd") 
-##conn = openeo.connect("http://cityregions.roaming.utwente.nl:5000")   
+##conn = openeo.connect("http://cityregions.roaming.utwente.nl:5000")  
 
 def getCube1():
     cube_s1 = conn.load_collection(
@@ -32,23 +33,18 @@ def getCube2():
    
 def execAgg(operation, sdata):
     cube_s2 = sdata.reduce_dimension(dimension="t", reducer=operation )
-    cube_s2.download("bbb3.tif")
-  
+    name = operation + ".tif"
+    cube_s2.download(name)
+    basetests.testCheckSum('aggregate', operation, name)
+
+   
 class TestAggregateStats(basetests.BaseTest):
 
     def test_01_agg_raster(self): 
         self.prepare(sys._getframe().f_code.co_name)
-
         cubedata=getCube2()
-        basetests.testExceptionCondition1(self, True, lambda r1 : execAgg(operation=r1, sdata=cubedata), 'sum',"Aggregate stats 2 bands. sum")
-        basetests.testExceptionCondition1(self, True, lambda r1 : execAgg(operation=r1, sdata=cubedata), 'mean',"Aggregate stats 2 bands. mean")
-        basetests.testExceptionCondition1(self, True, lambda r1 : execAgg(operation=r1, sdata=cubedata), 'max',"Aggregate stats 2 bands. max")
-        basetests.testExceptionCondition1(self, True, lambda r1 : execAgg(operation=r1, sdata=cubedata), 'min',"Aggregate stats 2 bands. min")
-        basetests.testExceptionCondition1(self, True, lambda r1 : execAgg(operation=r1, sdata=cubedata), 'median',"Aggregate stats 2 bands. median")
-        basetests.testExceptionCondition1(self, True, lambda r1 : execAgg(operation=r1, sdata=cubedata), 'sd',"Aggregate stats 2 bands. standard deviation")
-        basetests.testExceptionCondition1(self, True, lambda r1 : execAgg(operation=r1, sdata=cubedata), 'variance',"Aggregate stats 2 bands. variance")
-        basetests.testExceptionCondition1(self, False, lambda r1 : execAgg(operation=r1, sdata=cubedata), 'dummy',"Aggregate stats 2 bands. operation doesnt exist")
-
+        basetests.testExceptionCondition1(self, False, lambda r1 : execAgg(operation=r1, sdata=cubedata), 'sum',"two result, one download. must fail. sum")
+       
         cubedata=getCube1()
         basetests.testExceptionCondition1(self, True, lambda r1 : execAgg(operation=r1, sdata=cubedata), 'sum',"Aggregate stats. sum")
         basetests.testExceptionCondition1(self, True, lambda r1 : execAgg(operation=r1, sdata=cubedata), 'mean',"Aggregate stats. mean")
@@ -57,6 +53,10 @@ class TestAggregateStats(basetests.BaseTest):
         basetests.testExceptionCondition1(self, True, lambda r1 : execAgg(operation=r1, sdata=cubedata), 'median',"Aggregate stats. median")
         basetests.testExceptionCondition1(self, True, lambda r1 : execAgg(operation=r1, sdata=cubedata), 'sd',"Aggregate stats. standard deviation")
         basetests.testExceptionCondition1(self, True, lambda r1 : execAgg(operation=r1, sdata=cubedata), 'variance',"Aggregate stats. variance")
-        basetests.testExceptionCondition1(self, False, lambda r1 : execAgg(operation=r1, sdata=cubedata), 'dummy',"Aggregate stats. operation doesnt exist")
+        basetests.testExceptionCondition1(self, False, lambda r1 : execAgg(operation=r1, sdata=cubedata), 'dummy',"Aggregate stats. operation doesnt exist")        
+
+     
+
+      
 
       

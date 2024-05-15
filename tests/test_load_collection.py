@@ -3,7 +3,6 @@ from tests import basetests
 import openeo
 import sys
 
-
 def runLoadCollection(spat_ext={}, temp_ext=[], dataset="", sbands=[]):
 
     if spat_ext == {}:
@@ -28,9 +27,9 @@ def runLoadCollection(spat_ext={}, temp_ext=[], dataset="", sbands=[]):
         temporal_extent = temp_ext,
         bands = sbands
     )
-    cube_s2 = cube_s2.reduce_dimension(dimension="t", reducer="mean" )
-    cube_s2.download("bbb3.tif")
-
+    #cube_s2 = cube_s2.reduce_dimension(dimension="t", reducer="mean" )
+    op = "load_collection_.tiff"
+    cube_s2.download(op)
 
 class TestLoadCollection(basetests.BaseTest):
    # def setUp(self):
