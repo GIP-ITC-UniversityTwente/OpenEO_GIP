@@ -10,6 +10,8 @@ from userinfo import UserInfo
 from rasterdata import RasterData
 import common
 import logging
+import tests.addTestRasters as tr
+
 
 class OpenEOIPCollections(Resource):
     def get(self):
@@ -33,6 +35,7 @@ def loadCollections():
        
     allJson = {}
     allCollections = []
+
 
     for location in data_locations:
         path = location["location"]
@@ -78,6 +81,9 @@ def loadCollections():
     allJson["links"] = globalsSingleton.openeoip_config['links']
 
     globalsSingleton.saveIdDatabase() 
+    rasters = tr.setTestRasters(5)
+    for r in rasters:
+        globalsSingleton.internal_database[r['id']] = r
     common.logMessage(logging.INFO, 'finished reading collections',common.process_user)
 
     return allJson    
