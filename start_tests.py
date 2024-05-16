@@ -15,7 +15,7 @@ sys.path.append(pp)
 
 loader = unittest.TestLoader()
 
-cls = configglobals.ErrorManager()
+cls = configglobals.TestManager()
 cls.init()
 
 #tests = loader.discover('./tests','test_*.py')
@@ -30,4 +30,6 @@ elist = cls.errorList()
 print("\nnumber of tests : " + tcount)
 print("number of fails in tests : " + ecount)
 print("error list : " + elist)
+
+configglobals.cleanup()
 
