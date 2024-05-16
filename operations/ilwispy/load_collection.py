@@ -15,6 +15,7 @@ from globals import getOperation
 from workflow.processGraph import ProcessGraph
 import copy
 
+
 class LoadCollectionOperation(OpenEoOperation):
     def __init__(self):
         self.loadOpenEoJsonDef('load_collection.json')
@@ -100,7 +101,7 @@ class LoadCollectionOperation(OpenEoOperation):
         if 'serverChannel' in arguments:
             toServer = arguments['serverChannel']
             job_id = arguments['job_id']
-                        
+
         fileIdDatabase = getRasterDataSets()          
         self.inputRaster = fileIdDatabase[arguments['id']['resolved']]
         # the requested data could not be found on the server
@@ -143,10 +144,16 @@ class LoadCollectionOperation(OpenEoOperation):
             if sect != None:
                 # the parameter spatial_extent is giving in latlon. To see if its values makes sense in
                 # the context of the input data its value must be translated to the SRS of the input data.
+                # note that in the case of synthetic data self.inputRaster['rasterImplementation'] isn't empty
+                # and we can use that data directly
                 self.checkSpatialExt(toServer, job_id, sect)
-                source = self.inputRaster.idx2layer(1)['source']                     
-                datapath = os.path.join(path, source)                            
-                rband = ilwis.RasterCoverage(datapath)
+                if len(self.inputRaster['rasterImplementation']) == 0:
+                    source = self.inputRaster.idx2layer(1)['source']                     
+                    datapath = os.path.join(path, source)                            
+                    rband = ilwis.RasterCoverage(datapath)
+                else:
+                    key = next(iter(self.inputRaster['rasterImplementation']))
+                    rband = self.inputRaster['rasterImplementation'][key]
                 csyLL = ilwis.CoordinateSystem("epsg:4326")
                 llenv = ilwis.Envelope(ilwis.Coordinate(sect['west'], sect['south']), ilwis.Coordinate(sect['east'], sect['north']))
                 envCube = rband.coordinateSystem().convertEnvelope(csyLL, llenv)
@@ -229,34 +236,39 @@ class LoadCollectionOperation(OpenEoOperation):
             bandIdxList = 'rasterbands(' + str(bandIndex) + ')'
             ilwisRasters = []
             layerTempExtent = []
-            for lyrIdx in self.lyrIdxs:
-                layer = self.inputRaster.idx2layer(lyrIdx)
-                if layer != None:
-                    valueOk = False 
-                    hasProp = hasattr(self, 'properties')
-                    # if we have a property filter we must check if this raster satisfies the condition(s)
-                    if hasProp:
-                        valueOk = self.checkProps(openeojob, processOutput,None, bandIndexes, layer)
-                    ## only add layers that either don't have the property or if they have if must match the condition                        
-                    if not hasProp or valueOk:
-                        layerTempExtent.append(layer['temporalExtent'])
-                        rband = ilwis.RasterCoverage(layer['source'])
-                        if rband.size() == ilwis.Size(0,0,0):
-                            self.handleError(processOutput, openeojob.job_id, 'Input raster', 'invalid sub-band:' + layer['source'], 'ProcessParameterInvalid')
+            # synthetic data is already loaded and ready to use. In that case inputRaster['rasterImplementation'] is already there
+            # and load_collection doesn't have to do much of actual loading
+            if len(self.inputRaster['rasterImplementation']) == 0:
+                for lyrIdx in self.lyrIdxs:
+                    layer = self.inputRaster.idx2layer(lyrIdx)
+                    if layer != None:
+                        valueOk = False 
+                        hasProp = hasattr(self, 'properties')
+                        # if we have a property filter we must check if this raster satisfies the condition(s)
+                        if hasProp:
+                            valueOk = self.checkProps(openeojob, processOutput,None, bandIndexes, layer)
+                        ## only add layers that either don't have the property or if they have if must match the condition                        
+                        if not hasProp or valueOk:
+                            layerTempExtent.append(layer['temporalExtent'])
+                            rband = ilwis.RasterCoverage(layer['source'])
+                            if rband.size() == ilwis.Size(0,0,0):
+                                self.handleError(processOutput, openeojob.job_id, 'Input raster', 'invalid sub-band:' + layer['source'], 'ProcessParameterInvalid')
 
-                        ev = ilwis.Envelope("(" + env + ")")
-                        # if the requested enevelope doesn't match the envelope of the inputdata we execute the 'select'
-                        # operation to get a portion of the raster that we need
-                        if not ev.equalsP(rband.envelope(), 0.001, 0.001, 0.001):
-                            rc = ilwis.do("selection", rband, "envelope(" + env + ") with: " + bandIdxList)
-                            if rc.size() != ilwis.Size(0,0,0):
-                                ilwisRasters.append(rc)
-                        else:
-                            ilwisRasters.append(rband) 
+                            ev = ilwis.Envelope("(" + env + ")")
+                            # if the requested enevelope doesn't match the envelope of the inputdata we execute the 'select'
+                            # operation to get a portion of the raster that we need
+                            if not ev.equalsP(rband.envelope(), 0.001, 0.001, 0.001):
+                                rc = ilwis.do("selection", rband, "envelope(" + env + ") with: " + bandIdxList)
+                                if rc.size() != ilwis.Size(0,0,0):
+                                    ilwisRasters.append(rc)
+                            else:
+                                ilwisRasters.append(rband) 
 
-            extra = self.constructExtraParams(self.inputRaster, self.temporalExtent, bandIndex)
-            extra['textsublayers'] = layerTempExtent
-            outputRasters.extend(self.setOutput(ilwisRasters, extra)) 
+                extra = self.constructExtraParams(self.inputRaster, self.temporalExtent, bandIndex)
+                extra['textsublayers'] = layerTempExtent
+                outputRasters.extend(self.setOutput(ilwisRasters, extra)) 
+            else:
+                outputRasters.append(self.inputRaster)
 
         return outputRasters                   
 
