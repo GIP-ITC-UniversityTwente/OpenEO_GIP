@@ -145,7 +145,7 @@ class XorOperation(BaseBinarymapCalcBase):
 
 class PowerOperation(BaseBinarymapCalcBase):
     def __init__(self):
-        self.loadOpenEoJsonDef('pow.json')
+        self.loadOpenEoJsonDef('power.json')
 
     def prepare(self, arguments):
         self.base_prepare(arguments, 'pow')
