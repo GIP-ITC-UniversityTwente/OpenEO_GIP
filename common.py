@@ -13,6 +13,8 @@ from zipfile import ZipFile
 import os
 from datetime import datetime
 from dateutil import parser
+import tests.addTestRasters as tr
+
 
 possible_time_formats = [
     "%Y-%m-%d %H:%M:%S",  # Format 1: YYYY-MM-DD HH:MM:SS
@@ -32,6 +34,7 @@ default_errrors = json.load(codesfile)
 
 raster_data_sets = None
 process_user = 'system'
+testRaster_openeo1  = None
 
 # gets all rasterdata sets that are registered in the system
 # this is basically a cached value for performance reasons and consitency
@@ -48,7 +51,11 @@ def getRasterDataSets():
                 data = f.read()
             f.close()
             lock.release()    
-            raster_data_sets =  pickle.loads(data) 
+            raster_data_sets =  pickle.loads(data)
+            
+    rasters = tr.setTestRasters(5)
+    for r in rasters:
+        raster_data_sets[r['id']] = r         
     return raster_data_sets
 
 # registers a data set in the system
