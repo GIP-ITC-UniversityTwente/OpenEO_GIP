@@ -37,6 +37,8 @@ CUSTOMERROR = "custom error"
 ERRORPARAMETER = 'ParameterError'
 ERROROPERATION = 'OperationError'
 
+TESTFILENAME1 = 'SYNTHETIC_DATA1'
+
 
 
 
