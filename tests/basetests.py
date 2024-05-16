@@ -87,7 +87,7 @@ def checksum(p):
                return hex(asum)[2:10].zfill(8).lower()   
 
 def testCheckSum(group, operation, name):
-     testdir = '/home/mschouwen/testdata/openeo/result'
+     testdir = configglobals.testdir
      #group = 'aggregate'
      testdiragg = testdir + "/" + group
      if os.path.exists(name):
@@ -136,7 +136,7 @@ class BaseTest(unittest.TestCase):
 
 
      def isEqual(self, str1, str2, msg):
-        cls = configglobals.ErrorManager()
+        cls = configglobals.TestManager()
         cls.incTestCount()
         result = 'SUCCESS'
         if (str1 != str2):
@@ -146,7 +146,7 @@ class BaseTest(unittest.TestCase):
         print(f'{cls.testCount():5} {msg:65}  {result}')
 
      def isAlmostEqualNum(self, num1, num2, delta, msg) :
-        cls = configglobals.ErrorManager()
+        cls = configglobals.TestManager()
         cls.incTestCount()
         result = 'SUCCESS'
         if (abs(num1 - num2) > delta):
@@ -157,7 +157,7 @@ class BaseTest(unittest.TestCase):
 
  
      def isTrue(self, b, msg):
-        cls = configglobals.ErrorManager()
+        cls = configglobals.TestManager()
         cls.incTestCount() 
         result = 'FAIL'
         if (b):
@@ -167,7 +167,7 @@ class BaseTest(unittest.TestCase):
         print(f'{cls.testCount():5} {msg:65}  {result}')
 
      def isFalse(self, b, msg):
-        cls = configglobals.ErrorManager()
+        cls = configglobals.TestManager()
         cls.incTestCount() 
         result = 'SUCCESS'
         if (b):
