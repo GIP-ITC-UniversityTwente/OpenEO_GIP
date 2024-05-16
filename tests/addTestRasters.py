@@ -2,7 +2,7 @@ import ilwis
 import math
 import numpy as np
 import common
-from rasterdata import RasterData
+from rasterdata import RasterData, RasterBand
 import os
 from pathlib import Path
 import constants.constants as cc
@@ -37,9 +37,9 @@ def createSmallNumericRasterNLayers(dims, alternate=0):
                             
     return rc 
     
-def getTestRaster(dims):
-    if common.testRaster_openeo != None:
-        return common.testRaster_openeo
+def setTestRasters(dims):
+    if common.testRaster_openeo1 != None:
+        return common.testRaster_openeo1
     
     rc = createSmallNumericRasterNLayers(dims)
     raster = RasterData()
@@ -58,10 +58,22 @@ def getTestRaster(dims):
     path = Path(folder).as_uri()
     ilwis.setWorkingCatalog(path)  
     raster.load(rc, 'ilwisraster', extra)
-    raster['name'] = cc.TESTFILENAME
+    bdns = {}
+    band = RasterBand()
+    band['name'] = 'TB01'
+    band['normalizedbandname']= 'TB01'
+    band['details'] = {}
+    band['bandIndex'] = 0
+    band['type'] = 'float'
+    bdns[band['name']] = band
+    raster['eo:bands'] = bdns
 
-    common.testRaster_openeo = raster
+    raster['id'] = raster['name'] = cc.TESTFILENAME1
 
-    return raster
+    common.testRaster_openeo1 = [raster]
+
+    return [raster]
+  
+
    
    
