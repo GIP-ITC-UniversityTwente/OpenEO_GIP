@@ -121,6 +121,17 @@ class ATanOperation(BaseUnarymapCalc):
     def run(self,openeojob, processOutput, processInput):
         return self.base_run(openeojob, processOutput, processInput) 
 
+class ATanHOperation(BaseUnarymapCalc):
+    def __init__(self):
+        self.loadOpenEoJsonDef('artanh.json')
+
+    def prepare(self, arguments):
+        self.base_prepare(arguments, 'atanh')
+        return ""
+
+    def run(self,openeojob, processOutput, processInput):
+        return self.base_run(openeojob, processOutput, processInput) 
+
 class AbsOperation(BaseUnarymapCalc):
     def __init__(self):
         self.loadOpenEoJsonDef('absolute.json')
@@ -241,6 +252,7 @@ def registerOperation():
      funcs.append(ASinHOperation())      
      funcs.append(TanOperation()) 
      funcs.append(ATanOperation()) 
+     funcs.append(ATanHOperation()) 
      funcs.append(AbsOperation()) 
      funcs.append(CeilOperation())                                     
      funcs.append(IntOperation())      
