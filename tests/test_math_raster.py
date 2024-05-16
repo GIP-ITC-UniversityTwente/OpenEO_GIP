@@ -12,30 +12,39 @@ import constants.constants as cc
 conn = openeo.connect("http://127.0.0.1:5000")
 conn.authenticate_basic("tester", "pwd") 
 ##conn = openeo.connect("http://cityregions.roaming.utwente.nl:5000")  
-
+'''
 cube_s1 = conn.load_collection(
     "Sentinel2TimeSeriesData" ,
     spatial_extent =  {"west": -119.2201, "south": 35.959, "east":  -119.0861, "north": 36.0574},
     temporal_extent =  ["2018-11-18", "2019-10-24"],
     bands = ['B02','B04']
 )
+'''
+
+cube_s1 = conn.load_collection(
+    "SYNTHETIC_DATA1" ,
+    spatial_extent =  {"west": -5, "south": 26, "east":  65, "north":67},
+    temporal_extent =  ["2020-11-03", "2020-11-07"],
+    bands = ['TB01']
+)
+band_selection = 'cube_s1.band("TB01")'
 
 def execUnaryMathRaster(oper, name):
-    expr = 'oeo.' + oper + '(cube_s1.band("B02"))'
+    expr = 'oeo.' + oper + '(' + band_selection + ')'
     cube_s2 = cube_s1.apply(lambda : eval(expr))
     name = name + ".tif"
     cube_s2.download(name)
     basetests.testCheckSum('math', name, name)
 
 def execBinaryMathRasterAlt(oper, name):
-    expr = oper + '(cube_s1.band("B02"), 10)'
+    expr = oper + '(' + band_selection + ', 10)'
     new_cube = cube_s1.apply(lambda : eval(expr))
     name = name + ".tif"
     new_cube.download(name)
     basetests.testCheckSum('math', oper, name)
 
 def execBinaryMathRaster(oper, name):
-    expr = 'cube_s1.band("B02")' + oper + '10' 
+    expr = band_selection + oper + '10' 
     cube_s2 = eval(expr)
     name = name + ".tif"
     cube_s2.download(name)
