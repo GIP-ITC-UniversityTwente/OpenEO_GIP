@@ -90,6 +90,8 @@ class Globals :
             p = item[0]
             if p == id:
                 raster = item[1]
+                if not os.path.exists(raster['dataSource']): #virtual datasets with no real source
+                    return raster
                 mttime = datetime.datetime.fromtimestamp(os.path.getmtime(raster['dataSource']))
                 if mttime == raster['lastmodified']:
                     return raster
