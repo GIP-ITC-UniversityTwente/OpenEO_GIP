@@ -268,7 +268,24 @@ class LoadCollectionOperation(OpenEoOperation):
                 extra['textsublayers'] = layerTempExtent
                 outputRasters.extend(self.setOutput(ilwisRasters, extra)) 
             else:
-                outputRasters.append(self.inputRaster)
+                bandIdxList = ''
+                layerTempExtent = []
+                for lyrIdx in self.lyrIdxs:
+                    layer = self.inputRaster.idx2layer(lyrIdx)
+                    layerTempExtent.append(layer['temporalExtent'])
+                    if bandIdxList == '':
+                        bandIdxList = str(lyrIdx)
+                    else:
+                        bandIdxList = bandIdxList + ','+ str(lyrIdx)
+                bandIdxList = 'rasterbands(' + bandIdxList + ')'                        
+                key = next(iter(self.inputRaster['rasterImplementation'])) 
+                raster = self.inputRaster['rasterImplementation'][key]                  
+                rc = ilwis.do("selection", raster, "envelope(" + env + ") with: " + bandIdxList)
+                extra = self.constructExtraParams(self.inputRaster, self.temporalExtent, 0)
+                extra['textsublayers'] = layerTempExtent                
+                rasterData = RasterData()
+                rasterData.load(rc, 'ilwisraster', extra )
+                outputRasters.append(rasterData) 
 
         return outputRasters                   
 
