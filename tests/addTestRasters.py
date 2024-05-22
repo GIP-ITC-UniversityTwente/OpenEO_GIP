@@ -36,11 +36,8 @@ def createSmallNumericRasterNLayers(dims, alternate=0):
              
                             
     return rc 
-    
-def setTestRasters(dims):
-    if common.testRaster_openeo1 != None:
-        return common.testRaster_openeo1
-    
+
+def setTestRaster(dims, bndcount = 1):
     rc = createSmallNumericRasterNLayers(dims)
     raster = RasterData()
     end = '2020-11-' + str((dims+1)*2)
@@ -59,20 +56,33 @@ def setTestRasters(dims):
     ilwis.setWorkingCatalog(path)  
     raster.load(rc, 'ilwisraster', extra)
     bdns = {}
-    band = RasterBand()
-    band['name'] = 'TB01'
-    band['normalizedbandname']= 'TB01'
-    band['details'] = {}
-    band['bandIndex'] = 0
-    band['type'] = 'float'
-    bdns[band['name']] = band
+    for i in range(bndcount):
+        band = RasterBand()
+        band['name'] = 'TB0' + str(i+1)
+        band['normalizedbandname']=  band['name']
+        band['details'] = {}
+        band['bandIndex'] = i
+        band['type'] = 'float'
+        bdns[band['name']] = band
     raster['eo:bands'] = bdns
 
-    raster['id'] = raster['name'] = cc.TESTFILENAME1
+ 
 
-    common.testRaster_openeo1 = [raster]
+    return raster
 
-    return [raster]
+def setTestRasters(dims):
+    if common.testRaster_openeo1 != None:
+        return common.testRaster_openeo1
+    
+    raster1 = setTestRaster(dims, 1)
+    raster1['id'] = raster1['name'] = cc.TESTFILENAME1    
+
+    raster2 = setTestRaster(dims, 2)
+    raster2['id'] = raster2['name'] = cc.TESTFILENAME2        
+
+    common.testRaster_openeo1 = [raster1, raster2]
+
+    return [raster1, raster2]
   
 
    
