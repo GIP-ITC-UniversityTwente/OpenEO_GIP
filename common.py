@@ -10,7 +10,7 @@ import mimetypes
 from constants.constants import *
 from io import BytesIO
 from zipfile import ZipFile
-import os
+import os, shutil
 from datetime import datetime
 from dateutil import parser
 import tests.addTestRasters as tr
@@ -112,7 +112,7 @@ def errorJson(errorStringCode, id, message):
                 
         return {"id" : id, "code" : 400, "message" : message }
 
-def makeResponse(outputInfo):
+def makeResponse(outputInfo, context = None):
     if outputInfo == None:
          return  {"id" : -1, "code" : 400, "message" : 'no output information' }
     
@@ -139,7 +139,14 @@ def makeResponse(outputInfo):
                     response = Response(w,
                                     mimetype="application/x-zip",
                                     direct_passthrough=True)
-
+            if context != None:
+                if isinstance(context, dict):
+                    if 'removedata' in context:
+                        job_id = context['removedata']
+                        filePath = openeoip_config['data_locations']['root_user_data_location']
+                        filePath = filePath['location'] + '/' + str(job_id)  
+                        if os.path.isdir(filePath):
+                            shutil.rmtree(filePath)    
                 
         elif outputInfo["datatype"] != DTRASTER:
             response = Response(str(outputInfo["value"]), mimetype = "string", direct_passthrough=True)
