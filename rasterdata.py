@@ -203,7 +203,8 @@ class RasterData(dict):
         self['dataSource'] = url
         self['dataFolder'] = head
         self['eo:bands'] = {}
-        self['rasterImplementation'] = {extraParams['bands'][0]['name'] : ilwisRaster}
+        for b in extraParams['bands']:
+            self['rasterImplementation'] = {b['name'] : ilwisRaster}
         
         self.layerIndex = 0
         if 'textsublayers' in extraParams:
