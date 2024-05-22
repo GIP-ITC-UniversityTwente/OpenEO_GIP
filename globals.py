@@ -10,6 +10,8 @@ import uuid
 import sqlite3
 from authenticationdatabase import authenticationDB
 from flask import jsonify, make_response
+import fnmatch
+import copy
 
 def authenticateError():
     err = globalsSingleton.errorJson('AuthenticationRequired', 0,'')
@@ -106,7 +108,13 @@ class Globals :
                         
         propsPath = os.path.join(propertiesFolder, 'id2filename.table')
         propsFile = open(propsPath, 'wb')
-        pickle.dump(self.internal_database, propsFile)
+        cp_db = {}
+        #keys SYNTHETIC_DATA may not be saved as they contain a 'unpickable' member and are generated anyway
+        for key,value in self.internal_database.items():
+            if key.find('SYNTHETIC_DATA') == -1:
+                cp_db[key] = value
+
+        pickle.dump(cp_db, propsFile)
         propsFile.close() 
 
     def loadIdDatabase(self):
