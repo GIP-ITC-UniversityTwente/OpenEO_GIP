@@ -90,6 +90,7 @@ def testCheckSum(group, operation, name):
      testdir = configglobals.testdir
      #group = 'aggregate'
      testdiragg = testdir + "/" + group
+     testfile = os.path.join(testdiragg, name)
      if os.path.exists(name):
           file_stats = os.stat(name) # sometimes if an error occurs openeo still creates an empty result file
           if file_stats.st_size == 0:
@@ -106,7 +107,6 @@ def testCheckSum(group, operation, name):
                          data = json.load(fp)
                else: # probably rest of an aborted test
                     os.remove(checksumfile)               
-          testfile = testdiragg + "/"+ name        
           if os.path.exists(testfile):        
                os.remove(testfile)
           shutil.move(name, testdiragg)
