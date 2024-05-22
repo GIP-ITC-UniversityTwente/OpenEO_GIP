@@ -37,7 +37,7 @@ class OpenEOIPResult(AuthenticatedResource):
             if process.processGraph != None:
                 outputInfo = process.processGraph.run(process, None, None)
                 common.logMessage(logging.INFO, 'ended sync: ' + process.job_id , common.process_user)
-                return common.makeResponse(outputInfo)
+                return common.makeResponse(outputInfo, {'removedata' : process.job_id})
         except (Exception, CustomException) as ex:
             code = 'unknow error'
             if isinstance(ex, CustomException):
