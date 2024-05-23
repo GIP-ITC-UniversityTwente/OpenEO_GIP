@@ -3,6 +3,25 @@ from tests import basetests
 import openeo
 import sys
 
+conn = basetests.openConnection()
+
+def runLoadCollectionDefault(spat_ext={}, temp_ext=[], dataset="", sbands=[], name='test'):
+    if dataset == "":
+        dataset = "Sentinel2TimeSeriesData" 
+        
+    if spat_ext == {} and temp_ext == [] and sbands == []:
+        cube_s2 = conn.load_collection(dataset)
+    elif spat_ext!={}:
+        cube_s2 = conn.load_collection(dataset,spatial_extent = spat_ext)
+
+    result = cube_s2.save_result("GTiff")
+    job = result.create_job()
+    job.start_and_wait()
+    job.get_results().download_files(name)
+
+    basetests.testCheckSumMulti('load_collection', name)
+
+
 def runLoadCollection(spat_ext={}, temp_ext=[], dataset="", sbands=[], name='test', multi = False):
 
     if spat_ext == {}:
@@ -15,9 +34,6 @@ def runLoadCollection(spat_ext={}, temp_ext=[], dataset="", sbands=[], name='tes
         sbands = []
     elif sbands == []:
         sbands = ['B02']        
-
-    conn = basetests.openConnection()
-  
 
     cube_s2 = conn.load_collection(
         dataset,
@@ -42,7 +58,16 @@ class TestLoadCollection(basetests.BaseTest):
    # def setUp(self):
    #     self.prepare('base')
 
-    def test_01_SpatialExtent(self): 
+    def test_01_SpatialExtent(self):
+        self.prepare(sys._getframe().f_code.co_name)
+
+        basetests.testExceptionCondition1(self, True, lambda r1 : runLoadCollectionDefault(dataset=r1, name='ldc1'),"Sentinel2TimeSeriesData" ,"load_collection. illegal bounds,eest")
+        
+        spat_ext = {"west": -119.2201, "south": 35.959, "east":  -119.0861, "north": 36.0574}
+        basetests.testExceptionCondition1(self, True, lambda r1 : runLoadCollectionDefault(spat_ext=r1, name='ldc2'),"Sentinel2TimeSeriesData" ,"load_collection. illegal bounds,eest")        
+
+
+    def test_02_SpatialExtent(self): 
         self.prepare(sys._getframe().f_code.co_name)
       
         spat_ext = {"eest": -119.2201, "south": 35.959, "east":  -119.0861, "north": 36.0574}
