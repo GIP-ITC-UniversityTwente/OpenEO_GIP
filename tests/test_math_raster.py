@@ -26,21 +26,21 @@ def execUnaryMathRaster(oper, name):
     cube_c4 = cube_s3.apply(lambda : eval(expr))
     name = name + ".tif"
     cube_c4.download(name)
-    basetests.testCheckSum('math', name, name)
+    basetests.testCheckSumSingle('math', name, name)
 
 def execBinaryMathRasterAlt(oper, name):
     expr = oper + '(' + band_selection + ', 10)'
     new_cube = cube_s3.apply(lambda : eval(expr))
     name = name + ".tif"
     new_cube.download(name)
-    basetests.testCheckSum('math', oper, name)
+    basetests.testCheckSumSingle('math', oper, name)
 
 def execBinaryMathRaster(oper, name):
     expr = band_selection + oper + '3.45' 
     cube_s4 = eval(expr)
     name = name + ".tif"
     cube_s4.download(name)
-    basetests.testCheckSum('math', name, name)
+    basetests.testCheckSumSingle('math', name, name)
 
 class TestMathRaster(basetests.BaseTest):
     def test_01_binary_math_raster(self): 
