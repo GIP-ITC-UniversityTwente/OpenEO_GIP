@@ -8,9 +8,8 @@ from openeo.processes import ProcessBuilder, sum
 import constants.constants as cc
 
 
-conn = openeo.connect("http://127.0.0.1:5000")
-conn.authenticate_basic("tester", "pwd") 
-##conn = openeo.connect("http://cityregions.roaming.utwente.nl:5000")  
+conn = basetests.openConnection()
+
 
 cube_s1 = conn.load_collection(
     cc.TESTFILENAME1 ,
@@ -29,7 +28,7 @@ def execAgg(operation, sdata):
     cube_s2 = sdata.reduce_dimension(dimension="t", reducer=operation )
     name = operation + ".tif"
     cube_s2.download(name)
-    basetests.testCheckSum('aggregate', operation, name)
+    basetests.testCheckSumSingle('aggregate', operation, name)
 
    
 class TestAggregateStats(basetests.BaseTest):

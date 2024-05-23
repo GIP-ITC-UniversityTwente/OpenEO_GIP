@@ -4,10 +4,17 @@ from zlib import adler32
 import shutil
 import os
 import json
+import openeo
 
 
 CUSTOM_EX = 'CUSTOM_EX@'
 
+def openConnection() :
+     conn = openeo.connect("http://127.0.0.1:5000")
+     conn.authenticate_basic("tester", "pwd") 
+     ##conn = openeo.connect("http://cityregions.roaming.utwente.nl:5000")
+     return conn
+ 
 def customError(regular_message, custom_message):
      if not custom_message.find(CUSTOM_EX) == -1:
           parts = custom_message.split('@')
@@ -214,6 +221,8 @@ class BaseTest(unittest.TestCase):
             cls.addErrorNumber(cls.testCount())  
             result = 'FAIL'
         print(f'{cls.testCount():5} {msg:65}  {result}')
+
+
         
 
    

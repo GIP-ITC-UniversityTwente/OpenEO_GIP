@@ -9,9 +9,7 @@ import openeo.processes as oeo
 import constants.constants as cc
 
 
-conn = openeo.connect("http://127.0.0.1:5000")
-conn.authenticate_basic("tester", "pwd") 
-##conn = openeo.connect("http://cityregions.roaming.utwente.nl:5000")  
+conn = basetests.openConnection()
 
 cube_s3 = conn.load_collection(
     cc.TESTFILENAME1 ,

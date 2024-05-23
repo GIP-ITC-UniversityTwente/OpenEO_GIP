@@ -16,9 +16,7 @@ def runLoadCollection(spat_ext={}, temp_ext=[], dataset="", sbands=[], name='tes
     elif sbands == []:
         sbands = ['B02']        
 
-    conn = openeo.connect("http://127.0.0.1:5000")
-    conn.authenticate_basic("tester", "pwd")    
-    ##conn = openeo.connect("http://cityregions.roaming.utwente.nl:5000")
+    conn = basetests.openConnection()
   
 
     cube_s2 = conn.load_collection(
@@ -32,11 +30,12 @@ def runLoadCollection(spat_ext={}, temp_ext=[], dataset="", sbands=[], name='tes
         job = result.create_job()
         job.start_and_wait()
         job.get_results().download_files(name)
+
         basetests.testCheckSumMulti('load_collection', name)
     else:
-        op = "load_collection_.tiff"
         opf = name + ".tif"
         cube_s2.download(opf)
+
         basetests.testCheckSumSingle('load_collection', name, opf)
 
 class TestLoadCollection(basetests.BaseTest):
