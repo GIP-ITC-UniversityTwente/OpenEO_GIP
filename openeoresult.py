@@ -30,9 +30,11 @@ class OpenEOIPResult(AuthenticatedResource):
         user = UserInfo(request)
         try:
             process = OpenEOProcess(user, request_json,0)
+            ''' seems the client already sends a validate request befor trying to run it so this one is superflous
             errors =  process.validate()
             if len(errors) > 0:
                 raise Exception(str(errors))
+            '''
             common.logMessage(logging.INFO, 'started sync: ' + process.job_id , common.process_user)
             if process.processGraph != None:
                 outputInfo = process.processGraph.run(process, None, None)
