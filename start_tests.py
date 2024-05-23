@@ -18,8 +18,8 @@ loader = unittest.TestLoader()
 cls = configglobals.TestManager()
 cls.init()
 
-tests = loader.discover('./tests','test_*.py')
-#tests = loader.discover('./tests','test_l*.py')
+#tests = loader.discover('./tests','test_*.py')
+tests = loader.discover('./tests','test_l*.py')
 testRunner = unittest.runner.TextTestRunner()
 testRunner.run(tests)
 
