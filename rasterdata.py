@@ -351,24 +351,30 @@ class RasterData(dict):
     #translate a list of bandnames to its corresponding indexes
     def getBandIndexes(self, requestedBands):
         idxs = []
-        for reqBandName in requestedBands:
-            idx = 0 
+        if len(requestedBands) == 0: # all bands
             for b in self['eo:bands'].items():
-                if b[1]['name'] == reqBandName or b[1]['normalizedbandname'] == reqBandName:
-                    if 'bandIndex' in b[1]:
-                        idxs.append(b[1]['bandIndex'])
-                        break
-                    else:                    
-                        idxs.append(idx)
-                idx = idx + 1
+                idxs.append(b[1]['bandIndex'])
+        else:
+            for reqBandName in requestedBands:
+                idx = 0 
+                for b in self['eo:bands'].items():
+                    if b[1]['name'] == reqBandName or b[1]['normalizedbandname'] == reqBandName:
+                        if 'bandIndex' in b[1]:
+                            idxs.append(b[1]['bandIndex'])
+                            break
+                        else:                    
+                            idxs.append(idx)
+                    idx = idx + 1
         return idxs           
 
     #translates a list of temporal extents to its corresponding layer indexes
     def getLayerIndexes(self, temporalExtent):
             idxs = []
             if temporalExtent == None:
-                for layer in self['layers']:
-                     idxs.append(layer['index'])
+                layers = self['layers']
+                for layer in layers:
+                     if layer!= 'all': # skip the generalized layer temp extent , it is not real
+                        idxs.append(layers[layer]['layerIndex'])
 
             else:
                 first = parser.parse(temporalExtent[0])
