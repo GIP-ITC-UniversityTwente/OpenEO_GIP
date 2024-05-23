@@ -124,8 +124,8 @@ class LoadCollectionOperation(OpenEoOperation):
                 self.bandIdxs = self.inputRaster.getBandIndexes(arguments['bands']['resolved'])
             else: # default band = 0
                 self.bandIdxs.append(0)
-        else: # default band = 0
-            self.bandIdxs.append(0)
+        else: # default all bands
+            self.bandIdxs = self.inputRaster.getBandIndexes([])
 
         if 'temporal_extent' in arguments:
             # if there is no overlap between temporal extent given and the temporal extent of the actual data
@@ -262,7 +262,8 @@ class LoadCollectionOperation(OpenEoOperation):
                                 if rc.size() != ilwis.Size(0,0,0):
                                     ilwisRasters.append(rc)
                             else:
-                                ilwisRasters.append(rband) 
+                                rc = ilwis.do("selection", rband,"with: " + bandIdxList)
+                                ilwisRasters.append(rc) 
 
                 extra = self.constructExtraParams(self.inputRaster, self.temporalExtent, bandIndex)
                 extra['textsublayers'] = layerTempExtent
