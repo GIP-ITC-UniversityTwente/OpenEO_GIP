@@ -86,13 +86,53 @@ def checksum(p):
 
                return hex(asum)[2:10].zfill(8).lower()   
 
-def testCheckSum(group, operation, name):
+def testCheckSumMulti(group, outputDir):
      testdir = configglobals.testdir
-     #group = 'aggregate'
      testdiragg = testdir + "/" + group
-     testfile = os.path.join(testdiragg, name)
-     if os.path.exists(name):
-          file_stats = os.stat(name) # sometimes if an error occurs openeo still creates an empty result file
+     testFolder = os.path.join(testdiragg, outputDir)
+     if os.path.exists(outputDir):
+          if not os.path.exists(testdiragg):
+               os.makedirs(testdiragg)
+          checksumfile = testdir + "/checksums.txt"
+          data = {}
+          if os.path.exists(checksumfile):
+               file_stats = os.stat(checksumfile)
+               if file_stats.st_size > 0:
+                    with open(checksumfile, 'r') as fp:
+                         data = json.load(fp)
+               else: # probably rest of an aborted test
+                    os.remove(checksumfile) 
+
+          if os.path.exists(testFolder):        
+              shutil.rmtree(testFolder)
+          shutil.move(outputDir, testFolder)
+          dir_list = os.listdir(testFolder)
+          for f in dir_list:
+               if f.find('.json') != -1:
+                    continue
+               fn = os.path.join(testFolder, f)
+               cc = checksum(fn)
+
+               key = group + outputDir + f
+               if key in data:
+                    if not data[key]['checksum'] == cc:
+                         raise Exception(CUSTOM_EX + 'checksum error')
+               else:
+                    entry = {'group' : group, 'operation' : outputDir, 'checksum' : cc}
+                    data[key] = entry
+          with open(checksumfile, 'w') as fp:
+               json.dump(data, fp)     
+     else:
+          raise Exception('file not found')
+
+
+
+def testCheckSumSingle(group, operation, outputFile):
+     testdir = configglobals.testdir
+     testdiragg = testdir + "/" + group
+     testfile = os.path.join(testdiragg, outputFile)
+     if os.path.exists(outputFile):
+          file_stats = os.stat(outputFile) # sometimes if an error occurs openeo still creates an empty result file
           if file_stats.st_size == 0:
                raise Exception('file not found')
 
@@ -109,7 +149,7 @@ def testCheckSum(group, operation, name):
                     os.remove(checksumfile)               
           if os.path.exists(testfile):        
                os.remove(testfile)
-          shutil.move(name, testdiragg)
+          shutil.move(outputFile, testdiragg)
           cc = checksum(testfile)
 
           key = group + operation
