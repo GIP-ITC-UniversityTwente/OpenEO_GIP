@@ -16,7 +16,7 @@ def createEmptySmallNumericRaster():
 
     return rc 
                     
-def createSmallNumericRasterNLayers(dims, alternate=0):
+def createSmallNumericRasterNLayers(dims, alternate=0, bndcount=1):
     rc = createEmptySmallNumericRaster()
     rc.setSize(ilwis.Size(15,12,dims))
     baseSize = 15 * 12
@@ -26,10 +26,10 @@ def createSmallNumericRasterNLayers(dims, alternate=0):
     for count in range(0, dims):
         if ( alternate == 0):
             for i in range(len(data)):
-                data[i] = (i + count*baseSize) * 10 
+                data[i] = (i + count*baseSize) * 10 + (bndcount-1)*10 
         if ( alternate == 1):                
             for i in range(len(data)):
-                data[i] = (i + 2*baseSize + 3 * + 2 * math.sin(math.radians(1 + i*count * 10))) * 10
+                data[i] = (i + 2*baseSize + 3 * + 2 * math.sin(math.radians(1 + i*count * 10))) * 10 + (bndcount-1)*10 
 
             data[5 * 6] = ilwis.Const.iUNDEF # pos 0,2 is undefined 
         rc.array2raster(data, count)                 
@@ -38,7 +38,7 @@ def createSmallNumericRasterNLayers(dims, alternate=0):
     return rc 
 
 def setTestRaster(dims, bndcount = 1):
-    rc = createSmallNumericRasterNLayers(dims)
+    rc = createSmallNumericRasterNLayers(dims, 0, bndcount)
     raster = RasterData()
     end = '2020-11-' + str((dims+1)*2)
     extra = {'epsg' : 4326, 'temporalExtent' : ['2020-11-01', end], 'bands' : [{'name' : 'band_01'}]}
@@ -77,7 +77,7 @@ def setTestRasters(dims):
     raster1 = setTestRaster(dims, 1)
     raster1['id'] = raster1['name'] = cc.TESTFILENAME1    
 
-    raster2 = setTestRaster(dims, 2)
+    raster2 = setTestRaster(dims, 4)
     raster2['id'] = raster2['name'] = cc.TESTFILENAME2        
 
     common.testRaster_openeo1 = [raster1, raster2]
