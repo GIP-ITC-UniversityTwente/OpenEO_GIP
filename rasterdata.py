@@ -169,7 +169,7 @@ class RasterData(dict):
         for idx in range(len(bands)):
             band = RasterBand()
             band['name'] = bands[idx]['name']
-            band['normalizedbandname']= bands[idx]['normalizedbandname']
+            band['commonbandname']= bands[idx]['commonbandname']
             band['details'] = bands[idx]['details']
             band['bandIndex'] = idx
             band['type'] = bands[idx]['type']
@@ -203,8 +203,29 @@ class RasterData(dict):
         self['dataSource'] = url
         self['dataFolder'] = head
         self['eo:bands'] = {}
+        count = 0
         for b in extraParams['bands']:
             self['rasterImplementation'] = {b['name'] : ilwisRaster}
+            band = RasterBand()
+            band['name'] = b['name']
+            if 'commonbandname' in b:
+                band['commonbandname'] = b['commonbandname']
+            else:
+                band['commonbandname'] = b['name']
+            if 'details' in b:
+                band['details'] = b['details']
+            else:
+                band['details'] = {}
+            if 'bandIndex' in  b:
+                band['bandIndex'] = b['bandIndex']
+            else:
+                band['commonbandname'] = count                
+            if 'type' in b:
+                band['type'] = b['type']
+            else:
+                band['type'] =  'float'
+            self['eo:bands'][band['name']] = band
+            count = count + 1
         
         self.layerIndex = 0
         if 'textsublayers' in extraParams:
@@ -269,7 +290,7 @@ class RasterData(dict):
         bandlist = []
         for b in self['eo:bands'].items():
             bdef = {"name": b[1]['name']}
-            bdef['normalizedbandname'] = b[1]['normalizedbandname']
+            bdef['commonbandname'] = b[1]['commonbandname']
             for kvp in b[1]['details'].items():
                 bdef[kvp[0]] = kvp[1]
                 if kvp[0] == 'gsd':
@@ -358,7 +379,7 @@ class RasterData(dict):
             for reqBandName in requestedBands:
                 idx = 0 
                 for b in self['eo:bands'].items():
-                    if b[1]['name'] == reqBandName or b[1]['normalizedbandname'] == reqBandName:
+                    if b[1]['name'] == reqBandName or b[1]['commonbandname'] == reqBandName:
                         if 'bandIndex' in b[1]:
                             idxs.append(b[1]['bandIndex'])
                             break
@@ -429,11 +450,12 @@ class RasterData(dict):
 # stores the metadata for a seperate band. Note that the details section can contain
 # sensor specific information about this band    
 class RasterBand(dict):
+    CENTER_WAVELENGTH = 'center_wavelength'
     def toDict(self):
         d = {}
         d['type'] = self['type']
         d['name'] = self['name']
-        d['normalizedbandname'] = self['normalizedbandname']
+        d['commonbandname'] = self['commonbandname']
         d['details'] = self['details']
         d['bandIndex'] = self['bandIndex']
         d['dataSource'] = self['dataSource']
@@ -441,7 +463,7 @@ class RasterBand(dict):
 
 
     def fromEoReader(self, band, index):
-        defnames = ['name', 'common_name', 'description', 'center_wavelength', 'full_width_half_max', 'solar_illumination','gsd']
+        defnames = ['name', 'common_name', 'description', RasterBand.CENTER_WAVELENGTH, 'full_width_half_max', 'solar_illumination','gsd']
         b = band[1]
         if ( b != None):
             details = {}
@@ -456,10 +478,16 @@ class RasterBand(dict):
             if name != '':                            
                 self['name'] = name
             b = band[0] 
-            self['normalizedbandname'] = b.value
+            self['commonbandname'] = b.value
             self['details'] = details
             self['bandIndex'] = index
             self['type'] = 'float'
+
+    def getDetail(self, property):
+        if 'details' in self:
+            if property in self['details']:
+                return self['details'][property]
+        return None            
    
 class RasterLayer(dict):
     def fromMetadataFile(self, metadata, index):
