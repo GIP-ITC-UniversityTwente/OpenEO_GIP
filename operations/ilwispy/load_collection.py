@@ -35,7 +35,7 @@ class LoadCollectionOperation(OpenEoOperation):
         oldoutputs = []
         sourceList = {}
         for band in self.inputRaster.bands:
-            bandname = band['normalizedbandname']
+            bandname = band['commonbandname']
             nn = to_band(bandname)
             prod.load(nn)
             outputs = [f for f in prod.output.glob("tmp*/*.tif")]
@@ -233,7 +233,7 @@ class LoadCollectionOperation(OpenEoOperation):
     def selectData(self, processOutput,openeojob, bandIndexes, env):
         outputRasters = []
         for bandIndex in bandIndexes:
-            bandIdxList = 'rasterbands(' + str(bandIndex) + ')'
+            LayerIdxList = 'rasterbands(' + str(bandIndex) + ')'
             ilwisRasters = []
             layerTempExtent = []
             # synthetic data is already loaded and ready to use. In that case inputRaster['rasterImplementation'] is already there
@@ -258,31 +258,31 @@ class LoadCollectionOperation(OpenEoOperation):
                             # if the requested enevelope doesn't match the envelope of the inputdata we execute the 'select'
                             # operation to get a portion of the raster that we need
                             if not ev.equalsP(rband.envelope(), 0.001, 0.001, 0.001):
-                                rc = ilwis.do("selection", rband, "envelope(" + env + ") with: " + bandIdxList)
+                                rc = ilwis.do("selection", rband, "envelope(" + env + ") with: " + LayerIdxList)
                                 if rc.size() != ilwis.Size(0,0,0):
                                     ilwisRasters.append(rc)
                             else:
-                                rc = ilwis.do("selection", rband,"with: " + bandIdxList)
+                                rc = ilwis.do("selection", rband,"with: " + LayerIdxList)
                                 ilwisRasters.append(rc) 
 
                 extra = self.constructExtraParams(self.inputRaster, self.temporalExtent, bandIndex)
                 extra['textsublayers'] = layerTempExtent
                 outputRasters.extend(self.setOutput(ilwisRasters, extra)) 
             else:
-                bandIdxList = ''
+                LayerIdxList = ''
                 layerTempExtent = []
                 for lyrIdx in self.lyrIdxs:
                     layer = self.inputRaster.idx2layer(lyrIdx)
                     layerTempExtent.append(layer['temporalExtent'])
-                    if bandIdxList == '':
-                        bandIdxList = str(lyrIdx)
+                    if LayerIdxList == '':
+                        LayerIdxList = str(lyrIdx)
                     else:
-                        bandIdxList = bandIdxList + ','+ str(lyrIdx)
-                bandIdxList = 'rasterbands(' + bandIdxList + ')'                        
+                        LayerIdxList = LayerIdxList + ','+ str(lyrIdx)
+                LayerIdxList = 'rasterbands(' + LayerIdxList + ')'                        
                 key = next(iter(self.inputRaster['rasterImplementation'])) 
                 raster = self.inputRaster['rasterImplementation'][key]                  
-                rc = ilwis.do("selection", raster, "envelope(" + env + ") with: " + bandIdxList)
-                extra = self.constructExtraParams(self.inputRaster, self.temporalExtent, 0)
+                rc = ilwis.do("selection", raster, "envelope(" + env + ") with: " + LayerIdxList)
+                extra = self.constructExtraParams(self.inputRaster, self.temporalExtent, bandIndex)
                 extra['textsublayers'] = layerTempExtent                
                 rasterData = RasterData()
                 rasterData.load(rc, 'ilwisraster', extra )
