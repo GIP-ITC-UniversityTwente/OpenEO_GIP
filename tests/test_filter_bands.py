@@ -45,4 +45,4 @@ class TestFilterBands(basetests.BaseTest):
         basetests.testExceptionCondition1(self, False, lambda r1 : execFilterBands(operation=r1, wvl=[['no number', 1.0]]), '"filerillegalwvl','illegal wavelength')   
         basetests.testExceptionCondition1(self, False, lambda r1 : execFilterBands(operation=r1, wvl=[[1.0, 0.8]]), 'filterwrongminmax',"filter wavelengths wrong order min/max")
         basetests.testExceptionCondition1(self, False, lambda r1 : execFilterBands(operation=r1, wvl=[[0.8]]), 'filterwrongminmax2',"filter wavelengthsrange needs 2 values")
-        basetests.testExceptionCondition1(self, True, lambda r1 : execFilterBands(operation=r1, wvl=[[0.8, 1.0], [0.4, 0.6]]), 'filterbasicwavel2sets',"filter wavelengths 2 sets")             
+        basetests.testExceptionCondition1(self, True, lambda r1 : execFilterBands(operation=r1, wvl=[[0.8, 1.0], [0.4, 0.6]]), 'filterbasicwavel2sets',"filter wavelengths 2 sets ")             
