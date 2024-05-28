@@ -75,8 +75,9 @@ def testExceptionCondition1(p, expected, func, parm1, message):
            p.isTrue(expected, message)
            return obj
       except Exception as ex:
-           message = customError(message, str(ex))
-           p.isTrue(not expected, message)
+           msg = str(ex)
+           message = customError(message, msg)
+           p.isTrue(not expected, message, msg)
            return None 
 
 def checksum(p): 
@@ -203,14 +204,14 @@ class BaseTest(unittest.TestCase):
         print(f'{cls.testCount():5} {msg:65}  {result}')
 
  
-     def isTrue(self, b, msg):
+     def isTrue(self, b, msg, error=''):
         cls = configglobals.TestManager()
         cls.incTestCount() 
         result = 'FAIL'
         if (b):
            result = 'SUCCESS'
         else:
-            cls.addErrorNumber(cls.testCount())         
+            cls.addErrorNumber(cls.testCount(), error)         
         print(f'{cls.testCount():5} {msg:65}  {result}')
 
      def isFalse(self, b, msg):

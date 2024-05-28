@@ -12,7 +12,8 @@ class TestManager:
         os.environ["OPENEO_TEST_COUNT"] = "0"
         os.environ["OPENEO_ERROR_COUNT"] = "0"
         os.environ["OPENEO_ERROR_LIST"] = ""
-  
+        os.environ["OPENEO_ERROR_MESSAGES"] = ""
+
     def incTestCount(self):
         c = int(os.environ["OPENEO_TEST_COUNT"]) 
         c +=1
@@ -24,10 +25,13 @@ class TestManager:
     def errorCount(self):
         return os.environ["OPENEO_ERROR_COUNT"]
 
+    def errorMessages(self):
+        return os.environ["OPENEO_ERROR_MESSAGES"]
+    
     def errorList(self):
-        return os.environ["OPENEO_ERROR_LIST"]
+        return os.environ["OPENEO_ERROR_LIST"]    
 
-    def addErrorNumber(self, num):
+    def addErrorNumber(self, num, msg=''):
         c = int(os.environ["OPENEO_ERROR_COUNT"]) 
         c +=1
         os.environ["OPENEO_ERROR_COUNT"] = str(c)
@@ -35,6 +39,9 @@ class TestManager:
         en = os.environ["OPENEO_ERROR_LIST"]
         en += ":" + str(num)
         os.environ["OPENEO_ERROR_LIST"] = en
+        en = os.environ['OPENEO_ERROR_MESSAGES']
+        en += str(num) + ' : ' + msg + '\n'
+        os.environ['OPENEO_ERROR_MESSAGES'] = en
 
 
 def clean_subfolders(folder_path):
