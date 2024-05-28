@@ -19,17 +19,19 @@ cls = configglobals.TestManager()
 cls.init()
 
 #tests = loader.discover('./tests','test_*.py')
-tests = loader.discover('./tests','test_l*.py')
+tests = loader.discover('./tests','test_f*.py')
 testRunner = unittest.runner.TextTestRunner()
 testRunner.run(tests)
 
 tcount = cls.testCount()
 ecount = cls.errorCount()
 elist = cls.errorList()
+emessages = cls.errorMessages()
 
 print("\nnumber of tests : " + tcount)
 print("number of fails in tests : " + ecount)
 print("error list : " + elist)
+print("error messages : \n" + emessages)
 
 configglobals.cleanup()
 
