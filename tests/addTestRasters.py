@@ -55,12 +55,13 @@ def setTestRaster(dims, bndcount = 1):
     path = Path(folder).as_uri()
     ilwis.setWorkingCatalog(path)  
     raster.load(rc, 'ilwisraster', extra)
+    common_names = ['Red', 'Green', 'Blue', 'NDVI', 'NIR', 'SWIR', 'Shortwave infrared / Cirrus']
     bdns = {}
     for i in range(bndcount):
         band = RasterBand()
         band['name'] = 'TB0' + str(i+1)
-        band['normalizedbandname']=  band['name']
-        band['details'] = {}
+        band['commonbandname']=  common_names[i]
+        band['details'] = {'center_wavelength' : 0.4 + 2 * i / 10}
         band['bandIndex'] = i
         band['type'] = 'float'
         bdns[band['name']] = band
