@@ -33,6 +33,7 @@ def message_handler(operation, processInput):
 
 
 
+
 class OpenEoOperation:
     name = ''
     summary = ''
@@ -195,12 +196,19 @@ class OpenEoOperation:
             for idx in range(len(r['dimStructure'])):
                 if implLevelIndex + 1 != idx:
                     self.extra['dimStructure'].append(r['dimStructure'][idx])
-            self.extra['textsublayers'] = {}                    
+            self.extra['textsublayers'] = {} 
+            self.extra['rasterkeys'] = []
+            for key in r['rasters'].keys(): # remove the last index as we have reduce the dimension
+                parts = key.split(':')
+                newkey = key if len(parts) == 1 else key.rsplit(':', 1)[0] #len == 1 is sp3ecial case as this is the root; the removed dim is implicit in the ilwraster
+                self.extra['rasterkeys'].append(newkey)                             
+
         else:                    
             self.extra['dimStructure'] = r['dimStructure']
             self.extra['textsublayers'] = r.getLayers()
+            self.extra['rasterkeys'] = r['rasters'].keys()
 
-        self.extra['rasterkeys'] = r['rasters'].keys()
+        
         self.extra['basename'] = self.name
      
     def checkSpatialDimensions(self, rasters):
@@ -252,9 +260,15 @@ class OpenEoOperation:
             return namemapping[name]
         return name
     
+    def getDimension(self, raster : RasterData, arguments):
+        if 'dimensions' in arguments:
+            self.mapname(arguments['dimensions']['resolved'])
+        else: # if the dimension is not given we assume the toplevel
+            return raster['dimStructure'][0]
+    
     def findRasterData(self, toServer, job_id, rasterData, arguments):
         arrIndex = -1
-        dimName = self.mapname(arguments['dimensions']['resolved'])
+        dimName = self.getDimension(rasterData,arguments)
         if 'index' in arguments:
             arrIndex = arguments['index']['resolved'] 
             if dimName in rasterData['dimStructure']:
