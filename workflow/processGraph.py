@@ -51,6 +51,9 @@ class ProcessGraph(OpenEoOperation):
         self.determineOutputNodes(self.processGraph)
 
     # helper function for the validatgraph method
+    def addLocalArgument(self, key, value, index = 0):
+          self.outputNodes[index][1].localArguments[key] = value
+    
     def validateNode(self, node):
         errors = []
         for arg in node.localArguments.items():
@@ -124,7 +127,7 @@ class ProcessGraph(OpenEoOperation):
         if parmKey in self.processArguments:
             return {'resolved': self.processArguments[parmKey]['resolved']}
         #assume its the process builder key/name which is unknown to us as its a client something
-        return {'resolved': self.processArguments[0]}
+        return {'resolved': None}
 
 class NodeExecution :
 
@@ -136,7 +139,7 @@ class NodeExecution :
 
     def handleError(self, openeojob, message, type):
         common.logMessage(logging.ERROR, message, openeojob.user.username )
-        raise customexception.CustomException(self.processNode.process_id, constants.ERROROPERATION, type, message)        
+        raise customexception.CustomException(constants.ERROROPERATION, self.processNode.process_id,  type, message)        
 
     # this method together with  the support method resolveNode do the heavy lifting for executing
     # the process graph. One can see an execution node as a sub process with a input(s) and one output of the 
@@ -246,8 +249,8 @@ class NodeExecution :
                 # if it is resolved we are done
                 if refNode['resolved'] != None:
                     return refNode['resolved'] 
-                # if not we resolve it
-                return self.resolveNode(openeojob, toServer, fromServer, refNode)  
+                # if not we cant resolve it
+                return None #self.resolveNode(openeojob, toServer, fromServer, refNode)  
        
         else: # direct value case; no indirections
             return parmKeyValue[1]                                              

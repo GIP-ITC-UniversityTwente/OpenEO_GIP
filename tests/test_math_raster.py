@@ -17,6 +17,20 @@ cube_s3 = conn.load_collection(
     temporal_extent =  ["2020-11-03", "2020-11-07"],
     bands = ['TB01']
 )
+
+cube_s2 = conn.load_collection(
+    cc.TESTFILENAME1 ,
+    spatial_extent =  {"west": -5, "south": 26, "east":  65, "north":67},
+    temporal_extent =  ["2020-11-03", "2020-11-07"],
+    bands = ['TB01']
+)
+
+cube_s5 = conn.load_collection(
+    cc.TESTFILENAME2 ,
+    spatial_extent =  {"west": -5, "south": 26, "east":  65, "north":67},
+    bands = ['TB01', 'TB02']
+)
+
 band_selection = 'cube_s3.band("TB01")'
 
 def execUnaryMathRaster(oper, name):
@@ -34,7 +48,7 @@ def execBinaryMathRasterAlt(oper, name):
     basetests.testCheckSumSingle('math', oper, name)
 
 def execBinaryMathRaster(oper, name):
-    expr = band_selection + oper + '3.45' 
+    expr = 'cube_s2 ' + oper + ' 3.45'
     cube_s4 = eval(expr)
     name = name + ".tif"
     cube_s4.download(name)

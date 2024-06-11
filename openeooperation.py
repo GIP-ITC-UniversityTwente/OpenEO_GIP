@@ -132,9 +132,9 @@ class OpenEoOperation:
         
         return newGraph
 
-    def createOutput(self, idx, ilwisRaster, extra):
+    def createOutput(self, idx, ilwisRasters, extra):
         rasterData = RasterData()
-        rasterData.load(ilwisRaster, 'ilwisraster', extra )
+        rasterData.load(ilwisRasters, 'ilwisraster', extra )
         if 'name' in extra:
             rasterData['title'] = extra['name']
         return rasterData
@@ -172,33 +172,66 @@ class OpenEoOperation:
         for index in range(0, len(rasters)):
            rc.setBandDefinition(index, rasters[index].datadef())
 
-        return rc            
+        return rc
+               
+    def getImplementationLevel(self, r : RasterData):
+        key = next(iter(r['rasters'])) # from the key we can learn at which level the implementation can be found
+        parts = key.split(':')
+        level = r['dimStructure'][len(parts)-1]
+        return level
 
-    def createExtra(self, r : RasterData, idx):
-        att = {'type' : 'float', 'name' : 'calculated band ' + str(idx),'details' : {} }
-        self.extra = { 'temporalExtent' : r['temporalExtent'], 'bands' : [att], 'epsg' : r['proj:epsg'], 'textsublayers' : r.getLayers()}
+    def createExtra(self, r : RasterData, reduce=False):
+        level = self.getImplementationLevel(r)
+        meta = r['dimMetadata'][level]
+        bands = []
+        if  level == constants.DIMSPECTRALBANDS:
+            for b in meta:
+                bands.append({'type' : 'float', 'name' : 'calculated from ' + b,'details' : {} } )
+
+        self.extra = { 'temporalExtent' : r['temporalExtent'], 'bands' : bands, 'epsg' : r['proj:epsg']}
+        if reduce: # we cut out the implementation level(=reduced) as this is now become one level higher
+            self.extra['dimStructure'] = []
+            implLevelIndex = r['dimStructure'].index(level)
+            for idx in range(len(r['dimStructure'])):
+                if implLevelIndex + 1 != idx:
+                    self.extra['dimStructure'].append(r['dimStructure'][idx])
+            self.extra['textsublayers'] = {}                    
+        else:                    
+            self.extra['dimStructure'] = r['dimStructure']
+            self.extra['textsublayers'] = r.getLayers()
+
+        self.extra['rasterkeys'] = r['rasters'].keys()
+        self.extra['basename'] = self.name
      
     def checkSpatialDimensions(self, rasters):
         pixelSize = 0
         allSame = True 
         extent = []       
         for rc in rasters:
-            if pixelSize == 0:
-                pixelSize = rc.getRaster().geoReference().pixelSize()
-                extent = rc['spatialExtent']               
-            else:
-                allSame = pixelSize == rc.getRaster().geoReference().pixelSize()
-                extentTest = rc['spatialExtent']                 
-                allSame = allSame and \
-                    extent[0] == extentTest[0] and \
-                    extent[1] == extentTest[1] and \
-                    extent[2] == extentTest[2] and \
-                    extent[3] == extentTest[3] 
-            if not allSame:
-                break
+            for raster in rc['rasters'].values():
+                if pixelSize == 0:
+                    pixelSize = rc.getRaster().geoReference().pixelSize()
+                    extent = rc['spatialExtent']               
+                else:
+                    allSame = pixelSize == rc.getRaster().geoReference().pixelSize()
+                    extentTest = rc['spatialExtent']                 
+                    allSame = allSame and \
+                        extent[0] == extentTest[0] and \
+                        extent[1] == extentTest[1] and \
+                        extent[2] == extentTest[2] and \
+                        extent[3] == extentTest[3] 
+                if not allSame:
+                    break
                                                    
         return allSame 
-
+    
+    def makeOutput(self, ilwisRasters, extra):
+        outputRasters = []
+        rasterData = RasterData()
+        rasterData.load(ilwisRasters, 'ilwisraster', extra )
+        outputRasters.append(rasterData)
+        return outputRasters 
+    
     def setOutput(self, ilwisRasters, extra):
         outputRasters = []
         if len(ilwisRasters) > 0:
@@ -213,21 +246,32 @@ class OpenEoOperation:
 
         return outputRasters 
     
-    def findRasterData(self, toServer, job_id, rasterDatas : list, arguments):
-        bandIndex = -1
+    def mapname(self, name):
+        namemapping = {'t' : constants.DIMTEMPORALLAYER, 'bands' : constants.DIMSPECTRALBANDS}
+        if name in namemapping:
+            return namemapping[name]
+        return name
+    
+    def findRasterData(self, toServer, job_id, rasterData, arguments):
+        arrIndex = -1
+        dimName = self.mapname(arguments['dimensions']['resolved'])
         if 'index' in arguments:
-            bandIndex = arguments['index']['resolved']  
-            if len(rasterDatas) <= bandIndex:
-                self.handleError(toServer, job_id, 'band index',"Number of raster bands doesnt match given index", 'ProcessParameterInvalid')
-            return bandIndex
+            arrIndex = arguments['index']['resolved'] 
+            if dimName in rasterData['dimStructure']:
+                meta = rasterData['dimMetadata'][dimName]
+                if len(meta) <= arrIndex:
+                    self.handleError(toServer, job_id, 'band index',"Number of raster bands doesnt match given index", 'ProcessParameterInvalid')
+            return arrIndex
                         
         if 'label' in arguments:
-            for idx in range(len(rasterDatas)):
-                for key in rasterDatas[idx]['rasterImplementation'].keys():
+            for idx in range(len(rasterData)):
+                meta = rasterData['dimMetadata'][dimName]
+                idx = 0
+                for key in meta:
                     if key == arguments['label']['resolved']:
                         return idx
-                        break
-        return bandIndex
+                    idx = idx + 1
+        return arrIndex
     
     
 

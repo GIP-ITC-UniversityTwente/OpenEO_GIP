@@ -38,33 +38,41 @@ def createSmallNumericRasterNLayers(dims, alternate=0, bndcount=1):
     return rc 
 
 def setTestRaster(dims, bndcount = 1):
-    rc = createSmallNumericRasterNLayers(dims, 0, bndcount)
+    
     raster = RasterData()
-    end = '2020-11-' + str((dims+1)*2)
-    extra = {'epsg' : 4326, 'temporalExtent' : ['2020-11-01', end], 'bands' : [{'name' : 'band_01'}]}
-    text = []
-    for i in range(1,dims + 1):
-        begin = '2020-11-' + str(i*2 - 1)
-        end = '2020-11-' + str((i)*2)
-        text.append([begin, end])
-    extra['textsublayers'] = text 
+
+    common_names = ['Red', 'Green', 'Blue', 'NDVI', 'NIR', 'SWIR', 'Shortwave infrared / Cirrus']
+    bdns = {}
+    bandNames = []
+    rcs = []
+    for i in range(bndcount):
+        band = RasterBand()
+        band['name'] = 'TB0' + str(i+1)
+        bandNames.append({'name' : band['name']})
+        band['commonbandname']=  common_names[i]
+        band['details'] = {'center_wavelength' : 0.4 + 2 * i / 10}
+        band['bandIndex'] = i
+        band['type'] = 'float'
+        bdns[band['name']] = band
+        rc = createSmallNumericRasterNLayers(dims, 0, i)
+        rcs.append(rc)
 
     url = rc.url()
     path = url.split('//')
     folder = os.path.dirname("/"+ path[1])
     path = Path(folder).as_uri()
     ilwis.setWorkingCatalog(path)  
-    raster.load(rc, 'ilwisraster', extra)
-    common_names = ['Red', 'Green', 'Blue', 'NDVI', 'NIR', 'SWIR', 'Shortwave infrared / Cirrus']
-    bdns = {}
-    for i in range(bndcount):
-        band = RasterBand()
-        band['name'] = 'TB0' + str(i+1)
-        band['commonbandname']=  common_names[i]
-        band['details'] = {'center_wavelength' : 0.4 + 2 * i / 10}
-        band['bandIndex'] = i
-        band['type'] = 'float'
-        bdns[band['name']] = band
+
+    end = '2020-11-' + str((dims+1)*2)
+
+    extra = {'epsg' : 4326, 'temporalExtent' : ['2020-11-01', end], 'bands' :bandNames}
+    text = []
+    for i in range(1,dims + 1):
+        begin = '2020-11-' + str(i*2 - 1)
+        end = '2020-11-' + str((i)*2)
+        text.append([begin, end])
+    extra['textsublayers'] = text 
+    raster.load(rcs, 'ilwisraster', extra)        
     raster['eo:bands'] = bdns
 
  

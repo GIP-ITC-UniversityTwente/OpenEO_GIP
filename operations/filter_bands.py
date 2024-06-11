@@ -10,7 +10,7 @@ class FilterBands(OpenEoOperation):
     def prepare(self, arguments):
         self.runnable = False 
         self.bandsByWavelength = []    
-        self.bandsByName = []   
+        selectedBands = []   
         if 'serverChannel' in arguments:
             toServer = arguments['serverChannel']
             job_id = arguments['job_id']
@@ -25,10 +25,11 @@ class FilterBands(OpenEoOperation):
                 requestedBands = arguments['bands']['resolved']
                 if len(requestedBands) > 0:
                     foundCount = 0
-                    for item in self.inpData:
-                        for bandItem in item['eo:bands'].items():
-                            if bandItem[1]['name'] in requestedBands or bandItem[1]['commonbandname'] in requestedBands:
-                                self.bandsByName.append(item)
+                    for rasterItem in self.inpData:
+                        bands = rasterItem.getBands()
+                        for bandItem in bands:
+                            if bandItem['name'] in requestedBands or bandItem['commonbandname'] in requestedBands:
+                                selectedBands.append(bandItem)
                                 foundCount = foundCount + 1
                     if foundCount != len(requestedBands):
                         message =  'Band list doesn match available bands'
@@ -49,11 +50,18 @@ class FilterBands(OpenEoOperation):
                         else:
                             self.handleError(toServer, job_id, 'filter bands', 'Wavelength values must be numerical', 'ProcessParameterInvalid') 
                                                                                                                                        
-                        for item in self.inpData:
-                            for bandItem in item['eo:bands'].items():
-                                cwavelength = bandItem[1].getDetail(RasterBand.CENTER_WAVELENGTH)
+                        for rasterItem in self.inpData:
+                            bands = rasterItem.getBands()
+                            for bandItem in bands:
+                                cwavelength = bandItem.getDetail(RasterBand.CENTER_WAVELENGTH)
                                 if cwavelength >= minv  and maxv >= cwavelength:
-                                    self.bandsByWavelength.append(item)
+                                    selectedBands.append(bandItem)
+            self.selectedBands = []
+            names = []
+            for sb in selectedBands:
+                name = sb['name']
+                if not name in names:
+                    self.selectedBands.append(sb)
             self.runnable = True                                 
                 
 
@@ -61,16 +69,8 @@ class FilterBands(OpenEoOperation):
         if self.runnable:
             self.logStartOperation(processOutput, openeojob)
             outData = []
-            for item in self.bandsByName:
-                outData.append(item)
-            for item in self.bandsByWavelength:
-                found = False
-                for existingItem in outData:
-                    if existingItem['id'] == item['id']:
-                        found = True
-                        break
-                if not found:
-                    outData.append(item)
+            for rasterItem in self.inpData:
+                outData.append(rasterItem.createRasterDatafromBand( self.selectedBands))
 
             self.logEndOperation(processOutput,openeojob)
             return createOutput(constants.STATUSFINISHED, outData, constants.DTRASTER)

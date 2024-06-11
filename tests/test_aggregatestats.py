@@ -35,9 +35,7 @@ class TestAggregateStats(basetests.BaseTest):
 
     def test_01_agg_raster(self): 
         self.prepare(sys._getframe().f_code.co_name)
-        cubedata = cube_s2
-        basetests.testExceptionCondition1(self, False, lambda r1 : execAgg(operation=r1, sdata=cubedata), 'sum',"two result, one download. must fail. sum")
-       
+
         cubedata =cube_s1
         basetests.testExceptionCondition1(self, True, lambda r1 : execAgg(operation=r1, sdata=cubedata), 'sum',"Aggregate stats. sum")
         basetests.testExceptionCondition1(self, True, lambda r1 : execAgg(operation=r1, sdata=cubedata), 'mean',"Aggregate stats. mean")
@@ -46,7 +44,12 @@ class TestAggregateStats(basetests.BaseTest):
         basetests.testExceptionCondition1(self, True, lambda r1 : execAgg(operation=r1, sdata=cubedata), 'median',"Aggregate stats. median")
         basetests.testExceptionCondition1(self, True, lambda r1 : execAgg(operation=r1, sdata=cubedata), 'sd',"Aggregate stats. standard deviation")
         basetests.testExceptionCondition1(self, True, lambda r1 : execAgg(operation=r1, sdata=cubedata), 'variance',"Aggregate stats. variance")
-        basetests.testExceptionCondition1(self, False, lambda r1 : execAgg(operation=r1, sdata=cubedata), 'dummy',"Aggregate stats. operation doesnt exist")        
+        basetests.testExceptionCondition1(self, False, lambda r1 : execAgg(operation=r1, sdata=cubedata), 'dummy',"Aggregate stats. operation doesnt exist")               
+        
+        cubedata = cube_s2
+        basetests.testExceptionCondition1(self, False, lambda r1 : execAgg(operation=r1, sdata=cubedata), 'sum',"two result, one download. must fail. sum")
+       
+      
 
      
 

@@ -232,13 +232,14 @@ class LoadCollectionOperation(OpenEoOperation):
     # multiple layers which represent the temporal extent. 
     def selectData(self, processOutput,openeojob, bandIndexes, env):
         outputRasters = []
-        for bandIndex in bandIndexes:
-            LayerIdxList = 'rasterbands(' + str(bandIndex) + ')'
-            ilwisRasters = []
-            layerTempExtent = []
-            # synthetic data is already loaded and ready to use. In that case inputRaster['rasterImplementation'] is already there
-            # and load_collection doesn't have to do much of actual loading
-            if len(self.inputRaster['rasterImplementation']) == 0:
+        if len(self.inputRaster['rasterImplementation']) == 0:
+            for bandIndex in bandIndexes:
+                LayerIdxList = 'rasterbands(' + str(bandIndex) + ')'
+                ilwisRasters = []
+                layerTempExtent = []
+                # synthetic data is already loaded and ready to use. In that case inputRaster['rasterImplementation'] is already there
+                # and load_collection doesn't have to do much of actual loading
+
                 for lyrIdx in self.lyrIdxs:
                     layer = self.inputRaster.idx2layer(lyrIdx)
                     if layer != None:
@@ -268,9 +269,15 @@ class LoadCollectionOperation(OpenEoOperation):
                 extra = self.constructExtraParams(self.inputRaster, self.temporalExtent, bandIndex)
                 extra['textsublayers'] = layerTempExtent
                 outputRasters.extend(self.setOutput(ilwisRasters, extra)) 
-            else:
+        else:
+            it = iter(self.inputRaster['rasters'])
+            it2= iter(self.inputRaster['eo:bands'])   
+            rcList = []
+            bands = []                     
+            for bandIndex in bandIndexes:
                 LayerIdxList = ''
                 layerTempExtent = []
+
                 for lyrIdx in self.lyrIdxs:
                     layer = self.inputRaster.idx2layer(lyrIdx)
                     layerTempExtent.append(layer['temporalExtent'])
@@ -279,14 +286,17 @@ class LoadCollectionOperation(OpenEoOperation):
                     else:
                         LayerIdxList = LayerIdxList + ','+ str(lyrIdx)
                 LayerIdxList = 'rasterbands(' + LayerIdxList + ')'                        
-                key = next(iter(self.inputRaster['rasterImplementation'])) 
-                raster = self.inputRaster['rasterImplementation'][key]                  
+                key = next(it)
+                key2 = next(it2) 
+                raster = self.inputRaster['rasters'][key]                  
                 rc = ilwis.do("selection", raster, "envelope(" + env + ") with: " + LayerIdxList)
-                extra = self.constructExtraParams(self.inputRaster, self.temporalExtent, bandIndex)
-                extra['textsublayers'] = layerTempExtent                
-                rasterData = RasterData()
-                rasterData.load(rc, 'ilwisraster', extra )
-                outputRasters.append(rasterData) 
+                rcList.append(rc)
+                bands.append(self.inputRaster['eo:bands'][key2])
+            extra = { 'temporalExtent' : self.temporalExtent, 'bands' : bands, 'epsg' : self.inputRaster['proj:epsg'], 'details': {}, 'name' : 'dummy'}                
+            extra['textsublayers'] = layerTempExtent               
+            rasterData = RasterData()
+            rasterData.load(rcList, 'ilwisraster', extra )
+            outputRasters.append(rasterData) 
 
         return outputRasters                   
 

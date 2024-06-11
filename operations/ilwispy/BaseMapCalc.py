@@ -58,6 +58,38 @@ class BaseUnarymapCalc(OpenEoOperation):
     
 class BaseBinarymapCalcBase(OpenEoOperation):
     def base_prepare(self, arguments, oper):
+        self.runnable = False
+        self.rasterSizesEqual = True
+        if 'serverChannel' in arguments:
+            toServer = arguments['serverChannel']
+            job_id = arguments['job_id']
+
+        if len(arguments) != 4: ##x,y,serverchannel, job_id
+            self.handleError(toServer,job_id, 'band math', "number of parameters is not correct in operation", 'ProcessParameterInvalid')
+        it = iter(arguments)
+        self.p1 = arguments[next(it)]['resolved']
+        self.p2 = arguments[next(it)]['resolved']
+        self.ismaps1 = isinstance(self.p1, list)
+        self.ismaps2 = isinstance(self.p2, list)
+        if self.ismaps1:
+            self.rasters1 = self.p1[0]
+            self.createExtra(self.rasters1) 
+        if self.ismaps2:            
+            self.rasters2 = self.p2[0]
+            self.createExtra(self.rasters2) 
+
+        if not self.ismaps1: 
+            if math.isnan(self.p1):
+                self.handleError(toServer,job_id, 'band math', "the parameter a is not a number in operation", 'ProcessParameterInvalid')
+        if not self.ismaps2:
+            if math.isnan(self.p2):
+                self.handleError(toServer,job_id, 'band math', "the parameter a is not a number in operation", 'ProcessParameterInvalid')
+        
+        self.runnable = True
+        self.operation = oper                           
+            
+        
+    def base_prepare2(self, arguments, oper):
         try:
             self.runnable = False
             self.rasterSizesEqual = True
@@ -90,21 +122,47 @@ class BaseBinarymapCalcBase(OpenEoOperation):
                 
         except Exception as ex:
             return ""
-
-    def extractRasters(self, rasters):
-        rasterImpls = []
-        for idx in range(len(rasters)):
-            r = rasters[idx]
-            self.createExtra(r, idx) 
-            for band in r['rasterImplementation']:
-                rasterImpl = r.getRaster(band)
-                if rasterImpl:
-                    rasterImpls.append(rasterImpl)
-        return rasterImpls            
-
    
-
     def base_run(self,openeojob, processOutput, processInput):
+           if self.runnable:
+            self.logStartOperation(processOutput, openeojob)
+
+            outputRasters = [] 
+            oper = '@1' + self.operation + '@2' 
+            outputs = []                               
+            if self.ismaps1 and self.ismaps2:
+                rasters1 = list(self.rasters1['rasters'].values())
+                rasters2 = list(self.rasters2['rasters'].values())
+                for idx in len(rasters1):
+                    outputRc = ilwis.do("mapcalc", oper, rasters1[idx],rasters2[idx])
+                    outputs.append(outputRc)
+            elif self.ismaps1 and not self.ismaps2:
+                    for raster in self.rasters1['rasters'].values():
+                        outputRc = ilwis.do("mapcalc", oper, raster,self.p2)
+                        outputs.append(outputRc)
+            elif not self.ismaps1 and self.ismaps2:
+                    for raster in self.rasters2['rasters'].values():
+                        outputRc = ilwis.do("mapcalc", oper, self.p2,raster)
+                        outputs.append(outputRc)  
+            else:
+                output = None
+                if self.operation in ['+','-', '/', '*', '<=', '>=', '==', 'or','and', 'xor']:
+                    expr = str(self.p1) + self.operation + str(self.p2)
+                    output = eval(expr)
+                elif self.operation in ['log']:
+                    expr = 'math.' + self.operation + '(' + str(self.p1)+ ',' +  str(self.p2) + ')'
+                    output = eval(expr)
+                out = createOutput(constants.STATUSFINISHED, output, constants.DTNUMBER) 
+
+            if self.ismaps1 or self.ismaps2:
+                outputRasters.extend(self.makeOutput(outputs, self.extra))
+                out =  createOutput(constants.STATUSFINISHED, outputRasters, constants.DTRASTER)                
+              
+            self.logEndOperation(processOutput,openeojob)
+
+            return out
+
+    def base_run2(self,openeojob, processOutput, processInput):
         if self.runnable:
             self.logStartOperation(processOutput, openeojob)
             ##put2Queue(processOutput, {'progress' : 0, 'job_id' : openeojob.job_id, 'status' : 'running'})

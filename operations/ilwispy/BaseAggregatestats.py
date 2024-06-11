@@ -21,10 +21,10 @@ class BaseAggregateData(OpenEoOperation):
                 for rc in self.rasters:
                     if not rc:
                         self.handleError(toServer, job_id, 'Input raster','invalid input. rasters are not valid', 'ProcessParameterInvalid')
-                    if rc.getRaster().datadef().domain().ilwisType() != ilwis.it.NUMERICDOMAIN:
-                       self.handleError(toServer, job_id, 'Input raster', 'invalid datatype in raster. Must be numeric', 'ProcessParameterInvalid')
+                    for raster in rc['rasters'].values():
+                        if raster.datadef().domain().ilwisType() != ilwis.it.NUMERICDOMAIN:
+                            self.handleError(toServer, job_id, 'Input raster', 'invalid datatype in raster. Must be numeric', 'ProcessParameterInvalid')
     
-                self.rasterSizesEqual = self.checkSpatialDimensions(self.rasters)  
             elif isinstance(inpData ,list):
                 self.array = inpData
     
@@ -34,10 +34,11 @@ class BaseAggregateData(OpenEoOperation):
             if hasattr(self, 'rasters'):
                 outputRasters = []
                 for rc in self.rasters:
-                    raster = rc.getRaster()
-                    outputRc = ilwis.do("aggregaterasterstatistics", raster,self.method)
-                    extra = self.constructExtraParams(rc, rc['temporalExtent'], 0)
-                    outputRasters.extend(self.setOutput([outputRc], extra))
+                    self.createExtra(rc, True)
+                    for ilwRaster in rc['rasters'].values():
+                        outputRc = ilwis.do("aggregaterasterstatistics", ilwRaster,self.method)
+
+                        outputRasters.extend(self.makeOutput([outputRc], self.extra))
 
                 self.logEndOperation(processOutput,openeojob)
                 return createOutput(constants.STATUSFINISHED, outputRasters, constants.DTRASTER)

@@ -13,6 +13,9 @@ class ArrayElementOperation(OpenEoOperation):
         self.kind = constants.PDPREDEFINED
 
     def prepare(self, arguments):
+        
+        self.internalName = self.mapname(arguments['dimensions']['resolved'])
+            
         self.runnable = False
         if 'serverChannel' in arguments:
             toServer = arguments['serverChannel']
@@ -29,7 +32,7 @@ class ArrayElementOperation(OpenEoOperation):
                 self.handleError(toServer, job_id, 'Input raster','No input raster found', 'ProcessParameterInvalid')
             self.bandIndex = -1
             if isinstance(inpData[0], RasterData):
-                idx = self.findRasterData(toServer, job_id, inpData, arguments )
+                idx = self.findRasterData(toServer, job_id, inpData[0], arguments )
                 if idx == -1:
                     self.handleError(toServer, job_id, 'band label or index',"label or index can't be found", 'ProcessParameterInvalid')
                 self.inputRasters = inpData                
@@ -49,9 +52,13 @@ class ArrayElementOperation(OpenEoOperation):
         if self.runnable:
             self.logStartOperation(processOutput, openeojob)
             if self.rasterCase:
-                outputRaster = self.inputRasters[self.bandIndex]
+                outputRasters = []
+                for raster in self.inputRasters:
+                    band = raster.index2band(self.bandIndex)
+                    outputRasters.append(raster.createRasterDatafromBand([band]))
+                    
                 self.logEndOperation(processOutput,openeojob)
-                return createOutput(constants.STATUSFINISHED, [outputRaster], constants.DTRASTER)
+                return createOutput(constants.STATUSFINISHED, outputRasters, constants.DTRASTER)
             else:
                 a = self.array1[self.index]
                 self.logEndOperation(processOutput,openeojob)

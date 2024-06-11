@@ -31,16 +31,17 @@ class SaveResultOperation(OpenEoOperation):
             count = 1
             if self.data != None:
                 for d in self.data:
-                    name = d['title']
-                    name = name.replace('_ANONYMOUS', 'raster')
-                    outpath = filePath + '/' + name + "_"+ str(count)
-                    d.getRaster().store("file://" + outpath,self.format, "gdal")
-                    envTemp = d.getRaster().envelope()
-                    if not env:
-                        env = envTemp
-                    else:
-                        env.add(envTemp)
-                    count = count + 1                        
+                    name = d['title'] 
+                    name = name.replace('_ANONYMOUS', 'raster')                    
+                    for raster in d['rasters'].values():
+                        outpath = filePath + '/' + name + "_"+ str(count)
+                        raster.store("file://" + outpath,self.format, "gdal")
+                        envTemp = raster.envelope()
+                        if not env:
+                            env = envTemp
+                        else:
+                            env.add(envTemp)
+                        count = count + 1                        
                 
 
                 ext = ('.tif','.dat','.mpr','.tiff','.jpg', '.png')

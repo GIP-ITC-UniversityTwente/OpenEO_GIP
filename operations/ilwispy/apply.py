@@ -14,18 +14,22 @@ class ApplyOperation(OpenEoOperation):
 
     def prepare(self, arguments):
         self.runnable = True
-        self.data = arguments['data']['resolved']
         self.apply = arguments['process']['base']
+        self.pgraph = self.apply['process_graph']
+        rootNode = next(iter(self.pgraph))
+        args = self.pgraph[rootNode]['arguments'] 
+        self.args = {} 
+        for key, value in args.items(): 
+            if isinstance(value, dict) and 'from_parameter' in value:
+                self.args = { key : arguments['data']}
+             
 
-        return ""
-              
 
     def run(self,openeojob, processOutput, processInput):
         if self.runnable:
             self.logStartOperation(processOutput, openeojob)
             if self.apply != None:
-                pgraph = self.apply['process_graph']
-                process = processGraph.ProcessGraph(pgraph, self.data, getOperation)
+                process = processGraph.ProcessGraph(self.pgraph, self.args, getOperation)
                 return process.run(openeojob, processOutput, processInput)
         
         return createOutput('error', "operation no runnable", constants.DTERROR)
