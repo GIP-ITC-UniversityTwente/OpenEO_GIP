@@ -14,8 +14,6 @@ class ArrayElementOperation(OpenEoOperation):
 
     def prepare(self, arguments):
         
-        self.internalName = self.mapname(arguments['dimensions']['resolved'])
-            
         self.runnable = False
         if 'serverChannel' in arguments:
             toServer = arguments['serverChannel']
