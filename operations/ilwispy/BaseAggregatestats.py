@@ -35,10 +35,12 @@ class BaseAggregateData(OpenEoOperation):
                 outputRasters = []
                 for rc in self.rasters:
                     self.createExtra(rc, True)
+                    ilwRasters = []
                     for ilwRaster in rc['rasters'].values():
                         outputRc = ilwis.do("aggregaterasterstatistics", ilwRaster,self.method)
+                        ilwRasters.append(outputRc)
 
-                        outputRasters.extend(self.makeOutput([outputRc], self.extra))
+                    outputRasters.extend(self.makeOutput(ilwRasters, self.extra))
 
                 self.logEndOperation(processOutput,openeojob)
                 return createOutput(constants.STATUSFINISHED, outputRasters, constants.DTRASTER)
