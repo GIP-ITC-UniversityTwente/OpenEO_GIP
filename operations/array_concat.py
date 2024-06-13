@@ -67,6 +67,7 @@ class ArrayConcat(OpenEoOperation):
                 self.logStartOperation(processOutput, openeojob)
                 ##for lists and numpy arrays same method
                 if self.targetRaster != None and self.sourceRaster != None:
+                    band = self.targetRaster.index2band(self.targetBandIndex)
                     targetRaster = self.targetRaster.index2band(self.targetBandIndex)['rasterImplementation']
                     cpTarget = targetRaster.clone()
                     for source in self.sourceRaster:

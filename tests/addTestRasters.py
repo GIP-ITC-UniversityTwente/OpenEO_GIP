@@ -7,6 +7,7 @@ import os
 from pathlib import Path
 import constants.constants as cc
 
+
 def createEmptySmallNumericRaster():
     grf = ilwis.GeoReference("epsg:4326", ilwis.Envelope("0 25 30 60") , ilwis.Size(15,12))
     dfNum = ilwis.DataDefinition(ilwis.NumericDomain("code=value"), ilwis.NumericRange(0.0, 1000000.0, 1.0))
@@ -42,7 +43,7 @@ def setTestRaster(dims, bndcount = 1):
     raster = RasterData()
 
     common_names = ['Red', 'Green', 'Blue', 'NDVI', 'NIR', 'SWIR', 'Shortwave infrared / Cirrus']
-    bdns = {}
+    bdns = []
     bandNames = []
     rcs = []
     for i in range(bndcount):
@@ -53,7 +54,7 @@ def setTestRaster(dims, bndcount = 1):
         band['details'] = {'center_wavelength' : 0.4 + 2 * i / 10}
         band['bandIndex'] = i
         band['type'] = 'float'
-        bdns[band['name']] = band
+        bdns.append(band)
         rc = createSmallNumericRasterNLayers(dims, 0, i)
         rcs.append(rc)
 
@@ -65,7 +66,7 @@ def setTestRaster(dims, bndcount = 1):
 
     end = '2020-11-' + str((dims+1)*2)
 
-    extra = {'epsg' : 4326, 'temporalExtent' : ['2020-11-01', end], 'bands' :bandNames}
+    extra = {'epsg' : 4326, 'temporalExtent' : ['2020-11-01', end], 'bands' :bdns}
     text = []
     for i in range(1,dims + 1):
         begin = '2020-11-' + str(i*2 - 1)
@@ -74,6 +75,7 @@ def setTestRaster(dims, bndcount = 1):
     extra['textsublayers'] = text 
     raster.load(rcs, 'ilwisraster', extra)        
     raster['eo:bands'] = bdns
+    #raster[cc.METADATDEFDIM][cc.DIMSPECTRALBANDS] = bdns
 
  
 

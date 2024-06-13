@@ -44,6 +44,10 @@ DIMSPECTRALBANDS = "DimSpectralBands"
 DIMTEMPORALLAYER = "DimTemporalLayer"
 DIMXYRASTER = "DimXYRaster"
 
+METADATDEFDIM = "dimMetadata"
+STRUCTUREDEFDIM = "dimStructure"
+DATAIMPLEMENTATION = "rasters"
+
 
 
 

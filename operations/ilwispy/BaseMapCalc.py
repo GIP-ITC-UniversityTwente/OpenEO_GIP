@@ -21,15 +21,15 @@ class BaseUnarymapCalc(OpenEoOperation):
             rasterList = []
             for ras in p1:
                 if type(ras) is RasterData:
-                    extra = self.constructExtraParams(ras, ras['temporalExtent'], 0)
+                    self.createExtra(ras,False, self.name)
                     raster = ras.getRaster()
-                    rasterList.append({'raster' : raster, 'extra' : extra})
-            self.parmValue = rasterList                        
+                    rasterList.append(raster)
+            self.rasters = rasterList                        
                     
         else:
             if math.isnan(p1):
                 self.handleError(toServer, job_id, 'Input data',"the parameter a is not a number", 'ProcessParameterInvalid')
-            self.parmValue = p1                        
+            self.rasters = p1                        
         self.operation = oper
         if self.operation in ['pow']:
             self.operation = 'power'
@@ -40,15 +40,17 @@ class BaseUnarymapCalc(OpenEoOperation):
         if self.runnable:
             self.logStartOperation(processOutput, openeojob)
             ##put2Queue(processOutput, {'progress' : 0, 'job_id' : openeojob.job_id, 'status' : 'running'})
-            if isinstance(self.parmValue, list):
-                outputRasters = []                                
-                for item in self.parmValue:
+            if isinstance(self.rasters, list):
+                outputRasters = []   
+                outputs = []                              
+                for raster in self.rasters:
                     oper = self.operation + '(@1)'
-                    outputRc = ilwis.do('mapcalc', oper, item['raster'])
-                    outputRasters.extend(self.setOutput([outputRc], item['extra']))
+                    outputRc = ilwis.do('mapcalc', oper, raster)
+                    outputs.append(outputRc)
+                outputRasters.extend(self.setOutput(outputs, self.extra))
                 out =  createOutput(constants.STATUSFINISHED, outputRasters, constants.DTRASTER)                
             else:
-                c = eval('math.' + self.operation + '(' + self.parmValue + ')')
+                c = eval('math.' + self.operation + '(' + self.rasters + ')')
                 out = createOutput(constants.STATUSFINISHED, c, constants.DTNUMBER)
             self.logEndOperation(processOutput,openeojob)
             ##put2Queue(processOutput,{'progress' : 100, 'job_id' : openeojob.job_id, 'status' : 'finished'}) 
@@ -73,10 +75,10 @@ class BaseBinarymapCalcBase(OpenEoOperation):
         self.ismaps2 = isinstance(self.p2, list)
         if self.ismaps1:
             self.rasters1 = self.p1[0]
-            self.createExtra(self.rasters1) 
+            self.createExtra(self.rasters1, basename=self.name) 
         if self.ismaps2:            
             self.rasters2 = self.p2[0]
-            self.createExtra(self.rasters2) 
+            self.createExtra(self.rasters2, basename=self.name) 
 
         if not self.ismaps1: 
             if math.isnan(self.p1):
@@ -131,18 +133,18 @@ class BaseBinarymapCalcBase(OpenEoOperation):
             oper = '@1' + self.operation + '@2' 
             outputs = []                               
             if self.ismaps1 and self.ismaps2:
-                rasters1 = list(self.rasters1['rasters'].values())
-                rasters2 = list(self.rasters2['rasters'].values())
+                rasters1 = list(self.rasters1[DATAIMPLEMENTATION].values())
+                rasters2 = list(self.rasters2[DATAIMPLEMENTATION].values())
                 for idx in len(rasters1):
                     outputRc = ilwis.do("mapcalc", oper, rasters1[idx],rasters2[idx])
                     outputs.append(outputRc)
             elif self.ismaps1 and not self.ismaps2:
-                    for raster in self.rasters1['rasters'].values():
+                    for raster in self.rasters1[DATAIMPLEMENTATION].values():
                         outputRc = ilwis.do("mapcalc", oper, raster,self.p2)
                         outputs.append(outputRc)
             elif not self.ismaps1 and self.ismaps2:
-                    for raster in self.rasters2['rasters'].values():
-                        outputRc = ilwis.do("mapcalc", oper, self.p2,raster)
+                    for raster in self.rasters2[DATAIMPLEMENTATION].values():
+                        outputRc = ilwis.do("mapcalc", oper, self.p1,raster)
                         outputs.append(outputRc)  
             else:
                 output = None

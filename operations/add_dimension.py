@@ -20,7 +20,7 @@ class AddDimension(OpenEoOperation):
         for raster in rasters:
             if not isinstance(raster, RasterData):
                 self.handleError(toServer, job_id, 'data','data must be a raster', 'ProcessParameterInvalid')
-            for fname in raster['dimStructure']:
+            for fname in raster[STRUCTUREDEFDIM]:
                 if fname == dimname:
                     self.handleError(toServer, job_id, 'data','A dimension with the specified name already exists', 'ProcessParameterInvalid') 
         self.dimname = dimname 
@@ -34,8 +34,8 @@ class AddDimension(OpenEoOperation):
             outData = []
             self.logStartOperation(processOutput, openeojob)
             for raster in self.rasters:
-                raster['dimStructure'].insert(0, self.dimname)
-                raster['dimMetadata'][self.dimname] = {}
+                raster[STRUCTUREDEFDIM].insert(0, self.dimname)
+                raster[METADATDEFDIM][self.dimname] = {}
                 exrasters = {}
                 for key, value in raster['rasters'].items():
                     exrasters['0:' + key] = value

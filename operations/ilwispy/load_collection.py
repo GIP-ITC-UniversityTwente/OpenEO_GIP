@@ -147,13 +147,13 @@ class LoadCollectionOperation(OpenEoOperation):
                 # note that in the case of synthetic data self.inputRaster['rasterImplementation'] isn't empty
                 # and we can use that data directly
                 self.checkSpatialExt(toServer, job_id, sect)
-                if len(self.inputRaster['rasterImplementation']) == 0:
+                if len(self.inputRaster[DATAIMPLEMENTATION]) == 0:
                     source = self.inputRaster.idx2layer(1)['source']                     
                     datapath = os.path.join(path, source)                            
                     rband = ilwis.RasterCoverage(datapath)
                 else:
-                    key = next(iter(self.inputRaster['rasterImplementation']))
-                    rband = self.inputRaster['rasterImplementation'][key]
+                    key = next(iter(self.inputRaster[DATAIMPLEMENTATION]))
+                    rband = self.inputRaster[DATAIMPLEMENTATION][key]
                 csyLL = ilwis.CoordinateSystem("epsg:4326")
                 llenv = ilwis.Envelope(ilwis.Coordinate(sect['west'], sect['south']), ilwis.Coordinate(sect['east'], sect['north']))
                 envCube = rband.coordinateSystem().convertEnvelope(csyLL, llenv)
@@ -232,7 +232,7 @@ class LoadCollectionOperation(OpenEoOperation):
     # multiple layers which represent the temporal extent. 
     def selectData(self, processOutput,openeojob, bandIndexes, env):
         outputRasters = []
-        if len(self.inputRaster['rasterImplementation']) == 0:
+        if len(self.inputRaster[DATAIMPLEMENTATION]) == 0:
             for bandIndex in bandIndexes:
                 LayerIdxList = 'rasterbands(' + str(bandIndex) + ')'
                 ilwisRasters = []
@@ -270,8 +270,8 @@ class LoadCollectionOperation(OpenEoOperation):
                 extra['textsublayers'] = layerTempExtent
                 outputRasters.extend(self.setOutput(ilwisRasters, extra)) 
         else:
-            it = iter(self.inputRaster['rasters'])
-            it2= iter(self.inputRaster['eo:bands'])   
+            it = iter(self.inputRaster[DATAIMPLEMENTATION])
+            it2= iter(self.inputRaster[METADATDEFDIM][DIMSPECTRALBANDS]['items'])   
             rcList = []
             bands = []                     
             for bandIndex in bandIndexes:
@@ -288,10 +288,10 @@ class LoadCollectionOperation(OpenEoOperation):
                 LayerIdxList = 'rasterbands(' + LayerIdxList + ')'                        
                 key = next(it)
                 key2 = next(it2) 
-                raster = self.inputRaster['rasters'][key]                  
+                raster = self.inputRaster[DATAIMPLEMENTATION][key]                  
                 rc = ilwis.do("selection", raster, "envelope(" + env + ") with: " + LayerIdxList)
                 rcList.append(rc)
-                bands.append(self.inputRaster['eo:bands'][key2])
+                bands.append(self.inputRaster[METADATDEFDIM][DIMSPECTRALBANDS]['items'][key2])
             extra = { 'temporalExtent' : self.temporalExtent, 'bands' : bands, 'epsg' : self.inputRaster['proj:epsg'], 'details': {}, 'name' : 'dummy'}                
             extra['textsublayers'] = layerTempExtent               
             rasterData = RasterData()

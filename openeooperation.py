@@ -176,37 +176,43 @@ class OpenEoOperation:
         return rc
                
     def getImplementationLevel(self, r : RasterData):
-        key = next(iter(r['rasters'])) # from the key we can learn at which level the implementation can be found
+        key = next(iter(r[DATAIMPLEMENTATION])) # from the key we can learn at which level the implementation can be found
         parts = key.split(':')
-        level = r['dimStructure'][len(parts)-1]
+        level = r[STRUCTUREDEFDIM][len(parts)-1]
         return level
 
-    def createExtra(self, r : RasterData, reduce=False):
+    def createExtra(self, r : RasterData, reduce=False, basename=''):
         level = self.getImplementationLevel(r)
-        meta = r['dimMetadata'][level]
+        meta = r[METADATDEFDIM][level]
         bands = []
+        rasterKeys = []
+        bname = basename if basename != '' else 'calc_from'
         if  level == constants.DIMSPECTRALBANDS:
-            for b in meta:
-                bands.append({'type' : 'float', 'name' : 'calculated from ' + b,'details' : {} } )
-
-        self.extra = { 'temporalExtent' : r['temporalExtent'], 'bands' : bands, 'epsg' : r['proj:epsg']}
+            count = 0
+            for b in meta['items']:
+                bands.append({'type' : 'float', 'bandIndex' : count, 'name' : basename + '_b' + str(count),'details' : {} } )
+   
+                count = count + 1
+        for key in r[DATAIMPLEMENTATION]:
+            rasterKeys.append(key)
+        self.extra = { 'temporalExtent' : r['temporalExtent'], 'bands' : bands, 'epsg' : r['proj:epsg'], 'rasterkeys': rasterKeys }
         if reduce: # we cut out the implementation level(=reduced) as this is now become one level higher
-            self.extra['dimStructure'] = []
-            implLevelIndex = r['dimStructure'].index(level)
-            for idx in range(len(r['dimStructure'])):
+            self.extra[STRUCTUREDEFDIM] = []
+            implLevelIndex = r[STRUCTUREDEFDIM].index(level)
+            for idx in range(len(r[STRUCTUREDEFDIM])):
                 if implLevelIndex + 1 != idx:
-                    self.extra['dimStructure'].append(r['dimStructure'][idx])
+                    self.extra[STRUCTUREDEFDIM].append(r[STRUCTUREDEFDIM][idx])
             self.extra['textsublayers'] = {} 
             self.extra['rasterkeys'] = []
-            for key in r['rasters'].keys(): # remove the last index as we have reduce the dimension
+            for key in r[DATAIMPLEMENTATION].keys(): # remove the last index as we have reduce the dimension
                 parts = key.split(':')
                 newkey = key if len(parts) == 1 else key.rsplit(':', 1)[0] #len == 1 is sp3ecial case as this is the root; the removed dim is implicit in the ilwraster
                 self.extra['rasterkeys'].append(newkey)                             
 
         else:                    
-            self.extra['dimStructure'] = r['dimStructure']
+            self.extra[STRUCTUREDEFDIM] = r[STRUCTUREDEFDIM]
             self.extra['textsublayers'] = r.getLayers()
-            self.extra['rasterkeys'] = r['rasters'].keys()
+            self.extra[DATAIMPLEMENTATION] = r[DATAIMPLEMENTATION].keys()
 
         
         self.extra['basename'] = self.name
@@ -216,7 +222,7 @@ class OpenEoOperation:
         allSame = True 
         extent = []       
         for rc in rasters:
-            for raster in rc['rasters'].values():
+            for raster in rc[DATAIMPLEMENTATION].values():
                 if pixelSize == 0:
                     pixelSize = rc.getRaster().geoReference().pixelSize()
                     extent = rc['spatialExtent']               
@@ -264,22 +270,22 @@ class OpenEoOperation:
         if 'dimensions' in arguments:
             self.mapname(arguments['dimensions']['resolved'])
         else: # if the dimension is not given we assume the toplevel
-            return raster['dimStructure'][0]
+            return raster[STRUCTUREDEFDIM][0]
     
     def findRasterData(self, toServer, job_id, rasterData, arguments):
         arrIndex = -1
         dimName = self.getDimension(rasterData,arguments)
         if 'index' in arguments:
             arrIndex = arguments['index']['resolved'] 
-            if dimName in rasterData['dimStructure']:
-                meta = rasterData['dimMetadata'][dimName]
+            if dimName in rasterData[STRUCTUREDEFDIM]:
+                meta = rasterData[METADATDEFDIM][dimName]
                 if len(meta) <= arrIndex:
                     self.handleError(toServer, job_id, 'band index',"Number of raster bands doesnt match given index", 'ProcessParameterInvalid')
             return arrIndex
                         
         if 'label' in arguments:
             for idx in range(len(rasterData)):
-                meta = rasterData['dimMetadata'][dimName]
+                meta = rasterData[METADATDEFDIM][dimName]
                 idx = 0
                 for key in meta:
                     if key == arguments['label']['resolved']:

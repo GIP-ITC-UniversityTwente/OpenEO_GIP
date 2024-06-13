@@ -64,9 +64,9 @@ def createNewRaster(rasters):
 # the content of the 'extra' parameter may shape how the dimensional structure is actually build.
 class RasterData(dict):
     def load( self, layerDataLink, method = 'eoreader', extra = None ) : 
-        self['dimStructure'] = []
-        self['dimMetadata'] = {}
-        self['rasters'] = {}     
+        self[STRUCTUREDEFDIM] = []
+        self[METADATDEFDIM] = {}
+        self[DATAIMPLEMENTATION] = {}     
         if method == 'eoreader':
             namepath = os.path.splitext(layerDataLink)[0]
             head, tail = os.path.split(namepath)
@@ -111,19 +111,23 @@ class RasterData(dict):
         self.setSummariesValue('constellation', prod.stac)
         self.setSummariesValue('instrument', prod)
         self['eo:cloud_cover'] = prod.get_cloud_cover()  
-        self['rasterImplementation'] = {}
-
+        
+        self[STRUCTUREDEFDIM] = [DIMSPECTRALBANDS]
         bands = {}
+        labels = []       
         bandIndex = 0
         for eoband in prod.bands.items():
             band = RasterBand()
             band.fromEoReader(eoband, bandIndex)
             if eoband[1] != None:
                 bands[band['name']] = band
-                bandIndex = bandIndex + 1 
-
+                bandIndex = bandIndex + 1
+                labels.append(band['name']) 
+            
         self['eo:bands'] = bands  
+        self[METADATDEFDIM][DIMSPECTRALBANDS] = {'items' : bands, 'labels' :labels, 'RefSystem' : '', 'unit' : ''}  
         lyrs = {} 
+        labels = [] 
         layer = RasterLayer()
         # layer 0 is a special layer as its the extent all the layers
         layer['temporalExtent'] = self['temporalExtent']
@@ -139,6 +143,10 @@ class RasterData(dict):
         lyrs[str(layer['temporalExtent'])] = layer
         self['layers'] = lyrs
 
+        self[STRUCTUREDEFDIM].append(DIMXYRASTER)
+        self[METADATDEFDIM][DIMXYRASTER] = {'unit' : 'meter', 'RefSystem' : self['proj:epsg']}
+        self[DATAIMPLEMENTATION] = {}        
+
     def fromMetadata(self, metadata):
         self['type'] = 'metadata' 
         self['id'] = metadata["title"]
@@ -151,27 +159,10 @@ class RasterData(dict):
         ext = getMandatoryValue("dimensions", metadata)
         self['boundingbox'] = getMandatoryValue("bounding_box", ext)
         self['proj:epsg'] = getValue('epsg' , metadata['projection'], '0')
-        temporal = getMandatoryValue("t", ext)
-        if len(temporal) == 0:
-            raise Exception("missing mandatory temporal extent value") 
-        lyrs = {}        
-        for index in range(0, len(temporal)):
-            layer = RasterLayer() 
-            layer.fromMetadataFile(temporal, index)
-            key = str(layer['temporalExtent'])
-            if index == 0:
-                key = 'all'
-                self['temporalExtent'] = layer['temporalExtent']
-            lyrs[key] = layer
-        self['layers'] =lyrs        
-        xext = ext['x']['extent']
-        yext = ext['y']['extent']
-        self['spatialExtent'] = [xext[0], xext[1], yext[0], yext[1]]
-        self['eo:bands'] = {}
-        self['eo:cloud_cover'] = DTUNKNOWN
-        self['rasterImplementation'] = {}
-        
+
         bands = getMandatoryValue("bands", ext)
+        self[STRUCTUREDEFDIM] = [DIMSPECTRALBANDS]
+        labels = []
         bdns = {}
         for idx in range(len(bands)):
             band = RasterBand()
@@ -181,9 +172,39 @@ class RasterData(dict):
             band['bandIndex'] = idx
             band['type'] = bands[idx]['type']
             bdns[band['name']] = band
+            labels.append(band['name'])
+        self[METADATDEFDIM][DIMSPECTRALBANDS] = {'items' : bdns, 'labels' :labels, 'RefSystem' : '', 'unit' : ''}            
         self['eo:bands'] = bdns
         if 'summaries' in metadata:
-            self['summaries'] = metadata['summaries'] 
+            self['summaries'] = metadata['summaries']         
+        temporal = getMandatoryValue("t", ext)
+        if len(temporal) == 0:
+            raise Exception("missing mandatory temporal extent value") 
+        lyrs = {} 
+        labels = []       
+        for index in range(0, len(temporal)):
+            layer = RasterLayer() 
+            layer.fromMetadataFile(temporal, index)
+            key = str(layer['temporalExtent'])
+            if index == 0:
+                key = 'all'
+                self['temporalExtent'] = layer['temporalExtent']
+            lyrs[key] = layer
+            labels.append(layer['temporalExtent'])
+        if len(lyrs) > 0:
+            self[STRUCTUREDEFDIM].append(DIMTEMPORALLAYER)
+            self[METADATDEFDIM][DIMTEMPORALLAYER] =  {'items' :lyrs, 'labels' : labels,'unit' : '' , 'RefSystem': 'Gregorian calendar / UTC'} 
+        self['layers'] =lyrs 
+        xext = ext['x']['extent']
+        yext = ext['y']['extent']
+        self['spatialExtent'] = [xext[0], xext[1], yext[0], yext[1]]
+        self['eo:bands'] = {}
+        self['eo:cloud_cover'] = DTUNKNOWN
+        
+        self[STRUCTUREDEFDIM].append(DIMXYRASTER)
+        self[METADATDEFDIM][DIMXYRASTER] = {'unit' : 'meter', 'RefSystem' : self['proj:epsg']}
+        self[DATAIMPLEMENTATION] = {}
+      
 
     def fromIlwisRaster(self, ilwisRaster, extraParams):
         rasterList = []
@@ -220,16 +241,16 @@ class RasterData(dict):
         self['dataFolder'] = head
         self['eo:bands'] = {}
         count = 0
-        definedDimStructure = 'dimStructure' in extraParams and len(extraParams['dimStructure']) > 0
-        if definedDimStructure:
-            self['dimStructure'] = extraParams['dimStructure']
+        defineSTRUCTUREDEFDIM = STRUCTUREDEFDIM in extraParams and len(extraParams[STRUCTUREDEFDIM]) > 0
+        if defineSTRUCTUREDEFDIM:
+            self[STRUCTUREDEFDIM] = extraParams[STRUCTUREDEFDIM]
         else:            
-            self['dimStructure'] = [DIMSPECTRALBANDS]
+            self[STRUCTUREDEFDIM] = [DIMSPECTRALBANDS]
 
-        if DIMSPECTRALBANDS in self['dimStructure']:
+        bnds ={}
+        if DIMSPECTRALBANDS in self[STRUCTUREDEFDIM]:
+            labels = []
             for b in extraParams['bands']:
-                self['rasterImplementation'] = {b['name'] : ilwisRaster}
-                
                 band = RasterBand()
                 band['name'] = b['name']
                 if 'commonbandname' in b:
@@ -249,13 +270,16 @@ class RasterData(dict):
                 else:
                     band['type'] =  'float'
                 self['eo:bands'][band['name']] = band
+                bnds[band['name']] = band
+                labels.append(band['name'])
                 count = count + 1
-            self['dimMetadata'][DIMSPECTRALBANDS] = self['eo:bands']
+            self[METADATDEFDIM][DIMSPECTRALBANDS] = {'items' : bnds, 'labels' :labels, 'RefSystem' : '', 'unit' : ''}
      
-        if not definedDimStructure:
-            self['dimStructure'].append(DIMTEMPORALLAYER)
-        if DIMTEMPORALLAYER in self['dimStructure']:
+        if not defineSTRUCTUREDEFDIM:
+            self[STRUCTUREDEFDIM].append(DIMTEMPORALLAYER)
+        if DIMTEMPORALLAYER in self[STRUCTUREDEFDIM]:
             self.layerIndex = 0
+            labels = [] 
             if 'textsublayers' in extraParams:
                 textsublayers = extraParams['textsublayers']
                 lyrs = {} 
@@ -264,33 +288,36 @@ class RasterData(dict):
                 layer['source'] = 'all'
                 layer['temporalExtent'] = self['temporalExtent']
                 layer['layerIndex'] = 0 
-                lyrs['all'] = layer           
+                lyrs['all'] = layer
+          
                 for index in range(0, len(textsublayers)):
                     layer = RasterLayer() 
                     layer['source'] = '' # calculated or derived product there is no source
                     layer['temporalExtent'] = textsublayers[index]
                     layer['layerIndex'] = index
-                    layer['eo:cloud_cover'] = 0                
+                    layer['eo:cloud_cover'] = 0
+                    labels.append(textsublayers[index])               
                     lyrs[str(layer['temporalExtent'])] = layer
                 self['layers'] =lyrs  
 
-            self['dimMetadata'][DIMTEMPORALLAYER] = lyrs  
-        if not DIMXYRASTER in self['dimStructure']:
-            self['dimStructure'].append(DIMXYRASTER)
+            self[METADATDEFDIM][DIMTEMPORALLAYER] =  {'items' :lyrs, 'labels' : labels,'unit' : '' , 'RefSystem': 'Gregorian calendar / UTC'} 
+        if not DIMXYRASTER in self[STRUCTUREDEFDIM]:
+            self[STRUCTUREDEFDIM].append(DIMXYRASTER)
+            self[METADATDEFDIM][DIMXYRASTER] = {'unit' : 'meter', 'RefSystem' : self['proj:epsg']}
 
-        if not definedDimStructure:
+        if not defineSTRUCTUREDEFDIM:
             self.makeKeyIndex(0, "", DIMTEMPORALLAYER, rasterList)
         if 'rasterkeys' in extraParams:
             i = 0
             for item in list(extraParams['rasterkeys']):
-                self['rasters'][item] = rasterList[i]
+                self[DATAIMPLEMENTATION][item] = rasterList[i]
                 i = i + 1
      
 
     def makeKeyIndex(self, currentIndex, keys, implementationLevel, rasterList):
-        dimname = self['dimStructure'][currentIndex]
+        dimname = self[STRUCTUREDEFDIM][currentIndex]
         if dimname != implementationLevel:
-            dimmeta = self['dimMetadata'][dimname]
+            dimmeta = self[METADATDEFDIM][dimname]['items']
 
             for idx in range(0, len(dimmeta)):
                 cidx = idx
@@ -299,7 +326,7 @@ class RasterData(dict):
         else: 
             for i in range(0,len(rasterList)):
                 key = str(i)               
-                self['rasters'][key] = rasterList[i]
+                self[DATAIMPLEMENTATION][key] = rasterList[i]
 
     # extra metadata is metadata that is stored in a seperate file and contains metadata that
     # is presetn in the STAC specs but not can be directly found in the primary satelite data
@@ -343,10 +370,11 @@ class RasterData(dict):
 
         gsds = set()
         bandlist = []
-        for b in self['eo:bands'].items():
-            bdef = {"name": b[1]['name']}
-            bdef['commonbandname'] = b[1]['commonbandname']
-            for kvp in b[1]['details'].items():
+        bands = self.getBands()
+        for b in bands:
+            bdef = {"name": b['name']}
+            bdef['commonbandname'] = b['commonbandname']
+            for kvp in b['details'].items():
                 bdef[kvp[0]] = kvp[1]
                 if kvp[0] == 'gsd':
                     gsds.add(kvp[1])                        
@@ -400,8 +428,8 @@ class RasterData(dict):
         t =   { 'type' : 'temporal', 'extent' : time}
 
         eobandlist = []
-        for b in bands.items():
-                eobandlist.append(b[1]['name'])
+        for b in bands:
+                eobandlist.append(b['name'])
 
         return { 'x' : x, 'y' : y, 't' : t, 'bands' : { 'type' : 'bands', 'values' : eobandlist}}        
 
@@ -428,15 +456,16 @@ class RasterData(dict):
     def getBandIndexes(self, requestedBands):
         idxs = []
         if len(requestedBands) == 0: # all bands
-            for b in self['eo:bands'].items():
-                idxs.append(b[1]['bandIndex'])
+            for b in self.getBands():
+                idxs.append(b['bandIndex'])
         else:
+            bands = self.getBands()
             for reqBandName in requestedBands:
                 idx = 0 
-                for b in self['eo:bands'].items():
-                    if b[1]['name'] == reqBandName or b[1]['commonbandname'] == reqBandName:
-                        if 'bandIndex' in b[1]:
-                            idxs.append(b[1]['bandIndex'])
+                for b in bands:
+                    if b['name'] == reqBandName or b['commonbandname'] == reqBandName:
+                        if 'bandIndex' in b:
+                            idxs.append(b['bandIndex'])
                             break
                         else:                    
                             idxs.append(idx)
@@ -444,6 +473,7 @@ class RasterData(dict):
         return idxs           
 
     #translates a list of temporal extents to its corresponding layer indexes
+
     def getLayerIndexes(self, temporalExtent):
             idxs = []
             if temporalExtent == None:
@@ -468,10 +498,10 @@ class RasterData(dict):
     # first has a special meaning as its the temporal extent of all the layers
     def getLayers(self):
         result = []
-        if DIMTEMPORALLAYER in self['dimStructure']:
+        if DIMTEMPORALLAYER in self[STRUCTUREDEFDIM]:
             result = []
             first = True
-            layers = self['dimMetadata'][DIMTEMPORALLAYER]
+            layers = self[METADATDEFDIM][DIMTEMPORALLAYER]['items']
             for layer in layers.values():
                 if not first:
                     result.append(layer['temporalExtent'])
@@ -480,20 +510,20 @@ class RasterData(dict):
     
     def getBands(self):
         result = []
-        if DIMSPECTRALBANDS in self['dimStructure']:
+        if DIMSPECTRALBANDS in self[STRUCTUREDEFDIM]:
             result = []
-            bands = self['dimMetadata'][DIMSPECTRALBANDS]
+            bands = self[METADATDEFDIM][DIMSPECTRALBANDS]['items']
             for band in bands.values():
                result.append(band)
         return result
 
     # translates an index to an actual band instance
     def index2band(self, idx):
-        if DIMSPECTRALBANDS in self['dimStructure']:
-            meta = self['dimMetadata'][DIMSPECTRALBANDS]
-            for b in meta.items():
-                if b[1]['bandIndex'] == int(idx):
-                    return b[1]
+        if DIMSPECTRALBANDS in self[STRUCTUREDEFDIM]:
+            meta = self.getBands()
+            for b in meta:
+                if b['bandIndex'] == int(idx):
+                    return b
         return None                    
 
     #translates an index to an actual layer index
@@ -509,25 +539,25 @@ class RasterData(dict):
     def getRaster(self, implName=''):
         if implName == '': # if the name is empty it is assumed that first raster implementation
                            # ( and often the only) is implied
-           if len(self['rasters']) > 0:
-                implName = next(iter(self['rasters']))
-        if implName in self['rasters']:
-            return self['rasters'][implName]
+           if len(self[DATAIMPLEMENTATION]) > 0:
+                implName = next(iter(self[DATAIMPLEMENTATION]))
+        if implName in self[DATAIMPLEMENTATION]:
+            return self[DATAIMPLEMENTATION][implName]
         
         return None
     
     def bandName2RasterKey(self, bandName):
-        key = next(iter(self['rasters'])) # from the key we can learn at which level the implementation can be found
+        key = next(iter(self[DATAIMPLEMENTATION])) # from the key we can learn at which level the implementation can be found
         parts = key.split(':')
-        level = self['dimStructure'][len(parts)-1]
-        meta = self['dimMetadata'][level]
+        level = self[STRUCTUREDEFDIM][len(parts)-1]
+        meta = self[METADATDEFDIM][level]['items']
         endIdx = -1
         for key in meta:
             if key == bandName:
                 endIdx = meta[key]['bandIndex']
                 break
         if endIdx != -1:
-            for rasterKey in self['rasters']:
+            for rasterKey in self[DATAIMPLEMENTATION]:
                 parts = rasterKey.split(':')
                 if parts[-1] == str(endIdx):
                     return rasterKey
@@ -535,13 +565,13 @@ class RasterData(dict):
 
     def createRasterDatafromBand(self, bands):
         extra = { 'temporalExtent' : self['temporalExtent'], 'bands' : bands, 'epsg' : self['proj:epsg']}
-        extra['dimStructure'] = self['dimStructure']
+        extra[STRUCTUREDEFDIM] = self[STRUCTUREDEFDIM]
         extra['textsublayers'] = self.getLayers()
         extra['rasterkeys'] = []
         rasters = []
         for band in bands: 
             ilwRasterKey = self.bandName2RasterKey(band['name'])
-            ilwRaster : ilwis.RasterCoverage = self['rasters'][ilwRasterKey]
+            ilwRaster : ilwis.RasterCoverage = self[DATAIMPLEMENTATION][ilwRasterKey]
             rasters.append(ilwRaster)
 
             # last index of the rasterkey must now become 0 as its the only element

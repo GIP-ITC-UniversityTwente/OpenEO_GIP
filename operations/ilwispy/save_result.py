@@ -33,7 +33,7 @@ class SaveResultOperation(OpenEoOperation):
                 for d in self.data:
                     name = d['title'] 
                     name = name.replace('_ANONYMOUS', 'raster')                    
-                    for raster in d['rasters'].values():
+                    for raster in d[DATAIMPLEMENTATION].values():
                         outpath = filePath + '/' + name + "_"+ str(count)
                         raster.store("file://" + outpath,self.format, "gdal")
                         envTemp = raster.envelope()
