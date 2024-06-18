@@ -74,7 +74,6 @@ def setTestRaster(dims, bndcount = 1):
         text.append([begin, end])
     extra['textsublayers'] = text 
     raster.load(rcs, 'ilwisraster', extra)        
-    raster['eo:bands'] = bdns
     #raster[cc.METADATDEFDIM][cc.DIMSPECTRALBANDS] = bdns
 
  
