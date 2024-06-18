@@ -124,7 +124,6 @@ class RasterData(dict):
                 bandIndex = bandIndex + 1
                 labels.append(band['name']) 
             
-        self['eo:bands'] = bands  
         self[METADATDEFDIM][DIMSPECTRALBANDS] = {'items' : bands, 'labels' :labels, 'RefSystem' : '', 'unit' : ''}  
         lyrs = {} 
         labels = [] 
@@ -174,7 +173,6 @@ class RasterData(dict):
             bdns[band['name']] = band
             labels.append(band['name'])
         self[METADATDEFDIM][DIMSPECTRALBANDS] = {'items' : bdns, 'labels' :labels, 'RefSystem' : '', 'unit' : ''}            
-        self['eo:bands'] = bdns
         if 'summaries' in metadata:
             self['summaries'] = metadata['summaries']         
         temporal = getMandatoryValue("t", ext)
@@ -198,7 +196,6 @@ class RasterData(dict):
         xext = ext['x']['extent']
         yext = ext['y']['extent']
         self['spatialExtent'] = [xext[0], xext[1], yext[0], yext[1]]
-        self['eo:bands'] = {}
         self['eo:cloud_cover'] = DTUNKNOWN
         
         self[STRUCTUREDEFDIM].append(DIMXYRASTER)
@@ -239,7 +236,6 @@ class RasterData(dict):
         head = os.path.dirname(path[1])
         self['dataSource'] = url
         self['dataFolder'] = head
-        self['eo:bands'] = {}
         count = 0
         defineSTRUCTUREDEFDIM = STRUCTUREDEFDIM in extraParams and len(extraParams[STRUCTUREDEFDIM]) > 0
         if defineSTRUCTUREDEFDIM:
@@ -269,7 +265,6 @@ class RasterData(dict):
                     band['type'] = b['type']
                 else:
                     band['type'] =  'float'
-                self['eo:bands'][band['name']] = band
                 bnds[band['name']] = band
                 labels.append(band['name'])
                 count = count + 1
@@ -422,16 +417,21 @@ class RasterData(dict):
         bbox = self['spatialExtent']
         epsg = self['proj:epsg']
         time = self.idx2layer(0)['temporalExtent']
-        bands = self['eo:bands']
+        bnds = self.getBands()
+        eobandlist = []
+        for bnd in bnds:
+            eobandlist.append(bnd['name'])
+
         x =   { 'type' : 'spatial', 'axis' : 'x', 'extent' : [bbox[0], bbox[2]] , 'reference_system' : epsg}
         y =   { 'type' : 'spatial', 'axis' : 'x', 'extent' : [bbox[1], bbox[3]], 'reference_system' : epsg}
         t =   { 'type' : 'temporal', 'extent' : time}
 
-        eobandlist = []
-        for b in bands:
-                eobandlist.append(b['name'])
+        d =  { 'x' : x, 'y' : y, 't' : t}
 
-        return { 'x' : x, 'y' : y, 't' : t, 'bands' : { 'type' : 'bands', 'values' : eobandlist}}        
+        if len(eobandlist) > 0:
+            d['bands'] = { 'type' : 'bands', 'values' : eobandlist}
+
+        return d            
 
     # translates the spatial extent to a json format. Used to translate a rasterdata instance to a dict
     def getExtentEOReader(self, prod):
