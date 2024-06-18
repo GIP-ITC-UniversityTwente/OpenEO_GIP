@@ -295,12 +295,13 @@ class OpenEoOperation:
     
     
 
-    def constructExtraParams(self, raster, temporalExtent, index):
+    def constructExtraParams(self, raster, temporalExtent, indexes):
          bands = []
-         band = raster.index2band(index)
-         if band == None:
-             band = {'name' : self.name, 'details' : {}}
-         bands.append(band)
+         for idx in indexes:
+            band = raster.index2band(idx)
+            if band == None:
+                band = {'name' : self.name + "_band_" + str(idx), 'details' : {}}
+            bands.append(band)
          extra = { 'temporalExtent' : temporalExtent, 'bands' : bands, 'epsg' : raster['proj:epsg'], 'details': bands[0]['details'], 'name' : bands[0]['name']} 
 
          return extra
