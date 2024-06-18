@@ -8,6 +8,8 @@ from pathlib import Path
 import os
 from authenticationdatabase import authenticationDB
 
+lockLogger = threading.Lock()
+
 def linkSection(begin, end):
         return {
                 "href" :  begin + "/" + end,
@@ -66,6 +68,7 @@ class ProcessManager:
     def __init__(self):
         self.lockProcessQue = threading.Lock()
         self.lockOutput = threading.Lock()
+        self.lockLogger = threading.Lock()
         self.processQueue  = []
         self.outputs = {}
         self.outputQueue = Queue()
@@ -218,7 +221,23 @@ class ProcessManager:
         if delta2.seconds > whenTimer:
             out = self.outputs.pop(key)
             out.cleanUp()
-                               
+
+    def reduceLogFile(self):
+        lockLogger.acquire()
+        logpath = os.path.join(os.path.dirname(__file__), 'log')
+        filepath = "{0}/{1}.log".format(logpath, 'openeoserver' )
+        lineCount = 0
+        with open(filepath, 'r') as fp:
+            lines = fp.readlines()
+            lineCount = len(lines)
+        if lineCount > 1000:         
+            with open(filepath, 'w') as fp:
+                limit  = 500
+                for number, line in enumerate(lines):
+                    if number > limit:
+                        fp.write(line) 
+        lockLogger.release()                           
+
     # this is the main function that handels process graph management. It starts, communicates with and stops
     # the process graphs that are requested. When created processes are put on a queue and started when there
     # is 'room' to do so. At the moment this is always, but might be more constrained in the future.
@@ -273,7 +292,8 @@ class ProcessManager:
                         self.removeFromOutputs(key,60*60*24 )
                     if self.outputs[key].status == constants.STATUSFINISHED:
                         self.removeFromOutputs(key,60*60*24*4 )   
-                startCheckRemoveOutput = endTimer                      
+                startCheckRemoveOutput = endTimer 
+                reduceLogFile()                     
 
     def loadProcessTables(self):
         path = common.openeoip_config['data_locations']['system_files']['location']

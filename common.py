@@ -14,6 +14,7 @@ import os, shutil
 from datetime import datetime
 from dateutil import parser
 import tests.addTestRasters as tr
+from processmanager import lockLogger
 
 
 possible_time_formats = [
@@ -75,8 +76,10 @@ def saveIdDatabase(idDatabse):
 
 # sets a message in the logger
 def logMessage(level, message, user='system'):
+      lockLogger.acquire()
       logger = logging.getLogger('openeo')
       logger.log(level, '[ ' + user + ' ] '  + message)
+      lockLogger.release()
 
 def notRunnableError(name, job_name):
      message = "operation not runnable:" + name + "job id:" + str(job_name)

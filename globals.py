@@ -49,7 +49,7 @@ class Globals :
             openeoip_configfile = open('./config/config.json')
             self.openeoip_config = json.load(openeoip_configfile)
             codesfile = open('./config/default_error_codes.json')
-            self.default_errrors = json.load(codesfile)  
+            self.default_errrors = json.load(codesfile) 
        
 
                                
