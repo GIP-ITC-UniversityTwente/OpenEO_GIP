@@ -232,64 +232,74 @@ class LoadCollectionOperation(OpenEoOperation):
     # multiple layers which represent the temporal extent. 
     def selectData(self, processOutput,openeojob, bandIndexes, env):
         outputRasters = []
+        ilwRasters = []
+        ev = ilwis.Envelope("(" + env + ")")
+        # synthetic data is already loaded and ready to use. In that case inputRaster['rasterImplementation'] is already there
+        # and load_collection doesn't have to do much of actual loading             
         if len(self.inputRaster[DATAIMPLEMENTATION]) == 0:
+            layerTempExtent = []
+            loadedRasters = []
+            for lyrIdx in self.lyrIdxs:
+                layer = self.inputRaster.idx2layer(lyrIdx)
+                if layer != None:
+                    valueOk = False 
+                    hasProp = hasattr(self, 'properties')
+                
+                    # if we have a property filter we must check if this raster satisfies the condition(s)
+                    if hasProp:
+                        valueOk = self.checkProps(openeojob, processOutput,None, bandIndexes, layer)
+                    ## only add layers that either don't have the property or if they have if must match the condition                        
+                    if not hasProp or valueOk:
+                        layerTempExtent.append(layer['temporalExtent'])
+                        ilwLayer = ilwis.RasterCoverage(layer['source'])
+                        if ilwLayer.size() == ilwis.Size(0,0,0):
+                            self.handleError(processOutput, openeojob.job_id, 'Input raster', 'invalid sub-band:' + layer['source'], 'ProcessParameterInvalid')
+                        loadedRasters.append(ilwLayer) 
+                                                        
+                        # if the requested enevelope doesn't match the envelope of the inputdata we execute the 'select'
+                        # operation to get a portion of the raster that we need
+            
             for bandIndex in bandIndexes:
-                LayerIdxList = 'rasterbands(' + str(bandIndex) + ')'
-                ilwisRasters = []
-                layerTempExtent = []
-                # synthetic data is already loaded and ready to use. In that case inputRaster['rasterImplementation'] is already there
-                # and load_collection doesn't have to do much of actual loading
-
-                for lyrIdx in self.lyrIdxs:
-                    layer = self.inputRaster.idx2layer(lyrIdx)
-                    if layer != None:
-                        valueOk = False 
-                        hasProp = hasattr(self, 'properties')
-                        # if we have a property filter we must check if this raster satisfies the condition(s)
-                        if hasProp:
-                            valueOk = self.checkProps(openeojob, processOutput,None, bandIndexes, layer)
-                        ## only add layers that either don't have the property or if they have if must match the condition                        
-                        if not hasProp or valueOk:
-                            layerTempExtent.append(layer['temporalExtent'])
-                            rband = ilwis.RasterCoverage(layer['source'])
-                            if rband.size() == ilwis.Size(0,0,0):
-                                self.handleError(processOutput, openeojob.job_id, 'Input raster', 'invalid sub-band:' + layer['source'], 'ProcessParameterInvalid')
-
-                            ev = ilwis.Envelope("(" + env + ")")
-                            # if the requested enevelope doesn't match the envelope of the inputdata we execute the 'select'
-                            # operation to get a portion of the raster that we need
-                            if not ev.equalsP(rband.envelope(), 0.001, 0.001, 0.001):
-                                rc = ilwis.do("selection", rband, "envelope(" + env + ") with: " + LayerIdxList)
-                                if rc.size() != ilwis.Size(0,0,0):
-                                    ilwisRasters.append(rc)
-                            else:
-                                rc = ilwis.do("selection", rband,"with: " + LayerIdxList)
-                                ilwisRasters.append(rc) 
-
-                extra = self.constructExtraParams(self.inputRaster, self.temporalExtent, bandIndex)
-                extra['textsublayers'] = layerTempExtent
-                outputRasters.extend(self.setOutput(ilwisRasters, extra)) 
+                bandIndexList = 'rasterbands(' + str(bandIndex) + ')'
+                layers = []                                
+                for layer in loadedRasters:                            
+                    if not ev.equalsP(loadedRasters[0].envelope(), 0.001, 0.001, 0.001):
+                        rc = ilwis.do("selection", layer, "envelope(" + env + ") with: " + bandIndexList) 
+                    else:
+                        rc = ilwis.do("selection", layer,"with: " + bandIndexList)                                                           
+                    layers.append(rc)
+                newBand = self.collectRasters(layers)
+                sz = newBand.size()
+                sz = str(sz)
+                ilwRasters.append(newBand)
+            extra = self.constructExtraParams(self.inputRaster, self.temporalExtent, bandIndexes)
+            extra['textsublayers'] = layerTempExtent
+            keys = []
+            for i in bandIndexes:
+                keys.append(str(i))
+            extra['rasterkeys'] = keys
+            outputRasters.append(self.createOutput(0, ilwRasters, extra))
         else:
             it = iter(self.inputRaster[DATAIMPLEMENTATION])
             it2= iter(self.inputRaster[METADATDEFDIM][DIMSPECTRALBANDS]['items'])   
             rcList = []
             bands = []                     
             for bandIndex in bandIndexes:
-                LayerIdxList = ''
+                bandIndexList = ''
                 layerTempExtent = []
 
                 for lyrIdx in self.lyrIdxs:
                     layer = self.inputRaster.idx2layer(lyrIdx)
                     layerTempExtent.append(layer['temporalExtent'])
-                    if LayerIdxList == '':
-                        LayerIdxList = str(lyrIdx)
+                    if bandIndexList == '':
+                        bandIndexList = str(lyrIdx)
                     else:
-                        LayerIdxList = LayerIdxList + ','+ str(lyrIdx)
-                LayerIdxList = 'rasterbands(' + LayerIdxList + ')'                        
+                        bandIndexList = bandIndexList + ','+ str(lyrIdx)
+                bandIndexList = 'rasterbands(' + bandIndexList + ')'                        
                 key = next(it)
                 key2 = next(it2) 
                 raster = self.inputRaster[DATAIMPLEMENTATION][key]                  
-                rc = ilwis.do("selection", raster, "envelope(" + env + ") with: " + LayerIdxList)
+                rc = ilwis.do("selection", raster, "envelope(" + env + ") with: " + bandIndexList)
                 rcList.append(rc)
                 bands.append(self.inputRaster[METADATDEFDIM][DIMSPECTRALBANDS]['items'][key2])
             extra = { 'temporalExtent' : self.temporalExtent, 'bands' : bands, 'epsg' : self.inputRaster['proj:epsg'], 'details': {}, 'name' : 'dummy'}                
