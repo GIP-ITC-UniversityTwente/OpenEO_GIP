@@ -59,12 +59,12 @@ class TestLoadCollection(basetests.BaseTest):
    #     self.prepare('base')
 
     def test_01_SpatialExtent(self):
-        self.prepare(sys._getframe().f_code.co_name)
+       self.prepare(sys._getframe().f_code.co_name)
 
-        basetests.testExceptionCondition1(self, True, lambda r1 : runLoadCollectionDefault(dataset=r1, name='ldc1'),"Sentinel2TimeSeriesData" ,"load_collection. illegal bounds,eest")
+       basetests.testExceptionCondition1(self, True, lambda r1 : runLoadCollectionDefault(dataset=r1, name='ldc1'),"Sentinel2TimeSeriesData" ,"load_collection. illegal bounds,eest")
         
-        spat_ext = {"west": -119.2201, "south": 35.959, "east":  -119.0861, "north": 36.0574}
-        basetests.testExceptionCondition1(self, True, lambda r1 : runLoadCollectionDefault(spat_ext=r1, name='ldc2'),"Sentinel2TimeSeriesData" ,"load_collection. illegal bounds,eest")        
+       spat_ext = {"west": -119.2201, "south": 35.959, "east":  -119.0861, "north": 36.0574}
+       basetests.testExceptionCondition1(self, True, lambda r1 : runLoadCollectionDefault(spat_ext=r1, name='ldc2'),spat_ext ,"load_collection. illegal bounds,eest")        
 
 
     def test_02_SpatialExtent(self): 
