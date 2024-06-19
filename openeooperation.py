@@ -10,6 +10,30 @@ import customexception
 
 operations1 = {}
 
+def parse_rectangle(rect_str):
+    # Convert the string to a list of integers
+    coords = list(map(float, rect_str.split()))
+    # Ensure the coordinates are in the form [(x1, y1), (x2, y2)]
+    return [(coords[0], coords[1]), (coords[2], coords[3])]
+
+def overlaps(rect1_str, rect2_str):
+    # Parse the input strings to get the rectangle coordinates
+    rect1 = parse_rectangle(rect1_str)
+    rect2 = parse_rectangle(rect2_str)
+    
+    # Unpack the rectangles
+    (x1, y1), (x2, y2) = rect1
+    (x3, y3), (x4, y4) = rect2
+    
+    # Check if one rectangle is to the left of the other
+    if x2 < x3 or x4 < x1:
+        return False
+    
+    # Check if one rectangle is above the other
+    if y2 < y3 or y4 < y1:
+        return False
+    
+    return True
 
 def put2Queue(processOutput, content):
     if processOutput != None: ##synchronous calls dont have output queues
@@ -224,10 +248,10 @@ class OpenEoOperation:
         for rc in rasters:
             for raster in rc[DATAIMPLEMENTATION].values():
                 if pixelSize == 0:
-                    pixelSize = rc.getRaster().geoReference().pixelSize()
+                    pixelSize = rc.getRaster().geoReference().pixelSize() #first raster
                     extent = rc['spatialExtent']               
                 else:
-                    allSame = pixelSize == rc.getRaster().geoReference().pixelSize()
+                    allSame = pixelSize == raster.geoReference().pixelSize() #other rasters
                     extentTest = rc['spatialExtent']                 
                     allSame = allSame and \
                         extent[0] == extentTest[0] and \
@@ -239,6 +263,9 @@ class OpenEoOperation:
                                                    
         return allSame 
     
+  
+                   
+        
     def makeOutput(self, ilwisRasters, extra):
         outputRasters = []
         rasterData = RasterData()
