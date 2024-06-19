@@ -183,7 +183,7 @@ class LoadCollectionOperation(OpenEoOperation):
         # unpck the original data. EOReader will do this an create a folder where all the data resides
         # basically we use all this but we are going to move and remove some stuff for convenience
         sourceList, unpack_folder = self.unpackOriginalData(self.dataSource, folder)
-        for band in self.inputRaster['eo:bands'].items():
+        for band in self.inputRaster.getBands().items():
             source = sourceList[band[1]['name']]
             band['source'] = source
 
