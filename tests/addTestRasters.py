@@ -33,12 +33,19 @@ def createSmallNumericRasterNLayers(dims, alternate=0, bndcount=1):
                 data[i] = (i + 2*baseSize + 3 * + 2 * math.sin(math.radians(1 + i*count * 10))) * 10 + (bndcount-1)*10 
 
             data[5 * 6] = ilwis.Const.iUNDEF # pos 0,2 is undefined 
+
+        if ( alternate == 2): # mask map
+             for i in range(len(data)):
+                if i % 7 == 0:
+                    data[i] = 1 
+                else:
+                    data[i] = 0                        
         rc.array2raster(data, count)                 
              
                             
     return rc 
 
-def setTestRaster(dims, bndcount = 1):
+def setTestRaster(dims, bndcount = 1, version = 0):
     
     raster = RasterData()
 
@@ -55,7 +62,7 @@ def setTestRaster(dims, bndcount = 1):
         band['bandIndex'] = i
         band['type'] = 'float'
         bdns.append(band)
-        rc = createSmallNumericRasterNLayers(dims, 0, i)
+        rc = createSmallNumericRasterNLayers(dims, version, i)
         rcs.append(rc)
 
     url = rc.url()
@@ -88,11 +95,14 @@ def setTestRasters(dims):
     raster1['id'] = raster1['name'] = cc.TESTFILENAME1    
 
     raster2 = setTestRaster(dims, 4)
-    raster2['id'] = raster2['name'] = cc.TESTFILENAME2        
+    raster2['id'] = raster2['name'] = cc.TESTFILENAME2 
 
-    common.testRaster_openeo1 = [raster1, raster2]
+    raster3 = setTestRaster(dims, 4, 2) # mask map
+    raster3['id'] = raster3['name'] = cc.TESTFILENAME3              
 
-    return [raster1, raster2]
+    common.testRaster_openeo1 = [raster1, raster2, raster3]
+
+    return [raster1, raster2, raster3]
   
 
    
