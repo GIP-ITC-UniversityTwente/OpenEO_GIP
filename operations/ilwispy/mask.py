@@ -19,6 +19,10 @@ class MaskOperation(OpenEoOperation):
         self.rasterSizesEqual = True                     
         dataRasters = arguments['data']['resolved'] 
         maskRasters = arguments['mask']['resolved']
+
+        if not overlaps(dataRasters[0]['boundingbox'],maskRasters[0]['boundingbox']):
+            self.handleError(toServer, job_id, 'input rasters', 'data and mask dont overlap', 'ProcessParameterInvalid')
+        self.replacement = arguments['replacement']['resolved']
         self.singleMask = len(maskRasters) == 1
         self.rasters = []
         if not self.singleMask:
@@ -27,7 +31,7 @@ class MaskOperation(OpenEoOperation):
             for i in range(len(dataRasters)): 
                 dRaster: RasterData = dataRasters[i]
                 mRaster: RasterData = maskRasters[i]              
-                if not matchBands(dRaster['eo:bands'], mRaster['eo:bands']):
+                if not matchBands(dRaster.getBands(), mRaster.getBands()):
                     self.handleError(toServer, job_id, 'input rasters', 'data and mask have different number of bands', 'ProcessParameterInvalid')
                 if not matchesTemporalExtent(dRaster['layers'], mRaster['layers']):
                     self.handleError(toServer, job_id, 'input rasters', 'data and mask have different temporal extent', 'ProcessParameterInvalid')
@@ -38,7 +42,8 @@ class MaskOperation(OpenEoOperation):
                 dRaster: RasterData = dataRasters[i]
                 mRaster: RasterData = maskRasters[i] 
                 resampleNeeded = not self.checkSpatialDimensions([dRaster, mRaster])
-                self.rasters.append({"data" : dRaster, "mask" : mRaster , "resampleneeded": resampleNeeded} )                                                   
+                self.rasters.append({"data" : dRaster, "mask" : mRaster , "resampleneeded": resampleNeeded} )  
+        self.createExtra(self.rasters[0]['data'])                                                                 
         self.runnable = True
 
 
@@ -51,11 +56,20 @@ class MaskOperation(OpenEoOperation):
                 maskMap = item["mask"]
                 if item["resampleneeded"]:
                     maskMap = self.resample(item["data"], maskMap)
-                expression = 'iff(@1 != 0, @2,' + constants.RSUNDEF + ')'
-                outputRc = ilwis.do("mapcalc", expression, item['mask'].getRaster(), item['data'].getRaster())  
-                extra = self.constructExtraParams(item['mask'], item['mask']['temporalExtent'], 0)
-                extra['name'] = self.name + '_' + str(outputRc.ilwisID())
-                outputRasters.extend(self.setOutput([outputRc], extra))
+                expression = 'iff(@1 != 0,' + str(self.replacement) + ',@2)' 
+                outputs = []
+                idxs = []
+                count = 0
+                                
+                for ras in self.rasters:
+                    for key in ras['data'][DATAIMPLEMENTATION]: 
+                        r = ras['data'][DATAIMPLEMENTATION][key]
+                        outputRc = ilwis.do("mapcalc", expression, item['mask'].getRaster(), r) 
+                        outputs.append(outputRc) 
+                        idxs.append(count)
+                        count = count + 1
+
+                outputRasters.extend(self.makeOutput(outputs, self.extra))
 
             self.logEndOperation(processOutput,openeojob)
             return createOutput(constants.STATUSFINISHED, outputRasters, constants.DTRASTERLIST)
