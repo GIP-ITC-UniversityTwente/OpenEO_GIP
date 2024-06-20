@@ -298,12 +298,16 @@ class LoadCollectionOperation(OpenEoOperation):
                 bandIndexList = 'rasterbands(' + bandIndexList + ')'                        
                 key = next(it)
                 key2 = next(it2) 
-                raster = self.inputRaster[DATAIMPLEMENTATION][key]                  
-                rc = ilwis.do("selection", raster, "envelope(" + env + ") with: " + bandIndexList)
+                raster = self.inputRaster[DATAIMPLEMENTATION][key]  
+                if len(self.lyrIdxs) > 0:
+                    rc = ilwis.do("selection", raster, "envelope(" + env + ") with: " + bandIndexList)
+                else:
+                    rc = ilwis.do("selection", raster, "envelope(" + env + ")")                    
                 rcList.append(rc)
                 bands.append(self.inputRaster[METADATDEFDIM][DIMSPECTRALBANDS]['items'][key2])
             extra = { 'temporalExtent' : self.temporalExtent, 'bands' : bands, 'epsg' : self.inputRaster['proj:epsg'], 'details': {}, 'name' : 'dummy'}                
-            extra['textsublayers'] = layerTempExtent               
+            if len(layerTempExtent) > 0:
+                extra['textsublayers'] = layerTempExtent               
             rasterData = RasterData()
             rasterData.load(rcList, 'ilwisraster', extra )
             outputRasters.append(rasterData) 
