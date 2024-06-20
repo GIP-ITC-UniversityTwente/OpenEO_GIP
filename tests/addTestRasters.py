@@ -8,8 +8,11 @@ from pathlib import Path
 import constants.constants as cc
 
 
-def createEmptySmallNumericRaster():
-    grf = ilwis.GeoReference("epsg:4326", ilwis.Envelope("0 25 30 60") , ilwis.Size(15,12))
+def createEmptySmallNumericRaster(alternate):
+    if alternate == 3:
+        grf = ilwis.GeoReference("epsg:4326", ilwis.Envelope("10 35 30 60") , ilwis.Size(15,12))  
+    else:      
+        grf = ilwis.GeoReference("epsg:4326", ilwis.Envelope("0 25 30 60") , ilwis.Size(15,12))
     dfNum = ilwis.DataDefinition(ilwis.NumericDomain("code=value"), ilwis.NumericRange(0.0, 1000000.0, 1.0))
     rc = ilwis.RasterCoverage()
     rc.setGeoReference(grf)
@@ -18,7 +21,7 @@ def createEmptySmallNumericRaster():
     return rc 
                     
 def createSmallNumericRasterNLayers(dims, alternate=0, bndcount=1):
-    rc = createEmptySmallNumericRaster()
+    rc = createEmptySmallNumericRaster(alternate)
     rc.setSize(ilwis.Size(15,12,dims))
     baseSize = 15 * 12
 
@@ -34,7 +37,7 @@ def createSmallNumericRasterNLayers(dims, alternate=0, bndcount=1):
 
             data[5 * 6] = ilwis.Const.iUNDEF # pos 0,2 is undefined 
 
-        if ( alternate == 2): # mask map
+        if ( alternate == 2 or alternate == 3): # mask map
              for i in range(len(data)):
                 if i % 7 == 0:
                     data[i] = 1 
@@ -74,12 +77,13 @@ def setTestRaster(dims, bndcount = 1, version = 0):
     end = '2020-11-' + str((dims+1)*2)
 
     extra = {'epsg' : 4326, 'temporalExtent' : ['2020-11-01', end], 'bands' :bdns}
-    text = []
-    for i in range(1,dims + 1):
-        begin = '2020-11-' + str(i*2 - 1)
-        end = '2020-11-' + str((i)*2)
-        text.append([begin, end])
-    extra['textsublayers'] = text 
+    if dims > 1:    
+        text = []
+        for i in range(1,dims + 1):
+            begin = '2020-11-' + str(i*2 - 1)
+            end = '2020-11-' + str((i)*2)
+            text.append([begin, end])
+        extra['textsublayers'] = text 
     raster.load(rcs, 'ilwisraster', extra)        
     #raster[cc.METADATDEFDIM][cc.DIMSPECTRALBANDS] = bdns
 
@@ -98,11 +102,17 @@ def setTestRasters(dims):
     raster2['id'] = raster2['name'] = cc.TESTFILENAME2 
 
     raster3 = setTestRaster(dims, 4, 2) # mask map
-    raster3['id'] = raster3['name'] = cc.TESTFILENAME3              
+    raster3['id'] = raster3['name'] = cc.TESTFILENAME3 
 
-    common.testRaster_openeo1 = [raster1, raster2, raster3]
+    raster4 = setTestRaster(dims, 4, 3) # mask map
+    raster4['id'] = raster4['name'] = cc.TESTFILENAME4
 
-    return [raster1, raster2, raster3]
+    raster5 = setTestRaster(1, 4) #no layer map
+    raster5['id'] = raster5['name'] = cc.TESTFILENAME5                          
+
+    common.testRaster_openeo1 = [raster1, raster2, raster3, raster4, raster5]
+
+    return [raster1, raster2, raster3, raster4, raster5]
   
 
    
