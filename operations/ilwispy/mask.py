@@ -56,6 +56,7 @@ class MaskOperation(OpenEoOperation):
                 maskMap = item["mask"]
                 if item["resampleneeded"]:
                     maskMap = self.resample(item["data"], maskMap)
+                  
                 expression = 'iff(@1 != 0,' + str(self.replacement) + ',@2)' 
                 outputs = []
                 idxs = []
@@ -64,7 +65,7 @@ class MaskOperation(OpenEoOperation):
                 for ras in self.rasters:
                     for key in ras['data'][DATAIMPLEMENTATION]: 
                         r = ras['data'][DATAIMPLEMENTATION][key]
-                        outputRc = ilwis.do("mapcalc", expression, item['mask'].getRaster(), r) 
+                        outputRc = ilwis.do("mapcalc", expression, maskMap.getRaster(), r) 
                         outputs.append(outputRc) 
                         idxs.append(count)
                         count = count + 1
