@@ -13,15 +13,21 @@ cube_s2 = conn.load_collection(
     spatial_extent =  {"west": -5, "south": 26, "east":  65, "north":67},
     temporal_extent =  ["2020-11-03", "2020-11-07"])
 
+cube_s3 = conn.load_collection(
+    cc.TESTFILENAME5 ,
+    spatial_extent =  {"west": -5, "south": 26, "east":  65, "north":67})
+
    
-def execAddDimension(operation, nm):
+def execAddDimension(operation, nm, cube=cube_s2):
     name = operation + ".tif"
-    b2 = cube_s2.apply(lambda : add_dimension(cube_s2,nm, nm + '_label'))
+    b2 = cube.apply(lambda : add_dimension(cube,nm, nm + '_label'))
     result = b2.save_result("GTiff")
     job = result.create_job()
     job.start_and_wait()
     job.get_results().download_files(name) 
-    basetests.testCheckSumMulti('add_dimension', name)       
+    basetests.testCheckSumMulti('add_dimension', name) 
+    
+          
    
 
 
@@ -32,3 +38,4 @@ class TestAddDimensions(basetests.BaseTest):
 
         basetests.testExceptionCondition1(self, True, lambda r1 : execAddDimension(operation=r1, nm='bleep'), 'adddimensionb',"add a simpel dimension")
         basetests.testExceptionCondition1(self, False, lambda r1 : execAddDimension(operation=r1, nm='t'), 'adddimensionc',"add a existing dimenions; fails")
+        basetests.testExceptionCondition1(self, True, lambda r1 : execAddDimension(operation=r1, nm='t', cube=cube_s3), 'adddimensiond',"add a well known dimenions")
