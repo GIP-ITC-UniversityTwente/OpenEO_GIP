@@ -34,12 +34,17 @@ class AddDimension(OpenEoOperation):
             outData = []
             self.logStartOperation(processOutput, openeojob)
             for raster in self.rasters:
-                raster[STRUCTUREDEFDIM].insert(0, self.dimname)
+                exrasters = {}                
+                if self.dimname == DIMTEMPORALLAYER:
+                    p = len(raster[STRUCTUREDEFDIM])
+                    raster[STRUCTUREDEFDIM].insert(p - 1, DIMTEMPORALLAYER)
+                else:    
+                    raster[STRUCTUREDEFDIM].insert(0, self.dimname)
+                    for key, value in raster['rasters'].items():
+                        exrasters['0:' + key] = value  
+                    raster['rasters'] = exrasters                                          
                 raster[METADATDEFDIM][self.dimname] = {}
-                exrasters = {}
-                for key, value in raster['rasters'].items():
-                    exrasters['0:' + key] = value
-                raster['rasters'] = exrasters
+                
                 outData.append(raster)
             self.logEndOperation(processOutput,openeojob)
             return  createOutput(constants.STATUSFINISHED, outData, constants.DTRASTER)
