@@ -235,7 +235,7 @@ class OpenEoOperation:
 
         else:                    
             self.extra[STRUCTUREDEFDIM] = r[STRUCTUREDEFDIM]
-            self.extra['textsublayers'] = r.getLayers()
+            self.extra['textsublayers'] = r.getLayersTempExtent()
             self.extra[DATAIMPLEMENTATION] = r[DATAIMPLEMENTATION].keys()
 
         
@@ -358,18 +358,19 @@ class OpenEoOperation:
         raise customexception.CustomException(code, job_id, parameter, message)
     
     def resample(self,targetRaster, sourceRaster):
-        inputRaster = targetRaster.getRaster().rasterImp() 
+        inputRaster = targetRaster.getRaster()
         env = inputRaster.envelope()
-        pixSize = targetRaster.getRaster().pixelSize()
-        projection = 'epsg:' + str(targetRaster.epsg)
+        pixSize = targetRaster.getRaster().geoReference().pixelSize()
+        projection = 'epsg:' + str(targetRaster['proj:epsg'])
         csy = ilwis.CoordinateSystem(projection)
         grf = ilwis.do('createcornersgeoreference', \
                            env.minCorner().x, env.minCorner().y, env.maxCorner().x, env.maxCorner().y, \
                            pixSize, csy, True, '.')
-        rm = sourceRaster.getRaster().rasterImp()
+        rm = sourceRaster.getRaster()
         outputRc = ilwis.do("resample", rm, grf, 'nearestneighbour')
-        self.extra = self.constructExtraParams(targetRaster, targetRaster.temporalExtent, 0)  
-        return self.setOutput([outputRc], self.extra)[0]
+        self.createExtra(targetRaster)
+        self.extra['rasterkeys'] = '0'
+        return self.makeOutput([outputRc], self.extra)[0]
     
     def type2type(self, a):
         t = DTUNKNOWN
