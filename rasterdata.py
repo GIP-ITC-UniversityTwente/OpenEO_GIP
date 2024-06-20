@@ -270,8 +270,9 @@ class RasterData(dict):
                 count = count + 1
             self[METADATDEFDIM][DIMSPECTRALBANDS] = {'items' : bnds, 'labels' :labels, 'RefSystem' : '', 'unit' : ''}
      
-        if not defineSTRUCTUREDEFDIM:
+        if not defineSTRUCTUREDEFDIM and 'textsublayers' in extraParams:
             self[STRUCTUREDEFDIM].append(DIMTEMPORALLAYER)
+        impLevel = self[STRUCTUREDEFDIM][-1]
         if DIMTEMPORALLAYER in self[STRUCTUREDEFDIM]:
             self.layerIndex = 0
             labels = [] 
@@ -297,11 +298,12 @@ class RasterData(dict):
 
             self[METADATDEFDIM][DIMTEMPORALLAYER] =  {'items' :lyrs, 'labels' : labels,'unit' : '' , 'RefSystem': 'Gregorian calendar / UTC'} 
         if not DIMXYRASTER in self[STRUCTUREDEFDIM]:
+
             self[STRUCTUREDEFDIM].append(DIMXYRASTER)
             self[METADATDEFDIM][DIMXYRASTER] = {'unit' : 'meter', 'RefSystem' : self['proj:epsg']}
 
         if not defineSTRUCTUREDEFDIM:
-            self.makeKeyIndex(0, "", DIMTEMPORALLAYER, rasterList)
+            self.makeKeyIndex(0, "", impLevel, rasterList)
         if 'rasterkeys' in extraParams:
             i = 0
             for item in list(extraParams['rasterkeys']):
@@ -385,7 +387,12 @@ class RasterData(dict):
         if 'id' in self:
             bbox = {}
             bbox['bbox'] = self['boundingbox']
-            time = self.idx2layer(0)['temporalExtent']
+            lyr = self.idx2layer(0)
+            if lyr == None:
+                 time = self['temporalExtent']
+            else:                 
+                time = lyr['temporalExtent']
+               
             interval = {}
             interval['interval'] = [time]
             ext = {'spatial' : bbox, 'temporal' : interval}        
@@ -416,7 +423,11 @@ class RasterData(dict):
     def getJsonExtent(self):
         bbox = self['spatialExtent']
         epsg = self['proj:epsg']
-        time = self.idx2layer(0)['temporalExtent']
+        lyr = self.idx2layer(0)
+        if lyr == None:
+            time = self['temporalExtent']
+        else:                 
+            time = lyr['temporalExtent']        
         bnds = self.getBands()
         eobandlist = []
         for bnd in bnds:
@@ -476,27 +487,24 @@ class RasterData(dict):
 
     def getLayerIndexes(self, temporalExtent):
             idxs = []
+            layers = self.getLayers()
             if temporalExtent == None:
-                layers = self['layers']
                 for layer in layers:
-                     if layer!= 'all': # skip the generalized layer temp extent , it is not real
-                        idxs.append(layers[layer]['layerIndex'])
+                    idxs.append(layer['layerIndex'])
 
             else:
                 first = parser.parse(temporalExtent[0])
                 last = parser.parse(temporalExtent[1])
-                for layer in self['layers'].items():
-                    if layer[0] == 'all':
-                        continue
-                    layerTempFirst = parser.parse(layer[1]['temporalExtent'][0])
-                    layerTempLast = parser.parse(layer[1]['temporalExtent'][1])
+                for layer in layers:
+                    layerTempFirst = parser.parse(layer['temporalExtent'][0])
+                    layerTempLast = parser.parse(layer['temporalExtent'][1])
                     if layerTempFirst >=  first and layerTempLast <= last:
-                        idxs.append(layer[1]['layerIndex'])
+                        idxs.append(layer['layerIndex'])
 
             return idxs
-    # gets all the layers of a rasterdata instance except for the first. The
+    # gets all the layers temporal extents of a rasterdata instance except for the first. The
     # first has a special meaning as its the temporal extent of all the layers
-    def getLayers(self):
+    def getLayersTempExtent(self):
         result = []
         if DIMTEMPORALLAYER in self[STRUCTUREDEFDIM]:
             result = []
@@ -505,6 +513,18 @@ class RasterData(dict):
             for layer in layers.values():
                 if not first:
                     result.append(layer['temporalExtent'])
+                first = False                
+        return result
+    
+    def getLayers(self):
+        result = []
+        if DIMTEMPORALLAYER in self[STRUCTUREDEFDIM]:
+            result = []
+            first = True
+            layers = self[METADATDEFDIM][DIMTEMPORALLAYER]['items']
+            for layer in layers.values():
+                if not first:
+                    result.append(layer)
                 first = False                
         return result
     
@@ -528,9 +548,11 @@ class RasterData(dict):
 
     #translates an index to an actual layer index
     def idx2layer(self, index):
-        for layer in self['layers'].items():
-            if layer[1]['layerIndex'] == index:
-                return layer[1]
+        if DIMTEMPORALLAYER in self[STRUCTUREDEFDIM]:
+            items = self[METADATDEFDIM][DIMTEMPORALLAYER]['items']
+            for layer in items.items():
+                if layer[1]['layerIndex'] == index:
+                    return layer[1]
         return None  
     
     #gets a raster implementation for this RasterData objects. Note that if it contain multiple
@@ -566,7 +588,7 @@ class RasterData(dict):
     def createRasterDatafromBand(self, bands):
         extra = { 'temporalExtent' : self['temporalExtent'], 'bands' : bands, 'epsg' : self['proj:epsg']}
         extra[STRUCTUREDEFDIM] = self[STRUCTUREDEFDIM]
-        extra['textsublayers'] = self.getLayers()
+        extra['textsublayers'] = self.getLayersTempExtent()
         extra['rasterkeys'] = []
         rasters = []
         for band in bands: 
