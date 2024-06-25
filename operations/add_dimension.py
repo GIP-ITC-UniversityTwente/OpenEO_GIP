@@ -24,7 +24,7 @@ class AddDimension(OpenEoOperation):
                 if fname == dimname:
                     self.handleError(toServer, job_id, 'data','A dimension with the specified name already exists', 'ProcessParameterInvalid') 
         self.dimname = dimname 
-        self.labelname = arguments['label']['resolved']
+        self.labels = arguments['label']['resolved']
         self.rasters = rasters
                    
         self.runnable = True           
@@ -42,8 +42,19 @@ class AddDimension(OpenEoOperation):
                     raster[STRUCTUREDEFDIM].insert(0, self.dimname)
                     for key, value in raster['rasters'].items():
                         exrasters['0:' + key] = value  
-                    raster['rasters'] = exrasters                                          
-                raster[METADATDEFDIM][self.dimname] = {}
+                    raster['rasters'] = exrasters
+                items = {}
+                labels = []                    
+                for idx,label in enumerate(self.labels): 
+                    layer = RasterLayer() if self.dimname == DIMTEMPORALLAYER else dict()
+                    layer['source'] = '' # calculated or derived product there is no source
+                    layer['temporalExtent'] = label if self.dimname == DIMTEMPORALLAYER else ''
+                    layer['layerIndex'] = idx
+                    layer['eo:cloud_cover'] = 0
+                    labels.append(label)               
+                    items[label] = layer  
+                refsystem =  'Gregorian calendar / UTC' if self.dimname == DIMTEMPORALLAYER else ''                                                                           
+                raster[METADATDEFDIM][self.dimname] =  {'items' :items, 'labels' : labels,'unit' : '' , 'RefSystem': refsystem} 
                 
                 outData.append(raster)
             self.logEndOperation(processOutput,openeojob)
