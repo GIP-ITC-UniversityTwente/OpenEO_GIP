@@ -16,9 +16,9 @@ class ReduceDimensionsOperation(OpenEoOperation):
         self.runnable = False
         self.reducer= arguments['reducer']['resolved']
         self.dimension = arguments['dimension']['resolved']
-        self.pgraph = self.reducer['process_graph']
-        rootNode = next(iter(self.pgraph))
-        args = self.pgraph[rootNode]['arguments'] 
+        pgraph = self.reducer['process_graph']
+        rootNode = next(iter(pgraph))
+        args = pgraph[rootNode]['arguments'] 
         self.args = {} 
         for key, value in args.items(): 
             if isinstance(value, dict) and 'from_parameter' in value:
