@@ -6,6 +6,7 @@ from rasterdata import RasterData, RasterBand
 import os
 from pathlib import Path
 import constants.constants as cc
+from datetime import datetime, timedelta
 
 
 def createEmptySmallNumericRaster(alternate):
@@ -48,6 +49,15 @@ def createSmallNumericRasterNLayers(dims, alternate=0, bndcount=1):
                             
     return rc 
 
+def convert_to_utm_date_only(starting_date_str, dims):
+    starting_date = datetime.strptime(starting_date_str, "%Y-%m-%d")
+    utm_dates = []
+    for i in range(0,2 * dims):
+        new_date = starting_date + timedelta(days=i)
+        utm_dates.append(new_date.strftime("%Y-%m-%d"))
+    
+    return utm_dates
+
 def setTestRaster(dims, bndcount = 1, version = 0):
     
     raster = RasterData()
@@ -74,15 +84,15 @@ def setTestRaster(dims, bndcount = 1, version = 0):
     path = Path(folder).as_uri()
     ilwis.setWorkingCatalog(path)  
 
-    end = '2020-11-' + str((dims+1)*2)
+    utmdates = convert_to_utm_date_only('2020-11-01', dims)
 
-    extra = {'epsg' : 4326, 'temporalExtent' : ['2020-11-01', end], 'bands' :bdns}
-    if dims > 1:    
+    extra = {'epsg' : 4326, 'temporalExtent' : ['2020-11-01', utmdates[-1]], 'bands' :bdns}
+    if dims > 1:
         text = []
-        for i in range(1,dims + 1):
-            begin = '2020-11-' + str(i*2 - 1)
-            end = '2020-11-' + str((i)*2)
-            text.append([begin, end])
+        for d in range(0, len(utmdates), 2):    
+            d1 = utmdates[d]
+            d2 = utmdates[d+1]
+            text.append([d1, d2])
         extra['textsublayers'] = text 
     raster.load(rcs, 'ilwisraster', extra)        
     #raster[cc.METADATDEFDIM][cc.DIMSPECTRALBANDS] = bdns
@@ -102,17 +112,20 @@ def setTestRasters(dims):
     raster2['id'] = raster2['name'] = cc.TESTFILENAME2 
 
     raster3 = setTestRaster(dims, 4, 2) # mask map
-    raster3['id'] = raster3['name'] = cc.TESTFILENAME3 
+    raster3['id'] = raster3['name'] = cc.TESTFILENAME_MASKMAP 
 
     raster4 = setTestRaster(dims, 4, 3) # mask map
-    raster4['id'] = raster4['name'] = cc.TESTFILENAME4
+    raster4['id'] = raster4['name'] = cc.TESTFILENAME_MASKMAP_SHIFTED
 
     raster5 = setTestRaster(1, 4) #no layer map
-    raster5['id'] = raster5['name'] = cc.TESTFILENAME5                          
+    raster5['id'] = raster5['name'] = cc.TESTFILENAME_NO_LAYERS  
 
-    common.testRaster_openeo1 = [raster1, raster2, raster3, raster4, raster5]
+    raster6 = setTestRaster(20,2) #more layer map
+    raster6['id'] = raster6['name'] = cc.TESTFILENAME_MORE_LAYERS
 
-    return [raster1, raster2, raster3, raster4, raster5]
+    common.testRaster_openeo1 = [raster1, raster2, raster3, raster4, raster5, raster6]
+
+    return [raster1, raster2, raster3, raster4, raster5, raster6]
   
 
    
