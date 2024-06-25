@@ -14,18 +14,18 @@ cube_s2 = conn.load_collection(
     temporal_extent =  ["2020-11-03", "2020-11-07"])
 
 cube_s3 = conn.load_collection(
-    cc.TESTFILENAME5 ,
+    cc.TESTFILENAME_NO_LAYERS ,
     spatial_extent =  {"west": -5, "south": 26, "east":  65, "north":67})
 
    
 def execAddDimension(operation, nm, cube=cube_s2):
     name = operation + ".tif"
-    b2 = cube.apply(lambda : add_dimension(cube,nm, nm + '_label'))
+    b2 = cube.apply(lambda : add_dimension(cube,nm, [nm + '_label']))
     result = b2.save_result("GTiff")
     job = result.create_job()
     job.start_and_wait()
-    job.get_results().download_files(name) 
-    basetests.testCheckSumMulti('add_dimension', name) 
+    job.get_results().download_files(operation) 
+    basetests.testCheckSumMulti('add_dimension', operation) 
     
           
    
