@@ -14,17 +14,17 @@ cube_s2 = conn.load_collection(
     temporal_extent =  ["2020-11-03", "2020-11-07"])
 
 cube_s3 = conn.load_collection(
-    cc.TESTFILENAME3 ,
+    cc.TESTFILENAME_MASKMAP ,
     spatial_extent =  {"west": -5, "south": 26, "east":  65, "north":67},
     temporal_extent =  ["2020-11-03", "2020-11-07"])
 
 cube_s4 = conn.load_collection(
-    cc.TESTFILENAME4 ,
+    cc.TESTFILENAME_MASKMAP_SHIFTED ,
     spatial_extent =  {"west": 10, "south": 25, "east":  30, "north":60},
     temporal_extent =  ["2020-11-03", "2020-11-07"])
 
 cube_s5 = conn.load_collection(
-    cc.TESTFILENAME4 ,
+    cc.TESTFILENAME_MASKMAP_SHIFTED ,
     spatial_extent =  {"west": 100, "south": 25, "east":  300, "north":60},
     temporal_extent =  ["2020-11-03", "2020-11-07"])
 
