@@ -293,7 +293,7 @@ class ProcessManager:
                     if self.outputs[key].status == constants.STATUSFINISHED:
                         self.removeFromOutputs(key,60*60*24*4 )   
                 startCheckRemoveOutput = endTimer 
-                reduceLogFile()                     
+                    
 
     def loadProcessTables(self):
         path = common.openeoip_config['data_locations']['system_files']['location']
