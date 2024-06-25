@@ -24,8 +24,8 @@ def execFilterBands(operation, bnds=[], wvl=[]):
         result = b2.save_result("GTiff")
         job = result.create_job()
         job.start_and_wait()
-        job.get_results().download_files(name) 
-        basetests.testCheckSumMulti('load_collection', name)       
+        job.get_results().download_files(operation) 
+        basetests.testCheckSumMulti('load_collection', operation)       
    
 
 
