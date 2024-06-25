@@ -567,7 +567,10 @@ class RasterData(dict):
             return self[DATAIMPLEMENTATION][implName]
         
         return None
-    
+    def setLabels(self, dimension, labels):
+        if dimension in self[STRUCTUREDEFDIM]:
+            self[METADATDEFDIM][dimension]['labels'] = labels
+            
     def bandName2RasterKey(self, bandName):
         key = next(iter(self[DATAIMPLEMENTATION])) # from the key we can learn at which level the implementation can be found
         parts = key.split(':')
