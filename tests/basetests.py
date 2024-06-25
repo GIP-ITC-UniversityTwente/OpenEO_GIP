@@ -8,6 +8,9 @@ import openeo
 
 
 CUSTOM_EX = 'CUSTOM_EX@'
+CMESS = '\033[92m'
+CERR = '\033[93m'
+CENDMESS = '\033[0m'
 
 def openConnection() :
      conn = openeo.connect("http://127.0.0.1:5000")
@@ -175,53 +178,61 @@ def testCheckSumSingle(group, operation, outputFile):
 class BaseTest(unittest.TestCase):
     
      def prepare(self, testdir):
-         print('started:' + testdir)
+         print('\033[96m' + 'started:' + testdir + CENDMESS)
          
 
      def decorateFunction(self, mod, fn) :
         self.decoration = mod + " ==> " + fn 
-        print("\n" + self.decoration + "\n")
+        print('\033[94m' + "\n" + self.decoration +  CENDMESS + "\n")
 
 
      def isEqual(self, str1, str2, msg):
         cls = configglobals.TestManager()
         cls.incTestCount()
+        color = CMESS
         result = 'SUCCESS'
         if (str1 != str2):
+           color = CERR
            cls.addErrorNumber(cls.testCount())
            result = 'FAIL'
 
-        print(f'{cls.testCount():5} {msg:65}  {result}')
+        print(color + f'{cls.testCount():5} {msg:65}  {result}' + CENDMESS)
 
      def isAlmostEqualNum(self, num1, num2, delta, msg) :
         cls = configglobals.TestManager()
         cls.incTestCount()
+        color = CMESS
         result = 'SUCCESS'
         if (abs(num1 - num2) > delta):
            cls.addErrorNumber(cls.testCount())
+           color = CERR
            result = 'FAIL'
 
-        print(f'{cls.testCount():5} {msg:65}  {result}')
+        print(color + f'{cls.testCount():5} {msg:65}  {result}'  + CENDMESS)
 
- 
+     
      def isTrue(self, b, msg, error=''):
         cls = configglobals.TestManager()
         cls.incTestCount() 
         result = 'FAIL'
+        color = CMESS
         if (b):
            result = 'SUCCESS'
         else:
+            color = CERR
             cls.addErrorNumber(cls.testCount(), error)         
-        print(f'{cls.testCount():5} {msg:65}  {result}')
+        print(color + f'{cls.testCount():5} {msg:65}  {result}' + CENDMESS)
 
      def isFalse(self, b, msg):
         cls = configglobals.TestManager()
         cls.incTestCount() 
         result = 'SUCCESS'
+        color = CMESS
         if (b):
             cls.addErrorNumber(cls.testCount())  
+            color = CERR
             result = 'FAIL'
-        print(f'{cls.testCount():5} {msg:65}  {result}')
+        print(color + f'{cls.testCount():5} {msg:65}  {result}' + CENDMESS)
 
 
         
