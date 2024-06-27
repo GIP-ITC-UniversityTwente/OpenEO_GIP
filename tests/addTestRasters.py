@@ -123,9 +123,12 @@ def setTestRasters(dims):
     raster6 = setTestRaster(20,2) #more layer map
     raster6['id'] = raster6['name'] = cc.TESTFILENAME_MORE_LAYERS
 
-    common.testRaster_openeo1 = [raster1, raster2, raster3, raster4, raster5, raster6]
+    raster7 = setTestRaster(60,2) #many layer map
+    raster7['id'] = raster7['name'] = cc.TESTFILENAME_MANY_LAYERS
 
-    return [raster1, raster2, raster3, raster4, raster5, raster6]
+    common.testRaster_openeo1 = [raster1, raster2, raster3, raster4, raster5, raster6, raster7]
+
+    return [raster1, raster2, raster3, raster4, raster5, raster6, raster7]
   
 
    
