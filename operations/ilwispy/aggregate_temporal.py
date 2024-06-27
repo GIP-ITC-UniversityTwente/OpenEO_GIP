@@ -5,6 +5,98 @@ from rasterdata import RasterData
 import ilwis
 from workflow import processGraph
 from globals import getOperation
+from datetime import datetime, timedelta
+import calendar
+
+def calculate_dekad_number(date_obj):
+    # Calculate the day of the month
+    day_of_month = date_obj.day
+    month = date_obj.month
+
+    # Determine the dekad number based on the day of the month
+    if day_of_month <= 10:
+        dekad_number = 1
+    elif day_of_month <= 20:
+        dekad_number = 2
+    else:
+        dekad_number = 3
+
+    return 3 * (month-1) + dekad_number
+
+def iso_season(beginDate, endDate):
+    current_date = beginDate
+
+def iso_week_range(begin_year, begin_week, end_year, end_week):
+    # Create datetime objects for the beginning and end of the range
+    begin_date = datetime.strptime(f"{begin_year}-W{begin_week}-1", "%Y-W%U-%w")
+    end_date = datetime.strptime(f"{end_year}-W{end_week}-1", "%Y-W%U-%w")
+
+    # Iterate through the weeks and add ISO periods to the list
+    current_date = begin_date
+    date_pairs = []
+    while current_date <= end_date:
+        week_end = current_date + timedelta(days=6)
+        date_pairs.append([current_date.strftime("%Y-%m-%d"), week_end.strftime("%Y-%m-%d")])
+        current_date += timedelta(weeks=1)
+
+    return date_pairs
+
+def iso_month_range(begin_year, begin_month, end_year, end_month):
+    # Initialize the list to store date pairs
+    date_pairs = []
+
+    # Create datetime objects for the beginning and end of the range
+    begin_date = datetime(begin_year, begin_month, 1)
+    end_date = datetime(end_year, end_month, 1)
+
+    # Iterate through the months and add date pairs to the list
+    current_date = begin_date
+    while current_date <= end_date:
+        # Calculate the end of the month
+        next_month = current_date.replace(day=28) + timedelta(days=4)
+        month_end = next_month - timedelta(days=next_month.day)
+        date_pairs.append([current_date.strftime("%Y-%m-%d"), month_end.strftime("%Y-%m-%d")])
+        current_date = next_month
+
+    return date_pairs
+
+def dateRangeDekad(date):
+    day_of_month = date.day
+    month = date.month
+
+    # Determine the dekad number based on the day of the month
+    if day_of_month <= 10:
+        d1 = 1
+        d2 = 10
+    elif day_of_month <= 20:
+        d1 = 11
+        d2 = 20
+    else:
+        d1 = 21
+        d2 = calendar.monthrange(date.year, month)[1]
+
+    return (d1,d2)        
+
+def iso_dekad_range(dateBegin, dateEnd):
+
+    # Initialize the list to store date pairs
+    date_pairs = []
+
+    dbegin = dateRangeDekad(dateBegin)
+    dend = dateRangeDekad(dateEnd)
+    begin_date = date(dateBegin.year, dateBegin.month, dbegin[0]) 
+    end_date = date(dateEnd.year, dateEnd.month, dend[1]) 
+
+    # Iterate through the dekads and add date pairs to the list
+    current_date = begin_date
+    while current_date <= end_date:
+        rng = dateRangeDekad(current_date)
+        s1 = "{0}-{1}-{2}".format(current_date.year, current_date.month, rng[0])
+        s2 = "{0}-{1}-{2}".format(current_date.year, current_date.month, rng[1])
+        date_pairs.append([s1, s2])
+        current_date = current_date + timedelta(days=rng[1] - rng[0] + 1)
+  
+    return date_pairs
 
 class AggregateTemporal(OpenEoOperation):
     def __init__(self):
@@ -117,6 +209,50 @@ class AggregateTemporal(OpenEoOperation):
              #process.addLocalArgument('dimensions',  {'base' : self.dimension, 'resolved' : self.dimension})
 
 
+class AggregateTemporalPeriod(AggregateTemporal):
+    def __init__(self):
+        self.loadOpenEoJsonDef('aggregate_temporal_period.json')
+        
+        self.kind = constants.PDPREDEFINED
+
+  
+    
+    def prepare(self, arguments):
+        self.runnable = False
+        if 'serverChannel' in arguments:
+            toServer = arguments['serverChannel']
+            job_id = arguments['job_id']        
+        inputRaster = arguments['data']['resolved']
+        raster = inputRaster[0]
+        tempExtent = raster['temporalExtent']
+        dr1 = parser.parse(tempExtent[0])
+        dr2 = parser.parse(tempExtent[1])
+        year1 = dr1.isocalendar()[0]
+        year2 = dr2.isocalendar()[0]        
+        period = arguments['period']['resolved']
+        periods = []
+        if period == 'day':
+            periods = iso_week_range(year1, dr1.isocalendar()[1], year2,  dr2.isocalendar()[1])
+        elif period == 'month':
+            periods = iso_month_range(year1, dr1.month, year2, dr2.month)
+        elif period == 'dekad':
+            periods = iso_dekad_range(dr1, dr2)
+        elif period == 'season':
+            periods = iso_season(dr1, dr2)
+        else:
+           self.handleError(toServer, job_id, 'temporalperiodtag','period tag not supported', 'ProcessParameterInvalid')
+
+
+        arguments['intervals'] = {'base' : period, 'resolved' : periods}
+        super().prepare(arguments)            
+
+
+
+
 
 def registerOperation():
-   return AggregateTemporal()                            
+   funcs = []
+   funcs.append(AggregateTemporal())
+   funcs.append(AggregateTemporalPeriod())   
+
+   return funcs                        
