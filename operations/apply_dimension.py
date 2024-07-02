@@ -18,24 +18,31 @@ class ApplyDimension(OpenEoOperation):
         if 'serverChannel' in arguments:
                 toServer = arguments['serverChannel']
                 job_id = arguments['job_id']
-        self.data = arguments['data']['resolved']
-        self.process_graph  = arguments['process']['resolved']
+        self.data = self.getMandatoryParam(toServer, job_id, arguments, 'data')
+        self.process_graph  = self.getMandatoryParam(toServer, job_id, arguments, 'process')
+        self.dimension = self.getMandatoryParam(toServer, job_id, arguments, 'dimension')
 
         self.runnable = True           
 
     def run(self,openeojob, processOutput, processInput):
         if self.runnable:
-            
-            for rasterData  in self.data:
-                outputRasters = []
-              
-                pgraph = self.process_graph['process_graph']
-                copyPg = copy.deepcopy(pgraph)
-                processArgs = {"data" : {"resolved": [rasterData]}}
-                process = ProcessGraph(copyPg, processArgs, getOperation)
-                oInfo = process.run(openeojob, processOutput, processInput) 
-                outputRasters.append(oInfo['value'][0])
-        createOutput(constants.STATUSFINISHED, outputRasters, constants.DTRASTERLIST)                    
+            pgraph = self.process_graph['process_graph']
+            copyPg = copy.deepcopy(pgraph)
+            process = ProcessGraph(copyPg, [], getOperation)
+            # the 'data' parameter must be matched against the name of the parameter needed
+            # for the 'process function. So we look witch name in the arguments of the process function
+            # has as input 'data', which is its equivalent when 'apply_dimension' is called (so from_parameter)
+            first = next(iter(copyPg))
+            args = copyPg[first]['arguments']
+            matchingName = 'data'
+            for item in args.items():
+                if 'from_parameter' in item[1] and item[1]['from_parameter'] == 'data':
+                    matchingName = item[0]
+            process.addLocalArgument(matchingName,  {'base' : '?', 'resolved' :self.data})
+            process.addLocalArgument('dimension',  {'base' : '?', 'resolved' : self.dimension})                
+            oInfo = process.run(openeojob, processOutput, processInput)
+            outputs = oInfo['value'] 
+            return createOutput(constants.STATUSFINISHED, outputs, constants.DTRASTERLIST)                    
 
         return createOutput('error', "operation no runnable", constants.DTERROR )  
 
