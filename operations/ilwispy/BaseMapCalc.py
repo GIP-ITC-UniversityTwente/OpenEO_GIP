@@ -8,15 +8,12 @@ class BaseUnarymapCalc(OpenEoOperation):
     def base_prepare(self, arguments, oper):
         self.runnable = False
         self.rasterSizesEqual = True
-        if len(arguments) != 3:
-            self.handleError(toServer, job_id, 'Input raster','number of parameters is not correct', 'ProcessParameterInvalid')        
-            
+                
         if 'serverChannel' in arguments:
             toServer = arguments['serverChannel']
             job_id = arguments['job_id']  
       
-        it = iter(arguments)
-        p1 = arguments[next(it)]['resolved']
+        p1 = self.getMandatoryParam(toServer, job_id, arguments, 'x')
         if isinstance(p1, list):
             rasterList = []
             for ras in p1:
@@ -31,6 +28,7 @@ class BaseUnarymapCalc(OpenEoOperation):
                 self.handleError(toServer, job_id, 'Input data',"the parameter a is not a number", 'ProcessParameterInvalid')
             self.rasters = p1                        
         self.operation = oper
+        self.dimension = self.getOptionalParam(toServer, job_id, arguments, 'dimension')
         if self.operation in ['pow']:
             self.operation = 'power'
         self.runnable = True                                      
