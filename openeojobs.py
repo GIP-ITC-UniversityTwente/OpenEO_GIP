@@ -95,7 +95,7 @@ class OpenEOJobResults(AuthenticatedResource):
             return make_response(jsonify(result),200)
         else:
               err = globalsSingleton.errorJson('JobNotFinished', job_id,'')
-              return make_response(jsonify(err),err.code) 
+              return make_response(jsonify(err),err['code']) 
 
 
 
