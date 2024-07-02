@@ -71,6 +71,7 @@ class OpenEoOperation:
     runnable = False 
     stopped = False
 
+  
     def startListener(self, processInput):
         if processInput != None: ## synchronous calls dont have listeners
             message_thread = threading.Thread(target=message_handler,args=(self, processInput,) )
@@ -305,14 +306,14 @@ class OpenEoOperation:
         if 'index' in arguments:
             arrIndex = arguments['index']['resolved'] 
             if dimName in rasterData[STRUCTUREDEFDIM]:
-                meta = rasterData[METADATDEFDIM][dimName]
+                meta = rasterData[METADATDEFDIM][dimName]['items']
                 if len(meta) <= arrIndex:
                     self.handleError(toServer, job_id, 'band index',"Number of raster bands doesnt match given index", 'ProcessParameterInvalid')
             return arrIndex
                         
         if 'label' in arguments:
             for idx in range(len(rasterData)):
-                meta = rasterData[METADATDEFDIM][dimName]
+                meta = rasterData[METADATDEFDIM][dimName]['items']
                 idx = 0
                 for key in meta:
                     if key == arguments['label']['resolved']:
@@ -393,9 +394,19 @@ class OpenEoOperation:
         return t                            
 
     def getMandatoryParam(self, toServer, job_id, args, key):
+        parts = key.split('|')
+        result = None
+        for p in parts:
+            if p in args:
+                result = args[p]['resolved']
+                if result != None:
+                    return result
+        self.handleError(toServer, job_id, "parameter", "missing parameter:" + key, 'ProcessParameterInvalid')
+
+    def getOptionalParam(self, toServer, job_id, args, key):
         if key in args:
             return args[key]['resolved']
-        self.handleError(toServer, job_id, "parameter", "missing parameter:" + key, 'ProcessParameterInvalid')
+        return None
             
 
 def createOutput(status, value, datatype, format='')        :
