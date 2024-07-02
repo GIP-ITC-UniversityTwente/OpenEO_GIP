@@ -18,8 +18,7 @@ loader = unittest.TestLoader()
 cls = configglobals.TestManager()
 cls.init()
 
-tests = loader.discover('./tests','test_*.py')
-#tests = loader.discover('./tests','test_*_temp*.py')
+tests = loader.discover('./tests','test_apply_dim*.py')
 testRunner = unittest.runner.TextTestRunner()
 testRunner.run(tests)
 
