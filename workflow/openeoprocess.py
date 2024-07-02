@@ -11,6 +11,9 @@ import common
 import os, shutil
 from openeooperation import put2Queue
 import customexception
+import rasterdata
+import ilwis
+import re
 
 
 def get(key,values,  defaultValue):
@@ -216,6 +219,25 @@ class OpenEOProcess(multiprocessing.Process):
         self.sendTo.send(message)
         self.cleanup()
 
+    def saveResult(self, path, data, format):
+        count = 0
+        env = ilwis.Envelope()
+        for d in data:
+            if isinstance(d, rasterdata.RasterData):
+                name = d['title'] 
+                name = name.replace('_ANONYMOUS', 'raster')                    
+                for raster in d[constants.DATAIMPLEMENTATION].values():
+                    envTemp = raster.envelope()
+                    outpath = path + '/' + name + "_"+ str(count)
+                    raster.store("file://" + outpath, format, "gdal")
+                    count = count + 1
+                    if not env:
+                        env = envTemp
+                    else:
+                        env.add(envTemp)                    
+        parts = re.split("[\s,]+", str(env))
+        return parts
+    
     # executes the process graph and is the end point for all raised exceptions that occur while running
     # the process graph.
     def run(self, toServer):
@@ -240,12 +262,17 @@ class OpenEOProcess(multiprocessing.Process):
                     self.status = constants.STATUSJOBDONE 
                 # dump a metadata file with info about the just finished process graph in the output folder                    
                 path = common.openeoip_config['data_locations']['root_user_data_location']
-                path = os.path.join(path['location'] + '/' + str(self.job_id + "/jobmetadata.json") )                                   
+                filedir = os.path.join(path['location'], str(self.job_id))
+                path = os.path.join(filedir , "jobmetadata.json")
                 dict = self.toDict(False) 
                 dict['start_datetime']  = timeStart
                 dict['end_datetime']  = timeEnd
+                if not os.path.exists(filedir): # this the case were not save_result was part of the workflow  
+                    os.makedirs(filedir)
+                    dict['spatialextent'] = self.saveResult( filedir, outputinfo['value'], "GTiff")                 
                 with open(path, "w") as fp:
-                    json.dump(dict, fp)   
+                    json.dump(dict, fp) 
+                   
                 common.logMessage(logging.INFO,'finished job_id: ' + self.job_id ,common.process_user)
             except  (Exception, BaseException, customexception.CustomException) as ex:
                 # end point for all exceptions. There should be no exception handlers in the running
