@@ -137,6 +137,9 @@ def testCheckSumMulti(group, outputDir):
           raise Exception('file not found')
 
 
+def removeOutput(outputFile):
+     if os.path.exists(outputFile):        
+          os.remove(outputFile)          
 
 def testCheckSumSingle(group, operation, outputFile):
      testdir = configglobals.testdir
