@@ -32,6 +32,8 @@ def createSmallNumericRasterNLayers(dims, alternate=0, bndcount=1):
         if ( alternate == 0):
             for i in range(len(data)):
                 data[i] = (i + count*baseSize) * 10 + (bndcount-1)*10 
+                if i % 4 == 0:
+                    data[i] = -data[i]
         if ( alternate == 1):                
             for i in range(len(data)):
                 data[i] = (i + 2*baseSize + 3 * + 2 * math.sin(math.radians(1 + i*count * 10))) * 10 + (bndcount-1)*10 
