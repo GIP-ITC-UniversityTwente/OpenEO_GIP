@@ -32,7 +32,7 @@ def ndif(data):
 
 class TestReduceDimension(basetests.BaseTest):
 
-    def test_01_add_dimension(self): 
+    def test_01_reduce_dimension(self): 
         self.prepare(sys._getframe().f_code.co_name)
 
         basetests.testExceptionCondition1(self, True, lambda r1: execReduceDimension(name='mean1', reduc='mean'), 'reducedimensiona',"reduce a dimension using aggregate method")
