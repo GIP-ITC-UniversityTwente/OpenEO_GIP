@@ -13,7 +13,7 @@ class BaseUnarymapCalc(OpenEoOperation):
             toServer = arguments['serverChannel']
             job_id = arguments['job_id']  
       
-        p1 = self.getMandatoryParam(toServer, job_id, arguments, 'x')
+        p1 = self.getMandatoryParam(toServer, job_id, arguments, 'x|p')
         if isinstance(p1, list):
             rasterList = []
             for ras in p1:
@@ -146,7 +146,7 @@ class BaseBinarymapCalcBase(OpenEoOperation):
                         outputs.append(outputRc)  
             else:
                 output = None
-                if self.operation in ['+','-', '/', '*', '<=', '>=', '==', 'or','and', 'xor']:
+                if self.operation in ['+','-', '/', '*','>','<','<=', '>=', '==', 'or','and', 'xor']:
                     expr = str(self.p1) + self.operation + str(self.p2)
                     output = eval(expr)
                 elif self.operation in ['log']:
