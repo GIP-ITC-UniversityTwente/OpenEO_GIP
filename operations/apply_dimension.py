@@ -36,8 +36,9 @@ class ApplyDimension(OpenEoOperation):
             args = copyPg[first]['arguments']
             matchingName = 'data'
             for item in args.items():
-                if 'from_parameter' in item[1] and item[1]['from_parameter'] == 'data':
-                    matchingName = item[0]
+                if isinstance(item[1], dict):
+                    if 'from_parameter' in item[1] and item[1]['from_parameter'] == 'data':
+                        matchingName = item[0]
             process.addLocalArgument(matchingName,  {'base' : '?', 'resolved' :self.data})
             process.addLocalArgument('dimension',  {'base' : '?', 'resolved' : self.dimension})                
             oInfo = process.run(openeojob, processOutput, processInput)
