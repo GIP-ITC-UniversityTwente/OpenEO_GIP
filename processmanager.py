@@ -149,7 +149,7 @@ class ProcessManager:
         for i in range(len(self.processQueue)):
             if str(self.processQueue[i].job_id) == job_id:
                 return self.processQueue[i]
-        for jobb_id, item in self.outputs: 
+        for jobb_id, item in self.outputs.items(): 
             if str(jobb_id) == job_id:
                 return item.eoprocess
         return None            
@@ -172,22 +172,25 @@ class ProcessManager:
                             dict['progress'] = value.progress
                         dict['updated'] = str(value.last_updated)
                         dict['status'] = value.status
+                        dict["links"]  = {
+                            "href" :  baseurl + "/" + value.eoprocess.job_id,
+                            "rel" : 'self',
+                            "type" : "application/json"
+                            }                        
                         if value.status == constants.STATUSJOBDONE:
                             dict['status'] = 'finished'
                             dict['progress'] = 'Job done'
+                            dict['links']['rel'] = 'result'
                         if value.status == constants.STATUSERROR:
                             dict['status'] = 'finished'
                             dict['progress'] = 'Job done'
                             dict['haserror'] = True
                             dict['message'] = value.message
                             dict['code'] = value.code
+                            dict['links']['rel'] = 'result'
                         dict['job_id'] = value.eoprocess.job_id
                         dict['submitted'] = value.eoprocess.submitted
-                        dict["links"]  = {
-                            "href" :  baseurl + "/" + value.eoprocess.job_id,
-                            "rel" : 'self',
-                            "type" : "application/json"
-                            }
+                    
                         processes.append(dict)
             if job_id == None: ## case were a list of metadata is requested 
                 return processes 
