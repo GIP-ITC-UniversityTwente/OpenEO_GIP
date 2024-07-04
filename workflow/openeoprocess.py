@@ -14,7 +14,7 @@ import customexception
 import rasterdata
 import ilwis
 import re
-
+import operations.operationconstants as opc
 
 def get(key,values,  defaultValue):
     if key in values:
@@ -193,7 +193,17 @@ class OpenEOProcess(multiprocessing.Process):
             if len(parms) > 0:
                 processDict["parameters"] = parms
 
-            processDict['returns'] = self.returns
+            if self.returns != {}:
+                outInfo = self.returns
+                if outInfo['datatype'] != constants.DTRASTER:
+                    subtype = 'string'
+                    schema = opc.OPERATION_SCHEMA_STRING
+                else:
+                    subtype = 'datacube'
+                    schema = opc.OPERATION_SCHEMA_DATACUBE
+                processDict['results'] = { 'subtype' : subtype, 'schema' : schema}
+            else:        
+                processDict['returns'] = self.returns
             processDict['categories'] = self.categories
             if len(self.examples) > 0:
                 processDict['examples'] = self.examples 
@@ -222,21 +232,23 @@ class OpenEOProcess(multiprocessing.Process):
     def saveResult(self, path, data, format):
         count = 0
         env = ilwis.Envelope()
-        for d in data:
-            if isinstance(d, rasterdata.RasterData):
-                name = d['title'] 
-                name = name.replace('_ANONYMOUS', 'raster')                    
-                for raster in d[constants.DATAIMPLEMENTATION].values():
-                    envTemp = raster.envelope()
-                    outpath = path + '/' + name + "_"+ str(count)
-                    raster.store("file://" + outpath, format, "gdal")
-                    count = count + 1
-                    if not env:
-                        env = envTemp
-                    else:
-                        env.add(envTemp)                    
-        parts = re.split("[\s,]+", str(env))
-        return parts
+        if data != None:
+            if isinstance(data, list):
+                for d in data:
+                    if isinstance(d, rasterdata.RasterData):
+                        name = d['title'] 
+                        name = name.replace('_ANONYMOUS', 'raster')                    
+                        for raster in d[constants.DATAIMPLEMENTATION].values():
+                            envTemp = raster.envelope()
+                            outpath = path + '/' + name + "_"+ str(count)
+                            raster.store("file://" + outpath, format, "gdal")
+                            count = count + 1
+                            if not env:
+                                env = envTemp
+                            else:
+                                env.add(envTemp)                    
+                parts = re.split("[\s,]+", str(env))
+                return parts
     
     # executes the process graph and is the end point for all raised exceptions that occur while running
     # the process graph.
@@ -250,6 +262,7 @@ class OpenEOProcess(multiprocessing.Process):
                 timeEnd = str(datetime.now())
                 if 'spatialextent' in outputinfo:
                     self.spatialextent = outputinfo['spatialextent']
+                self.returns = outputinfo                   
                 log = {'type' : 'progressevent', 'job_id': self.job_id, 'progress' : 'job finished' , 'last_updated' : timeEnd, 'status' : constants.STATUSJOBDONE, 'current_operation' : '?'}   
                 # communicate to the main server process that a job has finished
                 toServer.put(log)
@@ -267,9 +280,12 @@ class OpenEOProcess(multiprocessing.Process):
                 dict = self.toDict(False) 
                 dict['start_datetime']  = timeStart
                 dict['end_datetime']  = timeEnd
+                dict["assets"] = outputinfo
+
                 if not os.path.exists(filedir): # this the case were not save_result was part of the workflow  
                     os.makedirs(filedir)
-                    dict['spatialextent'] = self.saveResult( filedir, outputinfo['value'], "GTiff")                 
+                    if outputinfo['datatype'] == constants.DTRASTER:
+                        dict['spatialextent'] = self.saveResult( filedir, outputinfo['value'], "GTiff")                 
                 with open(path, "w") as fp:
                     json.dump(dict, fp) 
                    
