@@ -61,11 +61,13 @@ class OpenEOJobResults(AuthenticatedResource):
                                             "https://stac-extensions.github.io/view/v1.0.0/schema.json",
                                             "https://stac-extensions.github.io/projection/v1.0.0/schema.json",
                                             "https://stac-extensions.github.io/raster/v1.1.0/schema.json"]
+            result['geometry'] = None
             if 'spatialextent' in eoprocess:
                 result['bbox'] = eoprocess['spatialextent']
-                arr = result['bbox']
-                coords = [[arr[0], arr[1]], [arr[2], arr[1]], [arr[2], arr[3]],[arr[0], arr[3]], [arr[0], arr[1]]] 
-                result['geometry'] = {'type' : 'Polygon',  'coordinate': coords}
+                if result['bbox'] != []:
+                    arr = result['bbox']
+                    coords = [[arr[0], arr[1]], [arr[2], arr[1]], [arr[2], arr[3]],[arr[0], arr[3]], [arr[0], arr[1]]] 
+                    result['geometry'] = {'type' : 'Polygon',  'coordinate': coords}
             properties = {}
             properties['start_datetime'] = eoprocess['start_datetime']
             properties['end_datetime'] = eoprocess['end_datetime']
@@ -75,7 +77,7 @@ class OpenEOJobResults(AuthenticatedResource):
             properties['openeo:status'] = 'finished'
             result['properties'] = properties
             assets = {}
-            # Iterate directory
+            # Iterate directory  if there is a file output
             for path in os.listdir(rootJobdataPath):
                 if os.path.isfile(os.path.join(rootJobdataPath, path)):
                     if path == 'jobmetadata.json':
@@ -90,6 +92,10 @@ class OpenEOJobResults(AuthenticatedResource):
                     urldl = "http://"+ host + urlep + "___" + path
                     item = {'href' : urldl, 'type': type, 'title' : path, 'roles' : [role]}                       
                     assets[path] = item
+            if 'assets' in  eoprocess:
+                asset = eoprocess['assets']
+                if asset['datatype'] | (DTNUMBER | DTLIST | DTFLOAT | DTSTRING):
+                    assets[str(asset['value'])] = {'href' : '', 'type' : 'text', 'title' : str(asset['value']), 'roles' : ['data']}
             result['assets'] = assets 
             globalProcessManager.outputs[job_id].availableStart = datetime.now()
             return make_response(jsonify(result),200)
