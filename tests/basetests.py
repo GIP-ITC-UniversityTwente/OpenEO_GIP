@@ -18,6 +18,10 @@ def openConnection() :
      ##conn = openeo.connect("http://cityregions.roaming.utwente.nl:5000")
      return conn
  
+def getAssetValue(job):
+     res = job.get_results()
+     return res.get_assets()[0].name
+
 def customError(regular_message, custom_message):
      if not custom_message.find(CUSTOM_EX) == -1:
           parts = custom_message.split('@')
