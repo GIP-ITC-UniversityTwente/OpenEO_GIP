@@ -53,6 +53,12 @@ class ProcessGraph(OpenEoOperation):
     # helper function for the validatgraph method
     def addLocalArgument(self, key, value, index = 0):
           self.outputNodes[index][1].localArguments[key] = value
+
+    def clearLocalArgument(self, index = 0):
+          s =str(type(self.outputNodes))
+          p = self.outputNodes[index]
+          if len(self.outputNodes) > 0 and len(self.outputNodes[index]) > 1:
+            self.outputNodes[index][1].localArguments = {}
     
     def validateNode(self, node):
         errors = []
@@ -153,6 +159,10 @@ class NodeExecution :
     def run(self,openeojob, toServer, fromServer):
         args = self.processNode.localArguments
         for key, parmDef in args.items():
+             # if a graph is called multiple times job_id and serverChannel may be in the list of already
+             # present parameters. They are 'hidden' parameters and can be ignored here. They are plain values not dicts
+            if not isinstance(parmDef, dict):
+                continue
             if parmDef['resolved'] == None:
                 parmDefinition = parmDef['base']
                 if isinstance(parmDefinition, dict):
