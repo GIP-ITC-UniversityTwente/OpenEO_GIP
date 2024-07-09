@@ -51,31 +51,7 @@ class LoadCollectionOperation(OpenEoOperation):
         os.rename(posixpath.dirname(outputs[0]), unpack_folder)
         return sourceList, unpackFolderName
 
-    def checkOverlap(self, toServer, job_id, envCube, envMap):
-        b1 = envMap.intersects(envCube)
-        b2 = envCube.intersects(envMap)
-        if not (b1 or b2):
-            self.handleError(toServer, job_id, 'extents','extents given and extent data dont overlap', 'ProcessParameterInvalid') 
-
-    # checks if extents are valid. must contain 'north', 'south', 'east', 'west' and the values must legal and correctly
-    # positioned among themselves
-    def checkSpatialExt(self, toServer, job_id, ext):
-        if ext == None:
-            return
-        
-        if 'north' in ext and 'south' in ext and 'east' in ext and 'west'in ext: # all directions there
-            n = ext['north']
-            s = ext['south']
-            w = ext['west']
-            e = ext['east']
-            # correctly positioned and have legal value(s)
-            if n < s and abs(n) <= 90 and abs(s) <= 90:
-                self.handleError(toServer, job_id, 'extents', 'north or south have invalid values', 'ProcessParameterInvalid')
-            if w > e and abs(w) <= 180 and abs(e) <= 180:
-                self.handleError(toServer, job_id, 'extents', 'east or west have invalid values', 'ProcessParameterInvalid') 
-        else:
-            self.handleError(toServer, job_id, 'extents','missing extents in extents definition', 'ProcessParameterInvalid')                               
-
+  
     # checks if a given temporal extent makes sense given the input data
     def checkTemporalExtents(self, toServer, job_id, text):
         if text == None:
@@ -256,13 +232,14 @@ class LoadCollectionOperation(OpenEoOperation):
                             self.handleError(processOutput, openeojob.job_id, 'Input raster', 'invalid sub-band:' + layer['source'], 'ProcessParameterInvalid')
                         loadedRasters.append(ilwLayer) 
                                                         
-                        # if the requested enevelope doesn't match the envelope of the inputdata we execute the 'select'
-                        # operation to get a portion of the raster that we need
+                  
             
             for bandIndex in bandIndexes:
                 bandIndexList = 'rasterbands(' + str(bandIndex) + ')'
                 layers = []                                
-                for layer in loadedRasters:                            
+                for layer in loadedRasters:   
+                    # if the requested enevelope doesn't match the envelope of the inputdata we execute the 'select'
+                    # operation to get a portion of the raster that we need                         
                     if not ev.equalsP(loadedRasters[0].envelope(), 0.001, 0.001, 0.001):
                         rc = ilwis.do("selection", layer, "envelope(" + env + ") with: " + bandIndexList) 
                     else:
