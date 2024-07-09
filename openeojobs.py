@@ -94,8 +94,9 @@ class OpenEOJobResults(AuthenticatedResource):
                     assets[path] = item
             if 'assets' in  eoprocess:
                 asset = eoprocess['assets']
-                if asset['datatype'] | (DTNUMBER | DTLIST | DTFLOAT | DTSTRING):
-                    assets[str(asset['value'])] = {'href' : '', 'type' : 'text', 'title' : str(asset['value']), 'roles' : ['data']}
+                if not asset['datatype'] == DTRASTERLIST: # rasterlists are already handled
+                    if asset['datatype'] | (DTNUMBER | DTLIST | DTSTRING):
+                        assets[str(asset['value'])] = {'href' : '', 'type' : 'text', 'title' : str(asset['value']), 'roles' : ['data']}
             result['assets'] = assets 
             globalProcessManager.outputs[job_id].availableStart = datetime.now()
             return make_response(jsonify(result),200)

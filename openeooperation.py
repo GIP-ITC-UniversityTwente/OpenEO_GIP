@@ -358,6 +358,30 @@ class OpenEoOperation:
         self.logProgress(processOutput, job_id, message, constants.STATUSERROR )
         raise customexception.CustomException(code, job_id, parameter, message)
     
+    def checkOverlap(self, toServer, job_id, envCube, envMap):
+        b3 = envMap.overlap(envCube)
+        if not  bool(b3):
+            self.handleError(toServer, job_id, 'extents','extents given and extent data dont overlap', 'ProcessParameterInvalid')    
+
+    # checks if extents are valid. must contain 'north', 'south', 'east', 'west' and the values must legal and correctly
+    # positioned among themselves
+    def checkSpatialExt(self, toServer, job_id, ext):
+        if ext == None:
+            return
+        
+        if 'north' in ext and 'south' in ext and 'east' in ext and 'west'in ext: # all directions there
+            n = ext['north']
+            s = ext['south']
+            w = ext['west']
+            e = ext['east']
+            # correctly positioned and have legal value(s)
+            if n < s and abs(n) <= 90 and abs(s) <= 90:
+                self.handleError(toServer, job_id, 'extents', 'north or south have invalid values', 'ProcessParameterInvalid')
+            if w > e and abs(w) <= 180 and abs(e) <= 180:
+                self.handleError(toServer, job_id, 'extents', 'east or west have invalid values', 'ProcessParameterInvalid') 
+        else:
+            self.handleError(toServer, job_id, 'extents','missing extents in extents definition', 'ProcessParameterInvalid')   
+
     def resample(self,targetRaster, sourceRaster):
         inputRaster = targetRaster.getRaster()
         env = inputRaster.envelope()
