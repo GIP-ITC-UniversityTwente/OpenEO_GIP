@@ -20,7 +20,11 @@ def openConnection() :
  
 def getAssetValue(job):
      res = job.get_results()
-     return res.get_assets()[0].name
+     v =  res.get_assets()[0].name
+     if v!= None and v.startswith('[') and v.endswith(']'): # is list
+          v = v [1:-1]
+          v = v.split(',')
+     return v
 
 def customError(regular_message, custom_message):
      if not custom_message.find(CUSTOM_EX) == -1:
