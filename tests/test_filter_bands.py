@@ -25,7 +25,7 @@ def execFilterBands(operation, bnds=[], wvl=[]):
         job = result.create_job()
         job.start_and_wait()
         job.get_results().download_files(operation) 
-        basetests.testCheckSumMulti('load_collection', operation)       
+        basetests.testCheckSumMulti('filter_bands', operation)       
    
 
 
