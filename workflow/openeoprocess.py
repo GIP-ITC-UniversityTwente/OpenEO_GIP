@@ -280,7 +280,7 @@ class OpenEOProcess(multiprocessing.Process):
                 dict = self.toDict(False) 
                 dict['start_datetime']  = timeStart
                 dict['end_datetime']  = timeEnd
-                if outputinfo['datatype'] == constants.DTRASTER  or outputinfo['datatype'] == constants.DTRASTERLIST: 
+                if not (outputinfo['datatype'] == constants.DTRASTER  or outputinfo['datatype'] == constants.DTRASTERLIST): 
                     dict["assets"] = outputinfo
 
                 if not os.path.exists(filedir): # this the case were not save_result was part of the workflow  
