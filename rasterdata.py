@@ -110,7 +110,8 @@ class RasterData(dict):
         self['summaries']= {}
         self.setSummariesValue('constellation', prod.stac)
         self.setSummariesValue('instrument', prod)
-        self['eo:cloud_cover'] = prod.get_cloud_cover()  
+        self['eo:cloud_cover'] = prod.get_cloud_cover()
+        self['nodata'] = prod.nodata  
         
         self[STRUCTUREDEFDIM] = [DIMSPECTRALBANDS]
         bands = {}
@@ -158,7 +159,7 @@ class RasterData(dict):
         ext = getMandatoryValue("dimensions", metadata)
         self['boundingbox'] = getMandatoryValue("bounding_box", ext)
         self['proj:epsg'] = getValue('epsg' , metadata['projection'], '0')
-
+        self['nodata'] = getValue('nodata' , metadata, -9999)
         bands = getMandatoryValue("bands", ext)
         self[STRUCTUREDEFDIM] = [DIMSPECTRALBANDS]
         labels = []
@@ -236,6 +237,7 @@ class RasterData(dict):
         head = os.path.dirname(path[1])
         self['dataSource'] = url
         self['dataFolder'] = head
+        self['nodata'] = RUNDEFFL
         count = 0
         defineSTRUCTUREDEFDIM = STRUCTUREDEFDIM in extraParams and len(extraParams[STRUCTUREDEFDIM]) > 0
         if defineSTRUCTUREDEFDIM:

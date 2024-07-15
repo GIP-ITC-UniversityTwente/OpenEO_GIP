@@ -240,10 +240,14 @@ class LoadCollectionOperation(OpenEoOperation):
                 for layer in loadedRasters:   
                     # if the requested enevelope doesn't match the envelope of the inputdata we execute the 'select'
                     # operation to get a portion of the raster that we need                         
+                    nodata = self.inputRaster['nodata']
+                    undefRepl = ""
+                    if nodata != constants.RUNDEFFL or nodata != constants.RUNDEFI32:
+                        undefRepl = " pixelvalue!=" + str(nodata) + " and "
                     if not ev.equalsP(loadedRasters[0].envelope(), 0.001, 0.001, 0.001):
-                        rc = ilwis.do("selection", layer, "envelope(" + env + ") with: " + bandIndexList) 
+                        rc = ilwis.do("selection", layer, undefRepl + "with: envelope(" + env + ") and " + bandIndexList) 
                     else:
-                        rc = ilwis.do("selection", layer,"with: " + bandIndexList)                                                           
+                        rc = ilwis.do("selection", layer, undefRepl + "with: " + bandIndexList)                                                           
                     layers.append(rc)
                 newBand = self.collectRasters(layers)
                 sz = newBand.size()
