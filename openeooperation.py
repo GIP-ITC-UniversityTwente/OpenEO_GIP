@@ -334,9 +334,9 @@ class OpenEoOperation:
 
          return extra
     
-    def logProgress(self, processOutput, job_id, message,  status, progress=0):
+    def logProgress(self, processOutput, job_id, message,  status, progress=0, ids = []):
         timenow = str(datetime.now())
-        log = {'type' : 'progressevent', 'job_id': job_id, 'progress' : message , 'last_updated' : timenow, 'status' : status, 'progress' : progress, 'current_operation' : self.name}   
+        log = {'type' : 'progressevent', 'job_id': job_id, 'progress' : message , 'last_updated' : timenow, 'status' : status, 'progress' : progress, 'current_operation' : self.name, 'objectids' : ids }   
         put2Queue(processOutput, log)
     
     def logStartOperation(self, processOutput,openeojob, extraMessage=""):
@@ -346,14 +346,15 @@ class OpenEoOperation:
         else:
             return self.logProgress(processOutput, openeojob.job_id, self.name + ": " + extraMessage ,constants.STATUSRUNNING, 0)
 
-    def logEndOperation(self, processOutput,openeojob, extraMessage=""):
+    def logEndOperation(self, processOutput,openeojob, outputs = None, extraMessage=""):
         common.logMessage(logging.INFO, 'ended: ' + self.name + " with job name:" + openeojob.title, common.process_user)
         if extraMessage == "":
-            return self.logProgress(processOutput, openeojob.job_id, 'finished ' + self.name,constants.STATUSFINISHED,100)
+            return self.logProgress(processOutput, openeojob.job_id, 'finished ' + self.name,constants.STATUSFINISHED,100, common.ilwobj_created_ids)
         else:
-            return self.logProgress(processOutput, openeojob.job_id, 'finished ' + self.name +": " + extraMessage,constants.STATUSFINISHED,100)
+            return self.logProgress(processOutput, openeojob.job_id, 'finished ' + self.name +": " + extraMessage,constants.STATUSFINISHED,100, common.ilwobj_created_ids)
     
     def handleError(self, processOutput, job_id, parameter, message, code):
+        common.logMessage(logging.ERROR, 'error: ' + self.name + " with job:" + job_id + " ;" + message, common.process_user)
         message = message + ": " + self.name
         self.logProgress(processOutput, job_id, message, constants.STATUSERROR )
         raise customexception.CustomException(code, job_id, parameter, message)
