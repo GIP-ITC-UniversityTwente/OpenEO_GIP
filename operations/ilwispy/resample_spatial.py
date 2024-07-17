@@ -72,10 +72,11 @@ class ResampleSpatial(OpenEoOperation):
                            self.pixelSize, self.csy, True, '.')
 
             outputRc = ilwis.do("resample", self.inputRaster, grf, self.method)
-            outputRasters = []                
+            outputRasters = [] 
+            common.registerIlwisIds(outputRc)                 
             outputRasters.extend(self.setOutput([outputRc], self.extra))
             ##put2Queue(processOutput,{'progress' : 100, 'job_id' : openeojob.job_id, 'status' : 'finished'}) 
-            self.logEndOperation(processOutput,openeojob)
+            self.logEndOperation(processOutput,openeojob, outputs=outputRasters)
             return createOutput(constants.STATUSFINISHED, outputRasters, constants.DTRASTER)  
         message = common.notRunnableError(self.name, openeojob.job_id) 
         return createOutput('error', message, constants.DTERROR)

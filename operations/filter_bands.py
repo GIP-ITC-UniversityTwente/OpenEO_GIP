@@ -72,7 +72,7 @@ class FilterBands(OpenEoOperation):
             for rasterItem in self.inpData:
                 outData.append(rasterItem.createRasterDatafromBand( self.selectedBands))
 
-            self.logEndOperation(processOutput,openeojob)
+            self.logEndOperation(processOutput,openeojob, outData)
             return createOutput(constants.STATUSFINISHED, outData, constants.DTRASTER)
         common.notRunnableError(self.name, openeojob.job_id) 
         return createOutput('error', "operation not runnable", constants.DTERROR)   

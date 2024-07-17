@@ -33,13 +33,16 @@ class NormalizedDifference(OpenEoOperation):
         if self.runnable:
             self.logStartOperation(processOutput, openeojob)
             outputRasters = []
+            ilwRasters = []
             for idx in range(len(self.inputRaster1)): 
                 r1 = self.inputRaster1[idx]
                 r2 = self.inputRaster2[idx]
 
                 outputRc = ilwis.do("mapcalc", "(@1 - @2) / (@1 + @2)", r1.getRaster(), r2.getRaster())
-                outputRasters.extend(self.setOutput([outputRc], self.extra))
-            self.logEndOperation(processOutput,openeojob)
+                ilwRasters.append(outputRc)
+            common.registerIlwisIds(ilwRasters)  
+            outputRasters.extend(self.setOutput(ilwRasters, self.extra))
+            self.logEndOperation(processOutput,openeojob, outputs=outputRasters)
             return createOutput(constants.STATUSFINISHED, outputRasters, constants.DTRASTERLIST)
         message = common.notRunnableError(self.name, openeojob.job_id) 
         return createOutput('error', message, constants.DTERROR)

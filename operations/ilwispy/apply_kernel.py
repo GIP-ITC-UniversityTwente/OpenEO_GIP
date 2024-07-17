@@ -1,9 +1,7 @@
 from openeooperation import *
 from operationconstants import *
 from constants import constants
-from common import openeoip_config
-from workflow import processGraph
-from globals import getOperation
+
 
 
 class ApplyKernel(OpenEoOperation):
@@ -62,9 +60,10 @@ class ApplyKernel(OpenEoOperation):
                 for ilwRaster in rd[constants.DATAIMPLEMENTATION].values():
                     rc = ilwis.do("linearrasterfilter", ilwRaster, code)
                     ilwRasters.append(rc)
+                common.registerIlwisIds(ilwRasters)                       
                 outputRasters.extend(self.setOutput(ilwRasters, self.extra))
 
-            self.logEndOperation(processOutput,openeojob)                      
+            self.logEndOperation(processOutput,openeojob, outputRasters)                      
             return createOutput(constants.STATUSFINISHED, outputRasters, constants.DTRASTER)
         
         return createOutput('error', "operation no runnable", constants.DTERROR)

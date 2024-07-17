@@ -130,6 +130,8 @@ class LoadCollectionOperation(OpenEoOperation):
                 else:
                     key = next(iter(self.inputRaster[DATAIMPLEMENTATION]))
                     rband = self.inputRaster[DATAIMPLEMENTATION][key]
+
+                common.registerIlwisIds(rband)                    
                 csyLL = ilwis.CoordinateSystem("epsg:4326")
                 llenv = ilwis.Envelope(ilwis.Coordinate(sect['west'], sect['south']), ilwis.Coordinate(sect['east'], sect['north']))
                 envCube = rband.coordinateSystem().convertEnvelope(csyLL, llenv)
@@ -249,6 +251,7 @@ class LoadCollectionOperation(OpenEoOperation):
                     else:
                         rc = ilwis.do("selection", layer, undefRepl + "with: " + bandIndexList)                                                           
                     layers.append(rc)
+                    common.registerIlwisIds(layers)
                 newBand = self.collectRasters(layers)
                 sz = newBand.size()
                 sz = str(sz)
@@ -283,12 +286,13 @@ class LoadCollectionOperation(OpenEoOperation):
                 if len(self.lyrIdxs) > 0:
                     rc = ilwis.do("selection", raster, "envelope(" + env + ") with: " + bandIndexList)
                 else:
-                    rc = ilwis.do("selection", raster, "envelope(" + env + ")")                    
+                    rc = ilwis.do("selection", raster, "envelope(" + env + ")")  
                 rcList.append(rc)
                 bands.append(self.inputRaster[METADATDEFDIM][DIMSPECTRALBANDS]['items'][key2])
             extra = { 'temporalExtent' : self.temporalExtent, 'bands' : bands, 'epsg' : self.inputRaster['proj:epsg'], 'details': {}, 'name' : 'dummy'}                
             if len(layerTempExtent) > 0:
-                extra['textsublayers'] = layerTempExtent               
+                extra['textsublayers'] = layerTempExtent 
+            common.registerIlwisIds(rcList)                              
             rasterData = RasterData()
             rasterData.load(rcList, 'ilwisraster', extra )
             outputRasters.append(rasterData) 
@@ -307,7 +311,7 @@ class LoadCollectionOperation(OpenEoOperation):
 
             outputRasters = self.selectData(processOutput,openeojob, indexes, env)
 
-            self.logEndOperation(processOutput,openeojob,self.inputRaster['title'])
+            self.logEndOperation(processOutput,openeojob, outputs=outputRasters, extraMessage=self.inputRaster['title'])
             return createOutput(constants.STATUSFINISHED, outputRasters, constants.DTRASTER)
         
         message = common.notRunnableError(self.name, openeojob.job_id) 

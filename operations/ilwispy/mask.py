@@ -58,7 +58,7 @@ class MaskOperation(OpenEoOperation):
                     maskMap = self.resample(item["data"], maskMap)
                   
                 expression = 'iff(@1 != 0,' + str(self.replacement) + ',@2)' 
-                outputs = []
+                ilwRasters = []
                 idxs = []
                 count = 0
                                 
@@ -66,13 +66,14 @@ class MaskOperation(OpenEoOperation):
                     for key in ras['data'][DATAIMPLEMENTATION]: 
                         r = ras['data'][DATAIMPLEMENTATION][key]
                         outputRc = ilwis.do("mapcalc", expression, maskMap.getRaster(), r) 
-                        outputs.append(outputRc) 
+                        ilwRasters.append(outputRc) 
                         idxs.append(count)
                         count = count + 1
 
-                outputRasters.extend(self.makeOutput(outputs, self.extra))
+                common.registerIlwisIds(ilwRasters)  
+                outputRasters.extend(self.makeOutput(ilwRasters, self.extra))
 
-            self.logEndOperation(processOutput,openeojob)
+            self.logEndOperation(processOutput,openeojob, outputs=outputRasters)
             return createOutput(constants.STATUSFINISHED, outputRasters, constants.DTRASTERLIST)
         
         return createOutput('error', "operation no runnable", constants.DTERROR)

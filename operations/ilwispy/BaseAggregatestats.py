@@ -39,10 +39,10 @@ class BaseAggregateData(OpenEoOperation):
                     for ilwRaster in rc[DATAIMPLEMENTATION].values():
                         outputRc = ilwis.do("aggregaterasterstatistics", ilwRaster,self.method)
                         ilwRasters.append(outputRc)
-
+                    common.registerIlwisIds(ilwRasters)  
                     outputRasters.extend(self.makeOutput(ilwRasters, self.extra))
 
-                self.logEndOperation(processOutput,openeojob)
+                self.logEndOperation(processOutput,openeojob, outputs = outputRasters)
                 return createOutput(constants.STATUSFINISHED, outputRasters, constants.DTRASTER)
             elif hasattr(self, 'array'):
                 result = self.aggFunc(self.array)

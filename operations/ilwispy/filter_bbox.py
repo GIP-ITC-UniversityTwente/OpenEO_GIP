@@ -52,17 +52,18 @@ class FilterBBox(OpenEoOperation):
         def run(self,openeojob, processOutput, processInput):
                 if self.runnable:
                         outputRasters = []
-                        bands = []
+                        ilwRasters = []
                         bandIdxs = self.data.getBandIndexes([])
                         for bandIndex in bandIdxs:
                                 for raster in self.data[DATAIMPLEMENTATION].values(): 
                                         v = str(self.env.minCorner().x) + " " + str(self.env.minCorner().y) + "," + str(self.env.maxCorner().x) + " " + str(self.env.maxCorner().y) 
                                         rc = ilwis.do("selection", raster, "envelope(" + v + ")") 
-                                        bands.append(rc)
+                                        ilwRasters.append(rc)
                         self.createExtra(self.data)
-                        outputRasters.append(self.createOutput(0, bands, self.extra))
+                        common.registerIlwisIds(ilwRasters)  
+                        outputRasters.append(self.createOutput(0, ilwRasters, self.extra))
 
-                        self.logEndOperation(processOutput,openeojob)                      
+                        self.logEndOperation(processOutput,openeojob, outputs=outputRasters)                      
                         return createOutput(constants.STATUSFINISHED, outputRasters, constants.DTLIST)
                     
                 return createOutput('error', "operation no runnable", constants.DTERROR)  

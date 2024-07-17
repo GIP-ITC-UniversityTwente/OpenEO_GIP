@@ -55,7 +55,7 @@ class ArrayElementOperation(OpenEoOperation):
                     band = raster.index2band(self.bandIndex)
                     outputRasters.append(raster.createRasterDatafromBand([band]))
                     
-                self.logEndOperation(processOutput,openeojob)
+                self.logEndOperation(processOutput,openeojob, outputRasters)
                 return createOutput(constants.STATUSFINISHED, outputRasters, constants.DTRASTER)
             else:
                 a = self.array1[self.index]

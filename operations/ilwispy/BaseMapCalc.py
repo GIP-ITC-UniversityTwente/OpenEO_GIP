@@ -40,17 +40,19 @@ class BaseUnarymapCalc(OpenEoOperation):
             ##put2Queue(processOutput, {'progress' : 0, 'job_id' : openeojob.job_id, 'status' : 'running'})
             if isinstance(self.rasters, list):
                 outputRasters = []   
-                outputs = []                              
+                ilwRasters = []                              
                 for raster in self.rasters:
                     oper = self.operation + '(@1)'
                     outputRc = ilwis.do('mapcalc', oper, raster)
-                    outputs.append(outputRc)
-                outputRasters.extend(self.setOutput(outputs, self.extra))
-                out =  createOutput(constants.STATUSFINISHED, outputRasters, constants.DTRASTER)                
+                    ilwRasters.append(outputRc)
+                common.registerIlwisIds(ilwRasters)                      
+                outputRasters.extend(self.setOutput(ilwRasters, self.extra))
+                out =  createOutput(constants.STATUSFINISHED, outputRasters, constants.DTRASTER)
+                self.logEndOperation(processOutput,openeojob,outputRasters)                
             else:
                 c = eval('math.' + self.operation + '(' + self.rasters + ')')
                 out = createOutput(constants.STATUSFINISHED, c, constants.DTNUMBER)
-            self.logEndOperation(processOutput,openeojob)
+                self.logEndOperation(processOutput,openeojob)
             ##put2Queue(processOutput,{'progress' : 100, 'job_id' : openeojob.job_id, 'status' : 'finished'}) 
             return out
         message = common.notRunnableError(self.name, openeojob.job_id)   
@@ -155,10 +157,11 @@ class BaseBinarymapCalcBase(OpenEoOperation):
                 out = createOutput(constants.STATUSFINISHED, output, constants.DTNUMBER) 
 
             if self.ismaps1 or self.ismaps2:
+                common.registerIlwisIds(outputs)  
                 outputRasters.extend(self.makeOutput(outputs, self.extra))
                 out =  createOutput(constants.STATUSFINISHED, outputRasters, constants.DTRASTER)                
               
-            self.logEndOperation(processOutput,openeojob)
+            self.logEndOperation(processOutput,openeojob, outputs=outputRasters)
 
             return out
 
@@ -197,7 +200,7 @@ class BaseBinarymapCalcBase(OpenEoOperation):
                 out =  createOutput(constants.STATUSFINISHED, outputRasters, constants.DTRASTER)                
               
                 
-            self.logEndOperation(processOutput,openeojob)
+            self.logEndOperation(processOutput,openeojob, outputs=outputRasters)
             ##put2Queue(processOutput,{'progress' : 100, 'job_id' : openeojob.job_id, 'status' : 'finished'}) 
             return out
         common.notRunnableError(openeojob.job_id)   
