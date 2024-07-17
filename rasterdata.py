@@ -6,7 +6,8 @@ from datetime import datetime, date
 from dateutil import parser
 import ilwis
 from constants.constants import *
-import re
+import common
+
 
 # gets a value from a dict and if no value is present it returns a default value
 def getValue(key, extraMetaData, defValue):
@@ -47,6 +48,8 @@ def createNewRaster(rasters):
     dom = ilwis.NumericDomain("code=integer")
     rc.setStackDefinition(dom, stackIndexes)
     rc.setDataDef(dataDefRaster)
+
+    common.registerIlwisIds([grf, rc])
 
     for index in range(0, len(rasters)):
         rc.setBandDefinition(index, rasters[index].datadef())
