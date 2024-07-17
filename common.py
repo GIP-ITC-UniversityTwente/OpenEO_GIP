@@ -16,6 +16,8 @@ from dateutil import parser
 import tests.addTestRasters as tr
 from processmanager import lockLogger
 
+ilwobj_created_ids = []
+
 
 possible_time_formats = [
     "%Y-%m-%d %H:%M:%S",  # Format 1: YYYY-MM-DD HH:MM:SS
@@ -168,9 +170,17 @@ def string2datetime(inpTimeString):
             continue  # If parsing fails, try the next format
     return None
 
+
 def temporalOverlap(l1, l2):
     d00 = parser.parse(l1[0])
     d01 = parser.parse(l1[1])
     d10 = parser.parse(l2[0])
     d11 = parser.parse(l2[1])
     return not (d00 < d10 and d00 < d11 and d01 < d10 and d01 < d11)
+
+def registerIlwisIds(objs):
+    if not isinstance(objs, list):
+        objs = [objs]
+    for obj in objs:        
+        ilwobj_created_ids.append(obj.ilwisID())
+    return ilwobj_created_ids
