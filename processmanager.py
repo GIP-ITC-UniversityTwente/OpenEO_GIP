@@ -7,6 +7,8 @@ import pickle
 from pathlib import Path
 import os
 from authenticationdatabase import authenticationDB
+import ilwis
+import glob
 
 lockLogger = threading.Lock()
 
@@ -55,9 +57,21 @@ class OutputInfo:
         self.message = ''
         self.availableStart = None
         self.current_operation = '?'
+        self.ids = set()
 
     def isFinished(self):
         return self.progress == 1
+    
+    def cleanUp(self):
+        tempFiles = ilwis.contextProperty('cachelocation')
+        for id in self.ids:
+            ilwis.removeObject(id)
+            mask = os.path.join(tempFiles, '*' + str(id) + '*.temp') 
+            file_list = glob.glob(mask)
+            for file in file_list:
+                os.remove(file)
+
+
 
 class ProcessManager:
     def __new__(cls):
@@ -224,6 +238,11 @@ class ProcessManager:
         if delta2.seconds > whenTimer:
             out = self.outputs.pop(key)
             out.cleanUp()
+            
+    def removeTemps(self):
+        for out in self.outputs.values():
+            if out.status == constants.STATUSJOBDONE:
+                out.cleanUp()
 
     def reduceLogFile(self):
         lockLogger.acquire()
@@ -279,21 +298,23 @@ class ProcessManager:
             if delta.seconds > 120:
                 # for the moment not relevant
                 self.dumpProcessTables()
+                self.removeTemps()
                 startTimerDump = endTimer
+
             delta = endTimer - startTimerCheckTokens
             # next section will remove security tokens if they are too long in the outputs
             if delta.days > 1:
                 authenticationDB.clearOutOfDateTokes()
                 startTimerCheckTokens = endTimer
             delta = endTimer - startCheckRemoveOutput
-            if delta.seconds > 60 * 60: 
+            if delta.seconds >  60 * 60: 
                 ## as we are going to delete items in the outputs we iterate over a copy to prevent undef behavior 
                 for key,value in list(self.outputs.items()):
                     if self.outputs[key].status == constants.STATUSSTOPPED:
                         self.removeFromOutputs(key, 60*30)
                     if self.outputs[key].status == constants.STATUSERROR:
                         self.removeFromOutputs(key,60*60*24 )
-                    if self.outputs[key].status == constants.STATUSFINISHED:
+                    if self.outputs[key].status == constants.STATUSFINISHED: # or self.outputs[key].status == constants.STATUSJOBDONE:
                         self.removeFromOutputs(key,60*60*24*4 )   
                 startCheckRemoveOutput = endTimer 
                     
@@ -332,6 +353,12 @@ class ProcessManager:
                     self.outputs[job_id].progress = item['progress']
                     self.outputs[job_id].last_updated = datetime.now()
                     self.outputs[job_id].current_operation = item['current_operation']
+                    if item['status'] == constants.STATUSFINISHED:
+                        if 'objectids' in item:
+                            sids = item['objectids']
+                            for id in sids:
+                                self.outputs[job_id].ids.add(id)
+
                     if item['status'] == constants.STATUSJOBDONE:
                         self.outputs[job_id].status = constants.STATUSJOBDONE
                     if item['status'] == constants.STATUSERROR:
