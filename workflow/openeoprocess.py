@@ -257,6 +257,7 @@ class OpenEOProcess(multiprocessing.Process):
             try:
                 timeStart = str(datetime.now())
                 common.logMessage(logging.INFO, 'started job_id: ' + self.job_id + "with name: " + self.title,common.process_user)
+                
                 # start the process graph
                 outputinfo = self.processGraph.run(self, toServer, self.fromServer)
                 timeEnd = str(datetime.now())
