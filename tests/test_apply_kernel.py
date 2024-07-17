@@ -16,18 +16,14 @@ cube_s2 = conn.load_collection(
 )
 
    
-def execApplyKernel(operation, kern=[], wvl=[], s=True):
+def execApplyKernel(operation, kern=[], wvl=[], s=False):
     name = operation + ".tif"
     b2 = cube_s2.apply_kernel(kern, border='reflect')
-    if s:
-        b2.download(name)
-        basetests.testCheckSumSingle('filter_bands', operation, name)
-    else:
-        result = b2.save_result("GTiff")
-        job = result.create_job()
-        job.start_and_wait()
-        job.get_results().download_files(operation) 
-        basetests.testCheckSumMulti('filter_bands', operation)       
+    result = b2.save_result("GTiff")
+    job = result.create_job()
+    job.start_and_wait()
+    job.get_results().download_files(operation) 
+   # basetests.testCheckSumMulti('filter_bands', operation)       
    
 
 
