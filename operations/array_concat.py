@@ -78,7 +78,7 @@ class ArrayConcat(OpenEoOperation):
                             cpTarget.addBand(ilwis.constants.rUNDEF, iter)
 
                 outputRasters.extend(self.setOutput([cpTarget], self.extra))
-                self.logEndOperation(processOutput,openeojob)
+                self.logEndOperation(processOutput,openeojob, output=outputRasters)
                 return createOutput(constants.STATUSFINISHED, [outputRasters], constants.DTRASTER)
             else:
                 a = self.array1 + self.array2
