@@ -18,7 +18,6 @@ def createEmptySmallNumericRaster(alternate):
     rc = ilwis.RasterCoverage()
     rc.setGeoReference(grf)
     rc.setDataDef(dfNum)
-    ss = str(rc.envelope())
 
     return rc 
                     
