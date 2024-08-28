@@ -2,6 +2,7 @@ version: '3.8'
 
 services:
   openeo:
+    user: 111:1007
     build:
       context: .
       dockerfile: Dockerfile

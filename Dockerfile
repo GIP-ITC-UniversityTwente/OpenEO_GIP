@@ -24,6 +24,12 @@ COPY . /app
 
 EXPOSE 5000
 
+ARG OPENEO_UID=1000
+ARG OPENEO_GID=1000
 
+RUN groupadd --gid ${OPENEO_GID} openeo \
+ && useradd --uid ${OPENEO_UID} --gid ${OPENEO_GID} --no-create-home openeo
+
+USER openeo
 
 CMD ["flask", "run", "--host=0.0.0.0", "--port", "5000"]
