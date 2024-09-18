@@ -10,7 +10,7 @@ import uuid
 import sqlite3
 from authenticationdatabase import authenticationDB
 from flask import jsonify, make_response
-import fnmatch
+from rasterdata import RasterData
 import copy
 
 def authenticateError():
@@ -93,10 +93,10 @@ class Globals :
             if p == id:
                 raster = item[1]
                 if not os.path.exists(raster['dataSource']): #virtual datasets with no real source
-                    return raster
-                mttime = datetime.datetime.fromtimestamp(os.path.getmtime(raster['dataSource']))
-                if mttime == raster['lastmodified']:
-                    return raster
+                    return RasterData(raster)
+                mttime = str(datetime.datetime.fromtimestamp(os.path.getmtime(raster['dataSource'])))
+                #if mttime == str(raster['lastmodified']):
+                return RasterData(raster)
         return None        
     
     def saveIdDatabase(self):
@@ -107,14 +107,15 @@ class Globals :
         common.makeFolder(propertiesFolder)
                         
         propsPath = os.path.join(propertiesFolder, 'id2filename.table')
-        propsFile = open(propsPath, 'wb')
+        propsFile = open(propsPath, 'w')
         cp_db = {}
         #keys SYNTHETIC_DATA may not be saved as they contain a 'unpickable' member and are generated anyway
         for key,value in self.internal_database.items():
             if key.find('SYNTHETIC_DATA') == -1:
                 cp_db[key] = value
 
-        pickle.dump(cp_db, propsFile)
+        s = json.dumps(cp_db, default=str) 
+        propsFile.write(s)         
         propsFile.close() 
 
     def loadIdDatabase(self):
@@ -128,9 +129,9 @@ class Globals :
         if ( os.path.exists(propertiesPath)):
             file_stats = os.stat(propertiesPath)
             if file_stats.st_size > 0:
-                with open(propertiesPath, 'rb') as f:
+                with open(propertiesPath, 'r') as f:
                     data = f.read()
-                self.internal_database = pickle.loads(data) 
+                self.internal_database = json.loads(data) 
                 return True
         return False            
         

@@ -63,9 +63,8 @@ class MaskOperation(OpenEoOperation):
                 count = 0
                                 
                 for ras in self.rasters:
-                    for key in ras['data'][DATAIMPLEMENTATION]: 
-                        r = ras['data'][DATAIMPLEMENTATION][key]
-                        outputRc = ilwis.do("mapcalc", expression, maskMap.getRaster(), r) 
+                    for raster in ras.getRasters(): 
+                        outputRc = ilwis.do("mapcalc", expression, maskMap.getRaster(), raster) 
                         ilwRasters.append(outputRc) 
                         idxs.append(count)
                         count = count + 1

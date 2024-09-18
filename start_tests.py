@@ -18,7 +18,7 @@ loader = unittest.TestLoader()
 cls = configglobals.TestManager()
 cls.init()
 
-tests = loader.discover('./tests','test_filter_ba*.py')
+tests = loader.discover('./tests','test_arr*.py')
 testRunner = unittest.runner.TextTestRunner()
 testRunner.run(tests)
 

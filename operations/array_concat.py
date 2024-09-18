@@ -46,8 +46,8 @@ class ArrayConcat(OpenEoOperation):
                 self.sourceRaster = list1                
                 self.sourceBandIndex = idx
                 self.rastersEqualSize = self.checkSpatialDimensions([self.targetRaster, self.sourceRaster[0]])
-                rd1  = self.targetRaster['temporalExtent']
-                rd2  = self.sourceRaster[0]['temporalExtent']
+                rd1  = self.targetRaster[TEMPORALEXTENT]
+                rd2  = self.sourceRaster[0][TEMPORALEXTENT]
                 if common.temporalOverlap(rd1, rd2):
                    self.handleError(toServer, job_id, 'time values',"time ranges overlap, No append possible", 'ProcessParameterInvalid') 
             else:

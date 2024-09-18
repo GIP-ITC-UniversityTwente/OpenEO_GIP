@@ -133,17 +133,17 @@ class BaseBinarymapCalcBase(OpenEoOperation):
             oper = '@1' + self.operation + '@2' 
             outputs = []                               
             if self.ismaps1 and self.ismaps2:
-                rasters1 = list(self.rasters1[DATAIMPLEMENTATION].values())
-                rasters2 = list(self.rasters2[DATAIMPLEMENTATION].values())
+                rasters1 = list(self.rasters1.getRasters())
+                rasters2 = list(self.rasters2.getRasters())
                 for idx in len(rasters1):
                     outputRc = ilwis.do("mapcalc", oper, rasters1[idx],rasters2[idx])
                     outputs.append(outputRc)
             elif self.ismaps1 and not self.ismaps2:
-                    for raster in self.rasters1[DATAIMPLEMENTATION].values():
+                    for raster in self.rasters1.getRasters():
                         outputRc = ilwis.do("mapcalc", oper, raster,self.p2)
                         outputs.append(outputRc)
             elif not self.ismaps1 and self.ismaps2:
-                    for raster in self.rasters2[DATAIMPLEMENTATION].values():
+                    for raster in self.rasters2.getRasters():
                         outputRc = ilwis.do("mapcalc", oper, self.p1,raster)
                         outputs.append(outputRc)  
             else:

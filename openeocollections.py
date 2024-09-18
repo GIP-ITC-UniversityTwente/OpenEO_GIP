@@ -24,6 +24,24 @@ def processMetaFile(filename):
 
     return []
 
+def loadFile(fullPath, extraMetadataAll):
+    try:
+        raster = RasterData()                    
+
+        if Path(fullPath).suffix != ".metadata":
+            raster.load(fullPath, 'eoreader', extraMetadataAll)
+        else:    
+            raster.load(fullPath, 'metadata')
+
+        if raster['id'] != None:
+            globalsSingleton.insertRasterInDatabase(raster) 
+
+        return raster            
+            
+    except Exception as ex:
+        common.logMessage(logging.ERROR,str(ex),common.process_user)
+    return None
+
 def loadCollections():
     user = UserInfo(request)
     data_locations = []
@@ -41,10 +59,7 @@ def loadCollections():
         path = location["location"]
 
         extraPath = os.path.join(path, 'extrametadata.json')
-        extraMetadataAll = None
-        if os.path.exists(extraPath):
-            extraMd = open(extraPath)
-            extraMetadataAll = json.load(extraMd)  
+        extraMetadataAll = openExtraMetadata(extraPath)  
         if os.path.isdir(path):    
             files = os.listdir(path)
             
@@ -57,20 +72,9 @@ def loadCollections():
                     name = os.path.splitext(filename)[0]
                     raster = globalsSingleton.id2Raster(name)
                     if raster == None:
-                        try:
-                            raster = RasterData()                    
-
-                            if Path(fullPath).suffix != ".metadata":
-                                raster.load(fullPath, 'eoreader', extraMetadataAll)
-                            else:    
-                                raster.load(fullPath, 'metadata')
-
-                            if raster['id'] != None:
-                                globalsSingleton.insertRasterInDatabase(raster) 
-                                   
-                        except Exception as ex:
-                           common.logMessage(logging.ERROR,str(ex),common.process_user)
-                           continue
+                        raster = loadFile(fullPath, extraMetadataAll)                  
+                        if raster == None:
+                            continue
 
                     collectionJsonDict = raster.toShortDictDefinition()
                        
@@ -86,7 +90,14 @@ def loadCollections():
         globalsSingleton.internal_database[r['id']] = r
     common.logMessage(logging.INFO, 'finished reading collections',common.process_user)
 
-    return allJson    
+    return allJson 
+
+def openExtraMetadata(extraPath):
+    extraMetadataAll = None
+    if os.path.exists(extraPath):
+        extraMd = open(extraPath)
+        extraMetadataAll = json.load(extraMd)
+    return extraMetadataAll   
          
 def createCollectionJson(product, extraMetadata, fullpath, id=None):
     stac_version = globalsSingleton.openeoip_config['stac_version']

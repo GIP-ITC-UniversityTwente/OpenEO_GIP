@@ -21,7 +21,7 @@ class BaseAggregateData(OpenEoOperation):
                 for rc in self.rasters:
                     if not rc:
                         self.handleError(toServer, job_id, 'Input raster','invalid input. rasters are not valid', 'ProcessParameterInvalid')
-                    for raster in rc[DATAIMPLEMENTATION].values():
+                    for raster in rc.getRasters():
                         if raster.datadef().domain().ilwisType() != ilwis.it.NUMERICDOMAIN:
                             self.handleError(toServer, job_id, 'Input raster', 'invalid datatype in raster. Must be numeric', 'ProcessParameterInvalid')
     
@@ -31,12 +31,12 @@ class BaseAggregateData(OpenEoOperation):
     def base_run(self,openeojob, processOutput, processInput):
         if self.runnable:
             self.logStartOperation(processOutput, openeojob)
-            if hasattr(self, DATAIMPLEMENTATION):
+            if hasattr(self, DIMENSIONSLABEL):
                 outputRasters = []
                 for rc in self.rasters:
                     self.createExtra(rc, True, basename=self.method)
                     ilwRasters = []
-                    for ilwRaster in rc[DATAIMPLEMENTATION].values():
+                    for ilwRaster in rc.getRasters():
                         outputRc = ilwis.do("aggregaterasterstatistics", ilwRaster,self.method)
                         ilwRasters.append(outputRc)
                     common.registerIlwisIds(ilwRasters)  

@@ -47,9 +47,9 @@ class AddDimension(OpenEoOperation):
                 labels = []                    
                 for idx,label in enumerate(self.labels): 
                     layer = RasterLayer() if self.dimname == DIMTEMPORALLAYER else dict()
-                    layer['source'] = '' # calculated or derived product there is no source
-                    layer['temporalExtent'] = label if self.dimname == DIMTEMPORALLAYER else ''
-                    layer['layerIndex'] = idx
+                    layer[DATASOURCE] = '' # calculated or derived product there is no source
+                    layer[TEMPORALEXTENT] = label if self.dimname == DIMTEMPORALLAYER else ''
+                    layer[LAYERINDEX] = idx
                     layer['eo:cloud_cover'] = 0
                     labels.append(label)               
                     items[label] = layer  

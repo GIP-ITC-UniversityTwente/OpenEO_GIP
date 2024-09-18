@@ -57,7 +57,7 @@ class ApplyKernel(OpenEoOperation):
             outputRasters = []
             for rd in self.data:
                 ilwRasters = []
-                for ilwRaster in rd[constants.DATAIMPLEMENTATION].values():
+                for ilwRaster in rd.getRasters():
                     rc = ilwis.do("linearrasterfilter", ilwRaster, code)
                     ilwRasters.append(rc)
                 common.registerIlwisIds(ilwRasters)                       

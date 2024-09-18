@@ -41,9 +41,7 @@ class FilterBBox(OpenEoOperation):
                        csyExt = ilwis.CoordinateSystem("epsg:" + str(crs))
                        csyData = ilwis.CoordinateSystem("epsg:" + self.data['proj:epsg'])
                        self.env = csyData.convertEnvelope(csyExt, self.env)
-                key = next(iter(self.data[DATAIMPLEMENTATION]))
-                rband = self.data[DATAIMPLEMENTATION][key] 
-                ss = str(rband.envelope())                                         
+                rband = self.data.getRaster()
                 self.checkOverlap(toServer, job_id, self.env, rband.envelope())
                 self.runnable = True
 
@@ -55,7 +53,7 @@ class FilterBBox(OpenEoOperation):
                         ilwRasters = []
                         bandIdxs = self.data.getBandIndexes([])
                         for bandIndex in bandIdxs:
-                                for raster in self.data[DATAIMPLEMENTATION].values(): 
+                                for raster in self.data.getRasters(): 
                                         v = str(self.env.minCorner().x) + " " + str(self.env.minCorner().y) + "," + str(self.env.maxCorner().x) + " " + str(self.env.maxCorner().y) 
                                         rc = ilwis.do("selection", raster, "envelope(" + v + ")") 
                                         ilwRasters.append(rc)

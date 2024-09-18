@@ -15,7 +15,7 @@ class DimensionLabels(OpenEoOperation):
                 job_id = arguments['job_id']
         self.data = arguments['data']['resolved'][0]
         self.dimension = self.mapname(arguments['dimension']['resolved'])
-        if not self.dimension in self.data[STRUCTUREDEFDIM]:
+        if not self.dimension in self.data[DIMENSIONSLABEL]:
             self.handleError(toServer, job_id, 'Input dimension',"unknown dimension:" + arguments['dimension']['resolved'], 'ProcessParameterInvalid')
    
         self.runnable = True           
@@ -23,10 +23,7 @@ class DimensionLabels(OpenEoOperation):
     def run(self,openeojob, processOutput, processInput):
         if self.runnable:
             self.logStartOperation(processOutput, openeojob)
-            result = []
-            if 'labels' in self.data[METADATDEFDIM][self.dimension]:
-                result = self.data[METADATDEFDIM][self.dimension]['labels']
-                
+            result = self.data.getLabels(self.dimension)
             self.logEndOperation(processOutput,openeojob)                
             return createOutput(constants.STATUSFINISHED, result, DTLIST)
         

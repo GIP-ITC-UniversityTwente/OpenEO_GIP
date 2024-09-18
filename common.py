@@ -50,11 +50,11 @@ def getRasterDataSets():
         propertiesPath = os.path.join(propertiesFolder, 'id2filename.table')
         if ( os.path.exists(propertiesPath)):
             lock.acquire()
-            with open(propertiesPath, 'rb') as f:
+            with open(propertiesPath, 'r') as f:
                 data = f.read()
             f.close()
             lock.release()    
-            raster_data_sets =  pickle.loads(data)
+            raster_data_sets =  json.loads(data)
             
     rasters = tr.setTestRasters(5)
     for r in rasters:
@@ -72,8 +72,9 @@ def saveIdDatabase(idDatabse):
         if ( not os.path.exists(propertiesFolder)):
             os.makedirs(propertiesFolder)
         propsPath = os.path.join(propertiesFolder, 'id2filename.table')
-        propsFile = open(propsPath, 'wb')
-        pickle.dump(idDatabse, propsFile)
+        propsFile = open(propsPath, 'w')
+        s = json.dumps(idDatabse, default=str) 
+        propsFile.write(s) 
         propsFile.close() 
 
 # sets a message in the logger

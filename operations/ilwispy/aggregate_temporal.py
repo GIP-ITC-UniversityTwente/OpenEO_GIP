@@ -126,8 +126,8 @@ class AggregateTemporal(OpenEoOperation):
         for raster in self.inputRaster:
             dt1 = parser.parse(dbegin) 
             dt2 =  parser.parse(dend)
-            dr1 = parser.parse(raster['temporalExtent'][0])
-            dr2 = parser.parse(raster['temporalExtent'][1])
+            dr1 = parser.parse(raster[TEMPORALEXTENT][0])
+            dr2 = parser.parse(raster[TEMPORALEXTENT][1])
             if dt1 > dt2:
                 self.handleError(toServer, job_id, 'temporal intervals','invalid intervals', 'ProcessParameterInvalid')
             if (dt1 < dr1 and dt2 < dr1) or ( dt1 > dr2 and dt2 > dr2):
@@ -169,11 +169,11 @@ class AggregateTemporal(OpenEoOperation):
                     layerIndexes += ')'
                     rasters = []
                     # retrieve the selected temporal layers from the whole raster
-                    for rimpl in raster[DATAIMPLEMENTATION].values():
+                    for rimpl in raster.getRasters():
                         rc = ilwis.do("selection", rimpl,"with: " + layerIndexes) 
                         rasters.append(rc)
                     common.registerIlwisIds(rasters)                        
-                    self.extra['temporalExtent'] = interv
+                    self.extra[TEMPORALEXTENT] = interv
                     # translate the ilwis raster to a rasterdata as we need to pass it to the 
                     # reducer graph which assumes all input are rasterdata (in this case)
                     rd = self.makeOutput(rasters, self.extra)
@@ -183,7 +183,7 @@ class AggregateTemporal(OpenEoOperation):
                     process = processGraph.ProcessGraph(pgraph, self.args, getOperation)
                     output =  process.run(openeojob, processOutput, processInput)
                     # get the produced rasters
-                    rasterDatas = list(output['value'][0][DATAIMPLEMENTATION].values())
+                    rasterDatas = list(output['value'][0].getRasters())
                     bands = raster.getBands()
                     # register the produced rasters with the correct band. Note that the
                     # produced rasters are per band
@@ -195,9 +195,8 @@ class AggregateTemporal(OpenEoOperation):
                 # merge the rasters (temporal layers) to one ilw raster (which contains the layers)
                 for item in self.reducedBands[count].values():
                     aggRasters.append(self.collectRasters(item))                                   
-                self.extra['temporalExtent'] = self.tempExtent
+                self.extra[TEMPORALEXTENT] = self.tempExtent
                 self.extra['textsublayers'] = tmpExtents
-                self.extra['rasterkeys'] = list(raster[DATAIMPLEMENTATION].keys())
 
                 outputRasters.extend(self.makeOutput(aggRasters, self.extra))
                 if len(self.labels) > 0:
@@ -207,7 +206,7 @@ class AggregateTemporal(OpenEoOperation):
             self.logEndOperation(processOutput,openeojob, outputs=outputRasters)
             return out
 
-             #process.addLocalArgument('dimensions',  {'base' : self.dimension, 'resolved' : self.dimension})
+             #process.addLocalArgument(DIMENSIONSLABEL,  {'base' : self.dimension, 'resolved' : self.dimension})
 
 
 class AggregateTemporalPeriod(AggregateTemporal):
@@ -225,7 +224,7 @@ class AggregateTemporalPeriod(AggregateTemporal):
             job_id = arguments['job_id']        
         inputRaster = arguments['data']['resolved']
         raster = inputRaster[0]
-        tempExtent = raster['temporalExtent']
+        tempExtent = raster[TEMPORALEXTENT]
         dr1 = parser.parse(tempExtent[0])
         dr2 = parser.parse(tempExtent[1])
         year1 = dr1.isocalendar()[0]

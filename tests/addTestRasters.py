@@ -74,8 +74,9 @@ def setTestRaster(dims, bndcount = 1, version = 0):
         bandNames.append({'name' : band['name']})
         band['commonbandname']=  common_names[i]
         band['details'] = {'center_wavelength' : 0.4 + 2 * i / 10}
-        band['bandIndex'] = i
+        band[cc.BANDINDEX] = i
         band['type'] = 'float'
+        band['label'] = band['name']
         bdns.append(band)
         rc = createSmallNumericRasterNLayers(dims, version, i)
         rcs.append(rc)
@@ -88,7 +89,7 @@ def setTestRaster(dims, bndcount = 1, version = 0):
 
     utmdates = convert_to_utm_date_only('2020-11-01', dims)
 
-    extra = {'epsg' : 4326, 'temporalExtent' : ['2020-11-01', utmdates[-1]], 'bands' :bdns}
+    extra = {'epsg' : 4326, cc.TEMPORALEXTENT : ['2020-11-01', utmdates[-1]], 'bands' :bdns}
     if dims > 1:
         text = []
         for d in range(0, len(utmdates), 2):    

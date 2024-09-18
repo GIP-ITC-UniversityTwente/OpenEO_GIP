@@ -36,7 +36,7 @@ class ResampleSpatial(OpenEoOperation):
         for r in data:
             if r.isValid():
                 if type(r) is RasterData:
-                    self.extra = self.constructExtraParams(r, r['temporalExtent'], 0)                 
+                    self.extra = self.constructExtraParams(r, r[TEMPORALEXTENT], 0)                 
                     self.inputRaster = r.getRaster()                  
                     pixSize = r.getRaster().geoReference().pixelSize()
                     if pixSize == 0:

@@ -43,7 +43,7 @@ class OpenEOParameter:
                 self.parameters.append(OpenEOParameter(parm))
 
         if subt == 'datacube':
-            dimensions = parm['dimensions']
+            dimensions = parm[DIMENSIONSLABEL]
             self.spatial_organization = []
             for dim in dimensions:
                 tp = dim['type']
@@ -238,7 +238,7 @@ class OpenEOProcess(multiprocessing.Process):
                     if isinstance(d, rasterdata.RasterData):
                         name = d['title'] 
                         name = name.replace('_ANONYMOUS', 'raster')                    
-                        for raster in d[constants.DATAIMPLEMENTATION].values():
+                        for raster in d.getRasters():
                             envTemp = raster.envelope()
                             outpath = path + '/' + name + "_"+ str(count)
                             raster.store("file://" + outpath, format, "gdal")
@@ -281,8 +281,8 @@ class OpenEOProcess(multiprocessing.Process):
                 dict = self.toDict(False) 
                 dict['start_datetime']  = timeStart
                 dict['end_datetime']  = timeEnd
-                if not (outputinfo['datatype'] == constants.DTRASTER  or outputinfo['datatype'] == constants.DTRASTERLIST): 
-                    dict["assets"] = outputinfo
+                #if not (outputinfo['datatype'] == constants.DTRASTER  or outputinfo['datatype'] == constants.DTRASTERLIST): 
+                #    dict["assets"] = outputinfo
 
                 if not os.path.exists(filedir): # this the case were not save_result was part of the workflow  
                     os.makedirs(filedir)
