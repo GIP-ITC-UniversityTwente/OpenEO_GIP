@@ -284,26 +284,26 @@ class OpenEoOperation:
         else: # if the dimension is not given we assume the toplevel
             return raster.getDimension()
     
-    def findRasterData(self, toServer, job_id, rasterData, arguments):
+    def findBandIndex(self, toServer, job_id, rasterData, arguments):
         arrIndex = -1
         dimName = self.getDimension(rasterData,arguments)
         if 'index' in arguments:
             arrIndex = arguments['index']['resolved'] 
-            if dimName in rasterData:
+            if dimName in rasterData[DIMENSIONSLABEL]:
                 meta = rasterData[DIMENSIONSLABEL][dimName]
-                if len(meta) <= arrIndex:
-                    self.handleError(toServer, job_id, 'band index',"Number of raster bands doesnt match given index", 'ProcessParameterInvalid')
-            return arrIndex
+                for dimItem in meta:
+                    if BANDINDEX in dimItem:
+                        if dimItem[BANDINDEX] == arrIndex:
+                            return dimItem[BANDINDEX]
+            return -1
                         
         if 'label' in arguments:
             for idx in range(len(rasterData)):
                 meta = rasterData[DIMENSIONSLABEL][dimName]
-                idx = 0
                 for dimItem in meta:
                     if 'label' in dimItem:
                         if dimItem['label'] == arguments['label']['resolved']:
-                            return idx
-                    idx = idx + 1
+                            return dimItem[BANDINDEX]
         return arrIndex
     
     

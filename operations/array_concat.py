@@ -40,7 +40,7 @@ class ArrayConcat(OpenEoOperation):
             self.targetRaster = list2[0]
             
             if isinstance(list1[0], RasterData):
-                idx = self.findRasterData(toServer, job_id, list1, arguments )
+                idx = self.findBandIndex(toServer, job_id, list1, arguments )
                 if idx == -1:
                     self.handleError(toServer, job_id, 'band label or index',"label or index can't be found", 'ProcessParameterInvalid')
                 self.sourceRaster = list1                

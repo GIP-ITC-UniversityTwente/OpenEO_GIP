@@ -291,10 +291,13 @@ class LoadCollectionOperation(OpenEoOperation):
                 for lyrIdx in self.lyrIdxs:
                     layer = self.inputRaster.idx2layer(lyrIdx)
                     layerTempExtent.append(layer[TEMPORALEXTENT])
+                    #note that the 'true' layerindex is always one smaller than the actual number as the first layer (index 0) is a
+                    #generalized layer describing all the layers ; not a real layer. So in the actual binary data this layer doesnt exist
+                    #its a metadata thing.
                     if bandIndexList == '':
-                        bandIndexList = str(lyrIdx)
+                        bandIndexList = str(lyrIdx - 1)
                     else:
-                        bandIndexList = bandIndexList + ','+ str(lyrIdx)
+                        bandIndexList = bandIndexList + ','+ str(lyrIdx - 1)
                 bandIndexList = 'rasterbands(' + bandIndexList + ')'                        
 
                 raster = inpRasters[bandIndex]

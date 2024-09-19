@@ -122,6 +122,7 @@ class RasterData(dict):
             band.fromEoReader(eoband, bandIndex)
             if eoband[1] != None:
                 self.setItem(DIMSPECTRALBANDS, band)
+            bandIndex = bandIndex+1                
         self[DIMENSIONSLABEL]['boundingbox'] = prod.stac.bbox    
         layer = RasterLayer()
         # layer 0 is a special layer as its the extent all the layers
@@ -458,6 +459,7 @@ class RasterData(dict):
         return idxs           
 
     #translates a list of temporal extents to its corresponding layer indexes
+    #note that the first layer is a general layer, not a real one. It describes the metadata of all the layers
 
     def getLayerIndexes(self, temporalExtent):
             idxs = []
@@ -533,7 +535,8 @@ class RasterData(dict):
          implDim = next(iter(self['implementation']))
          d = next(iter(self[DIMENSIONSLABEL][implDim]))
          if RASTERDATA in d:
-            return d[RASTERDATA] == True
+            b = bool(d[RASTERDATA])
+            return b
          return False
 
     #gets a raster implementation for this RasterData objects. Note that if it contain multiple
@@ -547,11 +550,8 @@ class RasterData(dict):
                 d = next(iter(self[DIMENSIONSLABEL][implDim]))
                 # might be that the rasterdata is not yet loaded
                 if not self.hasData():
-                    pdir = os.path.dirname(self['dataSource'])
-                    spath = os.path.join(pdir, self['dataFolder'], d[DATASOURCE] ) 
-                    ilwRaster = ilwis.RasterCoverage(spath)
-                    d[RASTERDATA] = ilwRaster
-                    return ilwRaster
+                    self.loadRaster(d)
+                return d[RASTERDATA]
            return None
 
         for item in self[DIMENSIONSLABEL][implDim]:
@@ -559,12 +559,24 @@ class RasterData(dict):
                 return item['data']
         
         return None
+
+    def loadRaster(self, d):
+        pdir = os.path.dirname(self['dataSource'])
+        spath = os.path.join(pdir, self['dataFolder'], d[DATASOURCE] ) 
+        ilwRaster = ilwis.RasterCoverage(spath)
+        d[RASTERDATA] = ilwRaster
+        return ilwRaster
     
     def getRasters(self):
         data = []
         implDim = next(iter(self['implementation']))  
         for item in self[DIMENSIONSLABEL][implDim]:
-            data.append(item['data'])    
+            if RASTERDATA in item:
+                data.append(item[RASTERDATA])  
+            else:
+                ilwRaster = self.loadRaster(item)
+                if ilwRaster:
+                    data.append(ilwRaster)
         return data              
 
     def getImplementationDimension(self):
