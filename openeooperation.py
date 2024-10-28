@@ -174,6 +174,7 @@ class OpenEoOperation:
         for index in range(0, len(rasters)):
             iter = rasters[index].begin()
             ilwisRaster.addBand(index, iter) ## will add to the end
+        common.registerIlwisIds(ilwisRaster)                
         return ilwisRaster
 
     def createNewRaster(self, rasters):
@@ -216,7 +217,7 @@ class OpenEoOperation:
                 count = count + 1
         self.extra = { TEMPORALEXTENT : r[TEMPORALEXTENT], 'bands' : bands, 'epsg' : r['proj:epsg'], 'rasterkeys': rasterKeys }
         if reduce: # we cut out the implementation level(=reduced) as this is now become one level higher
-            self.extra = []
+            self.extra = {}
             self.extra['textsublayers'] = {} 
         else:                    
             self.extra['textsublayers'] = r.getLayersTempExtent()
@@ -280,7 +281,7 @@ class OpenEoOperation:
     
     def getDimension(self, raster : RasterData, arguments):
         if DIMENSIONSLABEL in arguments:
-            self.mapname(arguments[DIMENSIONSLABEL]['resolved'])
+            return self.mapname(arguments[DIMENSIONSLABEL]['resolved'])
         else: # if the dimension is not given we assume the toplevel
             return raster.getDimension()
     
@@ -366,8 +367,13 @@ class OpenEoOperation:
             if w > e and abs(w) <= 180 and abs(e) <= 180:
                 self.handleError(toServer, job_id, 'extents', 'east or west have invalid values', 'ProcessParameterInvalid') 
         else:
-            self.handleError(toServer, job_id, 'extents','missing extents in extents definition', 'ProcessParameterInvalid')   
-
+            self.handleError(toServer, job_id, 'extents','missing extents in extents definition', 'ProcessParameterInvalid')
+               
+    def compatibleRaster(self,targetRaster, sourceRaster):
+        if self.needResample(targetRaster, sourceRaster):
+            return self.resample(targetRaster, sourceRaster)
+        return sourceRaster
+    
     def resample(self,targetRaster, sourceRaster):
         inputRaster = targetRaster.getRaster()
         env = inputRaster.envelope()
@@ -380,8 +386,16 @@ class OpenEoOperation:
         rm = sourceRaster.getRaster()
         outputRc = ilwis.do("resample", rm, grf, 'nearestneighbour')
         self.createExtra(targetRaster)
-        self.extra['rasterkeys'] = '0'
         return self.makeOutput([outputRc], self.extra)[0]
+    
+    def needResample(self,targetRaster, sourceRaster):
+        targetRasterIlw = targetRaster.getRaster()     
+        sourceRasterIlw = sourceRaster.getRaster() 
+        if targetRasterIlw.size() != sourceRasterIlw.size():
+            return True
+        if targetRaster['proj:epsg'] != sourceRaster['proj:epsg']:
+            return True
+        return False
     
     def type2type(self, a):
         t = DTUNKNOWN
