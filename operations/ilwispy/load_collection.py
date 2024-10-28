@@ -77,6 +77,9 @@ class LoadCollectionOperation(OpenEoOperation):
         # convert between a string representation of date-time to a python representation of date-time           
         dt1 = parser.parse(text[0]) 
         dt2 =  parser.parse(text[1])
+        if not TEMPORALEXTENT in self.inputRaster:
+            self.handleError(toServer, job_id, 'temporal extents','missing extent', 'ProcessParameterInvalid')  
+              
         dr1 = parser.parse(self.inputRaster[TEMPORALEXTENT][0])
         dr2 = parser.parse(self.inputRaster[TEMPORALEXTENT][1])
         if dt1 > dt2:
@@ -108,9 +111,10 @@ class LoadCollectionOperation(OpenEoOperation):
         # satelite data. unpacking the compressed formats is time consuming. So we transform the original data 
         # a 'metadata' format. Unpack everything and create a .metadata file for this data set. From now only the 
         # .metadata format will be used which has much better performance. 
-        if  not self.inputRaster.sourceIsMetadata():
-            self.logProgress(toServer, job_id,"load collection : transforming data", constants.STATUSRUNNING)                   
-            folder = self.transformOriginalData(fileIdDatabase, folder, oldFolder)                  
+        if not self.inputRaster.hasData():
+            if  not self.inputRaster.sourceIsMetadata():
+                self.logProgress(toServer, job_id,"load collection : transforming data", constants.STATUSRUNNING)                   
+                folder = self.transformOriginalData(fileIdDatabase, folder, oldFolder)                  
             
         
         if 'bands'in arguments :
@@ -158,9 +162,13 @@ class LoadCollectionOperation(OpenEoOperation):
                 
                 env = e.split(' ')
                 if env[0] == '?': # apparently something went wrong with the conversion. Might be an impossible transformation
-                    self.handleError(toServer, job_id, 'unusable envelope found ' + str(sect), 'ProcessParameterInvalid')
+                    self.handleError(toServer, job_id, 'unusable envelope found ' + str(sect), 'ProcessParameterInvalid')                
+                x1 = float(env[0])
+                x2 = float(env[2])
+                y1 = float(env[1])
+                y2 = float(env[3])
 
-                self.inputRaster['spatialExtent'] = [env[0], env[2], env[1], env[3]]
+                self.inputRaster['spatialExtent'] = [min(x1,x2),min(y1,y2) ,max(x1,x2) ,max(y1,y2) ]
         
         if 'properties' in arguments: # filter properties
             self.properties =  arguments['properties']['resolved']
@@ -227,59 +235,18 @@ class LoadCollectionOperation(OpenEoOperation):
     def selectData(self, processOutput,openeojob, bandIndexes, env):
         outputRasters = []
         ilwRasters = []
-        ev = ilwis.Envelope("(" + env + ")")
+        
         # synthetic data is already loaded and ready to use. In that case inputRaster['rasterImplementation'] is already there
         # and load_collection doesn't have to do much of actual loading 
             
         if not self.inputRaster.hasData():
             layerTempExtent = []
-            loadedRasters = []
-            for lyrIdx in self.lyrIdxs:
-                layer = self.inputRaster.idx2layer(lyrIdx)
-                if layer != None:
-                    valueOk = False 
-                    hasProp = hasattr(self, 'properties')
-                
-                    # if we have a property filter we must check if this raster satisfies the condition(s)
-                    if hasProp:
-                        valueOk = self.checkProps(openeojob, processOutput,None, bandIndexes, layer)
-                    ## only add layers that either don't have the property or if they have if must match the condition                        
-                    if not hasProp or valueOk:
-                        layerTempExtent.append(layer[TEMPORALEXTENT])
-                        ilwLayer = ilwis.RasterCoverage(layer[DATASOURCE])
-                        if ilwLayer.size() == ilwis.Size(0,0,0):
-                            self.handleError(processOutput, openeojob.job_id, 'Input raster', 'invalid sub-band:' + layer[DATASOURCE], 'ProcessParameterInvalid')
-                        loadedRasters.append(ilwLayer) 
-                                                        
-                  
-            
-            for bandIndex in bandIndexes:
-                bandIndexList = 'rasterbands(' + str(bandIndex) + ')'
-                ilwRasters = []                                
-                for layer in loadedRasters:   
-                    # if the requested enevelope doesn't match the envelope of the inputdata we execute the 'select'
-                    # operation to get a portion of the raster that we need. we also include the exclusion of (if defined)                         
-                    # nodata values. As rasters are by default filled with undefs this will convert nodata to ilwis undefs
-                    # which is its equivalent
-                    nodata = self.inputRaster['nodata']
-                    undefRepl = ""
-                    if nodata != constants.RUNDEFFL or nodata != constants.RUNDEFI32:
-                        undefRepl = " pixelvalue!=" + str(nodata) + " and "
-                    if not ev.equalsP(loadedRasters[0].envelope(), 0.001, 0.001, 0.001):
-                        rc = ilwis.do("selection", layer, undefRepl + "with: envelope(" + env + ") and " + bandIndexList) 
-                    else:
-                        rc = ilwis.do("selection", layer, undefRepl + "with: " + bandIndexList)                                                           
-                    ilwRasters.append(rc)
-                common.registerIlwisIds(ilwRasters)
-                newBand = self.collectRasters(ilwRasters)
-                ilwRasters.append(newBand)
-            extra = self.constructExtraParams(self.inputRaster, self.temporalExtent, bandIndexes)
-            extra['textsublayers'] = layerTempExtent
-            keys = []
-            for i in bandIndexes:
-                keys.append(str(i))
-            extra['rasterkeys'] = keys
-            outputRasters.append(self.createOutput(0, ilwRasters, extra))
+            implDim =   next(iter(self.inputRaster['implementation']))
+            if implDim == DIMTEMPORALLAYER:
+                return self.loadByLayer(processOutput, openeojob, bandIndexes, env)
+            elif implDim == DIMSPECTRALBANDS:
+                return self.loadByBand(processOutput, openeojob, bandIndexes, env)
+        
         else:
             inpRasters = self.inputRaster.getRasters()
             rcList = []
@@ -305,6 +272,7 @@ class LoadCollectionOperation(OpenEoOperation):
                     rc = ilwis.do("selection", raster, "envelope(" + env + ") with: " + bandIndexList)
                 else:
                     rc = ilwis.do("selection", raster, "envelope(" + env + ")")  
+                dd = str(rc.size())
                 rcList.append(rc)
                 bands.append(self.inputRaster.index2band(bandIndex))
             extra = { TEMPORALEXTENT : self.temporalExtent, 'bands' : bands, 'epsg' : self.inputRaster['proj:epsg'], 'details': {}, 'name' : 'dummy'}                
@@ -315,8 +283,110 @@ class LoadCollectionOperation(OpenEoOperation):
             rasterData.load(rcList, 'ilwisraster', extra )
             outputRasters.append(rasterData) 
 
-        return outputRasters                   
+        return outputRasters 
 
+    def loadByBand(self, processOutput, openeojob, bandIndexes, env):
+        ilwRasters = []
+        outputRasters = []
+        layerTempExtent = []
+        bands = []
+        ev = ilwis.Envelope("(" + env + ")")
+
+        for lyrIdx in self.lyrIdxs:
+            layer = self.inputRaster.idx2layer(lyrIdx)
+            if layer != None:
+                valueOk = False 
+                hasProp = hasattr(self, 'properties')
+                
+                # if we have a property filter we must check if this raster satisfies the condition(s)
+                if hasProp:
+                    valueOk = self.checkProps(openeojob, processOutput,None, bandIndexes, layer)
+                if not hasProp or valueOk:
+                    layerTempExtent.append(layer[TEMPORALEXTENT])
+                    for bandIdx in bandIndexes:
+                        band = self.inputRaster.index2band(bandIdx)
+                        ilwBand = ilwis.RasterCoverage(band[DATASOURCE])  
+                        if ilwBand.size() == ilwis.Size(0,0,0):
+                            self.handleError(processOutput, openeojob.job_id, 'Input raster', 'invalid sub-band:' + layer[DATASOURCE], 'ProcessParameterInvalid')
+                        common.registerIlwisIds(ilwBand)
+                        nodata = self.inputRaster['nodata']
+                        undefRepl = ""
+                        if nodata != constants.RUNDEFFL or nodata != constants.RUNDEFI32:
+                            undefRepl = " pixelvalue!=" + str(nodata)
+                        ss = str(ilwBand.envelope())
+                        if not ev.equalsP(ilwBand.envelope(), 0.001, 0.001, 0.001):
+                            rc = ilwis.do("selection", ilwBand, undefRepl + " with: envelope(" + env + ")") 
+                        else:
+                            rc = ilwis.do("selection", ilwBand, undefRepl )
+                        common.registerIlwisIds(rc)  
+                        ilwRasters.append(rc) 
+                        bands.append(band)
+
+            extra = { TEMPORALEXTENT : self.temporalExtent, 'bands' : bands, 'epsg' : self.inputRaster['proj:epsg'], 'details': {}, 'name' : 'dummy'}                
+            if len(layerTempExtent) > 0:
+                extra['textsublayers'] = layerTempExtent 
+            common.registerIlwisIds(ilwRasters)                              
+            rasterData = RasterData()
+            rasterData.load(ilwRasters, 'ilwisraster', extra )
+            outputRasters.append(rasterData)   
+
+        return outputRasters
+    
+    def loadByLayer(self, processOutput, openeojob, bandIndexes, env):
+        layerTempExtent = []
+        loadedRasters = []
+        outputRasters = []
+        for lyrIdx in self.lyrIdxs:
+            layer = self.inputRaster.idx2layer(lyrIdx)
+            if layer != None:
+                valueOk = False 
+                hasProp = hasattr(self, 'properties')
+                
+                # if we have a property filter we must check if this raster satisfies the condition(s)
+                if hasProp:
+                    valueOk = self.checkProps(openeojob, processOutput,None, bandIndexes, layer)
+                    ## only add layers that either don't have the property or if they have if must match the condition                        
+                if not hasProp or valueOk:
+                    layerTempExtent.append(layer[TEMPORALEXTENT])
+                    ilwLayer = ilwis.RasterCoverage(layer[DATASOURCE])
+                    if ilwLayer.size() == ilwis.Size(0,0,0):
+                        self.handleError(processOutput, openeojob.job_id, 'Input raster', 'invalid sub-band:' + layer[DATASOURCE], 'ProcessParameterInvalid')
+                    common.registerIlwisIds(ilwLayer)
+                    loadedRasters.append(ilwLayer) 
+            
+        newRasters = self.selectBandsFromLayers(bandIndexes, env, loadedRasters)
+        
+        extra = self.constructExtraParams(self.inputRaster, self.temporalExtent, bandIndexes)
+        extra['textsublayers'] = layerTempExtent
+        outputRasters.append(self.createOutput(0, newRasters, extra))                  
+
+        return outputRasters
+
+    def selectBandsFromLayers(self, bandIndexes, env, loadedRasters):
+        ev = ilwis.Envelope("(" + env + ")")
+        ilwRasters = [] 
+        outRasters = []  
+        for bandIndex in bandIndexes:
+            bandIndexList = 'rasterbands(' + str(bandIndex) + ')'
+                             
+            for layer in loadedRasters:   
+                    # if the requested enevelope doesn't match the envelope of the inputdata we execute the 'select'
+                    # operation to get a portion of the raster that we need. we also include the exclusion of (if defined)                         
+                    # nodata values. As rasters are by default filled with undefs this will convert nodata to ilwis undefs
+                    # which is its equivalent
+                nodata = self.inputRaster['nodata']
+                undefRepl = ""
+                if nodata != constants.RUNDEFFL or nodata != constants.RUNDEFI32:
+                    undefRepl = " pixelvalue!=" + str(nodata) + " and "
+                if not ev.equalsP(loadedRasters[0].envelope(), 0.001, 0.001, 0.001):
+                    rc = ilwis.do("selection", layer, undefRepl + "with: envelope(" + env + ") and " + bandIndexList) 
+                else:
+                    rc = ilwis.do("selection", layer, undefRepl + "with: " + bandIndexList)                                                           
+                ilwRasters.append(rc)
+            newRaster = self.collectRasters(ilwRasters)
+            outRasters.append(newRaster)
+                        
+        return outRasters
 
     def run(self,openeojob, processOutput, processInput):
         if self.runnable:
@@ -325,7 +395,8 @@ class LoadCollectionOperation(OpenEoOperation):
             indexes = str(self.bandIdxs).lstrip('[').rstrip(']')
             indexes = [int(ele) for ele in indexes.split(',')]
             ext = self.inputRaster['spatialExtent']
-            env = str(ext[0]) + " " + str(ext[2]) + "," + str(ext[1]) + " " +str(ext[3])
+            env = str(ext[0]) + " "+ str(ext[2]) + "," + str(ext[1]) + " " +str(ext[3])
+            #env = str(ext[0]) + " "+ str(ext[3]) + "," + str(ext[1]) + " " +str(ext[2])
 
             outputRasters = self.selectData(processOutput,openeojob, indexes, env)
 
