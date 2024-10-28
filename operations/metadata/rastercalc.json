@@ -1,0 +1,39 @@
+{
+    "id": "rastercalc",
+    "summary": "executes an optimized raster calculation",
+    "description": "Executes a proces graph of multiple raster calculations reduced to a single expression",
+    "categories": [
+        "math"
+    ],
+    "parameters": [
+        {
+            "name": "x",
+            "description": "A number to round down.",
+            "schema": {
+                "type": [
+                    "number",
+                    "null"
+                ]
+            }
+        }
+    ],
+    "returns": {
+        "description": "a new raster after the calculation.",
+        "schema": {
+            "type": [
+                "integer",
+                "null"
+            ]
+        }
+    },
+    "examples": [
+    
+    ],
+    "links": [
+        {
+            "rel": "about",
+            "href": "http://mathworld.wolfram.com/FloorFunction.html",
+            "title": "Floor explained by Wolfram MathWorld"
+        }
+    ]
+}
