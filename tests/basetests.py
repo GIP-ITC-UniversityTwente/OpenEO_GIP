@@ -1,10 +1,9 @@
 import unittest
-import configglobals
-from zlib import adler32
 import shutil
 import os
 import json
 import openeo
+from  tests import configglobals
 
 
 CUSTOM_EX = 'CUSTOM_EX@'
