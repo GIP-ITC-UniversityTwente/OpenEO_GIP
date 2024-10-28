@@ -31,7 +31,7 @@ class ReduceDimensionsOperation(OpenEoOperation):
         if self.runnable:
             self.logStartOperation(processOutput, openeojob)
             pgraph = self.reducer['process_graph']
-            process = processGraph.ProcessGraph(pgraph, self.args, getOperation)
+            process = processGraph.ProcessGraph(pgraph, self.args, getOperation, True)
             process.addLocalArgument(DIMENSIONSLABEL,  {'base' : self.dimension, 'resolved' : self.dimension})
         
             output =  process.run(openeojob, processOutput, processInput)
