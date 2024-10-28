@@ -5,6 +5,10 @@ import copy
 import customexception
 import rasterdata
 
+mathKeys2 = {'add' : '+', 'divide' : '/', 'multiply' : '*', 'subtract' : '-', 'exp' : 'exp', 'sin': 'sin', 'cos' : 'cos',
+             'arcsin': 'asin', 'arccos' : 'acos', 'pow': 'pow', 'sqrt' : 'sqrt', 'sqr': 'sqr','arctanh' : 'atanh', 
+             'arccosh' : 'acosh', 'arcsinh' : 'asinh', 'floor' : 'floor', 'ceil' : 'ceil', 'log' : 'log10', 'ln' : 'ln', 'abs' : 'abs'
+             , 'max' : 'max', 'min' : 'min', 'round' : 'round'}
 
 class ProcessNode :
     constants.UNDEFINED = 0
@@ -35,21 +39,87 @@ class ProcessNode :
 # strictly linear, no loops no branches
 class ProcessGraph(OpenEoOperation):
 
-    def __init__(self, source_graph, arguments, getOperation):
+    def __init__(self, source_graph, arguments, getOperation, subgraph=False):
         self.processGraph = {}
         self.outputNodes = []
-        self.sourceGraph = source_graph
-        self.processArguments = arguments
+        self.sourceGraph = self.analyzeGraph(source_graph,  subgraph)
+        #self.sourceGraph = source_graph
         self.localArguments = {}
+        self.processArguments = arguments        
         self.getOperation = getOperation
         self.startNode = None
         self.title = ''
-        for processKey,processValues in source_graph.items():
+        for processKey,processValues in self.sourceGraph.items():
             grNode = ProcessNode(self, processValues, processKey)
             self.processGraph[processKey] = grNode
 
         self.determineOutputNodes(self.processGraph)
+   
 
+   
+
+    def analyzeGraph(self, sourceGraph, subgraph):
+        if not subgraph:
+            return sourceGraph
+      
+        k = list(sourceGraph.values())[-1]
+        lastKey = list(sourceGraph)[-1]
+        if isinstance(k, dict):
+            expr, usedNodes = self.analyzeProcessGraph(k, sourceGraph,lastKey) 
+            if len(usedNodes) > 0 and expr != '':
+                graph = {} 
+                from_nodes = []                           
+                for nodeKey in sourceGraph:
+                    if not nodeKey in usedNodes:
+                        graph[nodeKey] = sourceGraph[nodeKey]
+                    if expr.find(nodeKey) != -1:
+                        from_nodes.append(nodeKey)                        
+                graph['rastercalc1'] = {'process_id' : 'rastercalc', 'arguments' : { 'expression' : expr, 'v' : {'from_node' : from_nodes}}, 'result' : True}
+                return graph
+        return sourceGraph
+    
+    def analyzeProcessGraph(self, node, processGraph, nodeName):
+        expr = ''
+        usedNodes = []
+        args = None
+        if 'process_id' in node:
+            if node['process_id'] in mathKeys2:
+                args = node['arguments']
+                oper = mathKeys2[node['process_id']]
+            if args != None:
+                usedNodes.append(nodeName)
+                for argkey in args:
+                    arg = args[argkey]
+                    if isinstance(arg, dict):
+                        v = self.argValue(arg)
+                        gnode = processGraph[v]
+                        v1, e = self.analyzeProcessGraph(gnode, processGraph,v)
+                        v = v1 = v if v1 == '@' else v1
+                        usedNodes.extend(e)
+                    else:
+                        v = arg
+
+                    if len(args) == 1:
+                        expr = expr + oper + '(' + str(v) + ')'
+                    else:                             
+                        expr = expr + str(v) + oper
+                    oper = '' # is used, don't use again
+                if len(expr) > 0:
+                    expr = '('+ expr + ')'
+            else:
+                expr = '@' 
+
+        return expr, usedNodes
+    def argValue(self, arg):
+        if isinstance(arg, dict):
+            k = next(iter(arg))
+            v = next(iter(arg.values()))
+            if k == 'from_node':
+                return v
+        else:
+            return arg
+        
+        return None            
     # helper function for the validatgraph method
     def addLocalArgument(self, key, value, index = 0):
           self.outputNodes[index][1].localArguments[key] = value
@@ -119,6 +189,13 @@ class ProcessGraph(OpenEoOperation):
     
     # translates the a given id to an actual graphNode. All nodes have a unique id (for this graph)
     def id2node(self, id):
+        if isinstance(id, list):
+            nodes = []
+            for node in self.processGraph.items():
+                if node[0] == id:
+                    nodes.append(node)
+            return node
+        
         for node in self.processGraph.items():
             if node[0] == id:
                 return node
@@ -239,18 +316,27 @@ class NodeExecution :
     def resolveNode(self,openeojob, toServer, fromServer, parmKeyValue):
         if 'from_node' in parmKeyValue: # value is value of another node
             referredNodeName = parmKeyValue[1]
-            referredNode = self.processGraph.id2node(referredNodeName) # find the node
-            if referredNode != None:
-                if referredNode[1].nodeValue == None:
-                    # create a new execution node based on the found node and run it to get a resolved value
-                    # in this way the nodeVlaue will be filled and subsequent calls will use tha already 
-                    # calcualted value
-                    refExecutionNode = NodeExecution(referredNode[1], self.processGraph)
-                    refExecutionNode.run(openeojob, toServer, fromServer)
-                    referredNode[1].nodeValue = refExecutionNode.outputInfo
-                return referredNode[1].nodeValue['value']
-            else: # should never happen, but anyway
-                self.handleError(openeojob, "Node can not be found", 'resolved node')
+            refvalues = referredNodeName if isinstance(referredNodeName, list) else [referredNodeName]
+            nodeValues = {}
+            for refvalue in refvalues:
+                referredNode = self.processGraph.id2node(refvalue) # find the node
+                if referredNode != None:
+                    if referredNode[1].nodeValue == None:
+                        # create a new execution node based on the found node and run it to get a resolved value
+                        # in this way the nodeVlaue will be filled and subsequent calls will use tha already 
+                        # calcualted value
+                        refExecutionNode = NodeExecution(referredNode[1], self.processGraph)
+                        refExecutionNode.run(openeojob, toServer, fromServer)
+                        referredNode[1].nodeValue = refExecutionNode.outputInfo
+                    nodeValues[refvalue] = referredNode[1].nodeValue['value']
+                else: # should never happen, but anyway
+                    self.handleError(openeojob, "Node can not be found", 'resolved node')
+
+            if len(nodeValues) == 1:
+                return next(iter(nodeValues.values()))
+            else:
+                return nodeValues
+            
         # a value that has been set for this sub process. The previous case refers to another node, 
         # this case the actual value refers to a value present in the calling process (which might be resolved or not)
         elif 'from_parameter' in parmKeyValue: 
@@ -263,4 +349,5 @@ class NodeExecution :
                 return None #self.resolveNode(openeojob, toServer, fromServer, refNode)  
        
         else: # direct value case; no indirections
-            return parmKeyValue[1]                                              
+            return parmKeyValue[1] 
+
