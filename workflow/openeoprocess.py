@@ -43,7 +43,7 @@ class OpenEOParameter:
                 self.parameters.append(OpenEOParameter(parm))
 
         if subt == 'datacube':
-            dimensions = parm[DIMENSIONSLABEL]
+            dimensions = parm[constants.DIMENSIONSLABEL]
             self.spatial_organization = []
             for dim in dimensions:
                 tp = dim['type']
