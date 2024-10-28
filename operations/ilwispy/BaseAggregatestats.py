@@ -31,7 +31,7 @@ class BaseAggregateData(OpenEoOperation):
     def base_run(self,openeojob, processOutput, processInput):
         if self.runnable:
             self.logStartOperation(processOutput, openeojob)
-            if hasattr(self, DIMENSIONSLABEL):
+            if hasattr(self, 'rasters'):
                 outputRasters = []
                 for rc in self.rasters:
                     self.createExtra(rc, True, basename=self.method)
