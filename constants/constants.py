@@ -57,9 +57,11 @@ DATASOURCE = 'source'
 
 TEMPORALEXTENT = "extent"
 SPATIALEXTENT = "extent"
-BANDINDEX = 'bindex'
-LAYERINDEX = 'lindex'
+BANDINDEX = 'index'
+LAYERINDEX = 'index'
+INDEXID = 'index'
 RASTERDATA = 'data'
+NAMEID = 'name'
 
 
 
