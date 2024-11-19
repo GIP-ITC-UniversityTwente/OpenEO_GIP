@@ -43,7 +43,8 @@ class MaskOperation(OpenEoOperation):
                 mRaster: RasterData = maskRasters[i] 
                 resampleNeeded = not self.checkSpatialDimensions([dRaster, mRaster])
                 self.rasters.append({"data" : dRaster, "mask" : mRaster , "resampleneeded": resampleNeeded} )  
-        self.createExtra(self.rasters[0]['data'])                                                                 
+        self.createExtra(self.rasters[0]['data']) 
+        setWorkingCatalog(self.rasters[0]['data'])                                                                
         self.runnable = True
 
 

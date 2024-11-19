@@ -16,6 +16,7 @@ class BaseAggregateData(OpenEoOperation):
             if len(inpData) == 0:
                 self.handleError(toServer, job_id, 'Input raster','invalid input. Number of rasters is 0', 'ProcessParameterInvalid')
             if isinstance(inpData[0], RasterData):
+                setWorkingCatalog(inpData[0])
                 self.rasters = inpData
 
                 for rc in self.rasters:

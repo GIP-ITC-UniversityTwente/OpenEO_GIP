@@ -46,6 +46,7 @@ class RasterCalc(OpenEoOperation):
             count = count + 1
         self.expr = 'ilwis.do("mapcalc","' + self.expr + '",' + self.rest + ')'
         self.createExtra(firstRaster[0], basename=self.name) 
+        setWorkingCatalog(firstRaster[0]) 
         self.runnable = True
     
              

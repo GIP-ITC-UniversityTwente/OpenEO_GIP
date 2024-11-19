@@ -54,6 +54,7 @@ DIMXRASTER = "x"
 DIMYRASTER = "y"
 DIMENSIONSLABEL = 'dimensions'
 DATASOURCE = 'source'
+DIMORDER = 'implementation'
 
 TEMPORALEXTENT = "extent"
 SPATIALEXTENT = "extent"

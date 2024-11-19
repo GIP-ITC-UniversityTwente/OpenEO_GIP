@@ -6,6 +6,7 @@ from rasterdata import *
 import logging
 import common
 import customexception
+from pathlib import Path
 
 
 operations1 = {}
@@ -432,7 +433,11 @@ class OpenEoOperation:
             return args[key]['resolved']
         return None
             
-
+def setWorkingCatalog(raster):
+    path = Path(raster.dataFolder()).as_uri()
+    ilwis.setWorkingCatalog(path)
+    return path    
+    
 def createOutput(status, value, datatype, format='')        :
     return {"status" : status, "value" : value, "datatype" : datatype, 'format' : format}  
 

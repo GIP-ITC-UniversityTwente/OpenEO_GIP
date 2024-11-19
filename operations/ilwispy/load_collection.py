@@ -134,8 +134,7 @@ class LoadCollectionOperation(OpenEoOperation):
             self.lyrIdxs = self.inputRaster.getLayerIndexes(arguments['temporal_extent']['resolved'])
             # else:
             #     self.lyrIdxs.append(0)  
-        path = Path(self.inputRaster.dataFolder()).as_uri()
-        ilwis.setWorkingCatalog(path)
+        path = setWorkingCatalog(self.inputRaster)
 
         if 'spatial_extent' in arguments:
             sect = arguments['spatial_extent']['resolved']

@@ -1,0 +1,172 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "properties": {
+        "dimensions": {
+            "type": "object",
+            "properties": {
+                "bands": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "name": {
+                                "type": "string"
+                            },
+                            "type": {
+                                "type": "string",
+                                "required": [
+                                    "float",
+                                    "integer"
+                                ]
+                            },
+                            "commonbandname": {
+                                "type": "string"
+                            },
+                            "index": {
+                                "type": "integer"
+                            },
+                            "details": {
+                                "type": "object",
+                                "properties": {
+                                    "gsd": {
+                                        "type": "integer"
+                                    }
+                                }
+                            }
+                        },
+                        "required": [
+                            "name",
+                            "type",
+                            "index"
+                        ]
+                    }
+                },
+                "t": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "extent": {
+                                "type": "array",
+                                "items": {
+                                    "type": "string"
+                                },
+                                "minItems": 2,
+                                "maxItems": 2
+                            },
+                            "source": {
+                                "type": "string"
+                            }
+                        },
+                        "required": [
+                            "extent"
+                        ]
+                    }
+                },
+                "x": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "extent": {
+                                "type": "array",
+                                "items": {
+                                    "type": "number"
+                                },
+                                "minItems": 2,
+                                "maxItems": 2
+                            },
+                            "source": {
+                                "type": "string"
+                            }
+                        },
+                        "required": [
+                            "extent"
+                        ]
+                    }
+                },
+                "y": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "extent": {
+                                "type": "array",
+                                "items": {
+                                    "type": "number"
+                                },
+                                "minItems": 2,
+                                "maxItems": 2
+                            },
+                            "source": {
+                                "type": "string"
+                            }
+                        },
+                        "required": [
+                            "extent"
+                        ]
+                    }
+                },
+                "boundingbox": {
+                    "type": "array",
+                    "items": {
+                        "type": "number"
+                    },
+                    "minItems": 4,
+                    "maxItems": 4
+                }
+            }
+        },
+        "projection" : {
+            "properties": {
+                "epsg" : {"type" : "integer"}
+            }
+        },
+        "keywords" : {
+            "type" : "array",
+            "items" : {
+                "type" : "string"
+            }
+        },
+        "license" : {"type" : "string"},
+        "links" : {
+            "type" : "array",
+            "items" : {
+                "href" : {"type" : "string"},
+                "rel" : {"type":"string"}
+            }
+        },
+        "providers" : {
+            "type" : "array",
+            "items" : {
+                "type" : "object",
+                "properties" : {
+                    "name" : { "type" : "string"},
+                    "roles" : {
+                        "type" : "array",
+                        "items" : {
+                        "type" : "string"
+                        }
+                    }
+                }
+            }
+        },
+        "summaries" : {
+            "type" : "object",
+            "properties" : {
+                "constellation" : { "type" : "string"},
+                "instrument": { "type": "string"}
+            }
+        },
+        "title" : {"type" : "string"},
+        "type" : {"type" : "string"},
+        "stac_version" : {"type" : "string"},
+        "id" : {"type" : "string"},
+        "dataFolder" : {"type" : "string"},
+        "description" : { "type" : "string"},
+        "grouping" : {"type" : "string"},
+        "nodata" : {"type" : "number"}
+    },
+    "required": ["dimensions", "projection", "license", "title", "id", "dataFolder"]
+}

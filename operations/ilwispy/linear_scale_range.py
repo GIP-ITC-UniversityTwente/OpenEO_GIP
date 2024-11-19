@@ -29,6 +29,7 @@ class LinearScaleRangeOperation(OpenEoOperation):
 
         if raster.getRaster().datadef().domain().ilwisType() != ilwis.it.NUMERICDOMAIN:
             self.handleError(toServer, job_id, 'Input raster','invalid datatype in raster. Must be numeric', 'ProcessParameterInvalid')
+        setWorkingCatalog( raster)
         self.inputRaster = raster.getRaster()
         self.createExtra(raster, 0) 
         return ""

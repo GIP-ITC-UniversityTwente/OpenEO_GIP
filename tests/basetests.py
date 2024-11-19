@@ -4,6 +4,7 @@ import os
 import json
 import openeo
 from  tests import configglobals
+import zlib
 
 
 CUSTOM_EX = 'CUSTOM_EX@'
@@ -12,9 +13,8 @@ CERR = '\033[93m'
 CENDMESS = '\033[0m'
 
 def openConnection() :
-     conn = openeo.connect("http://127.0.0.1:5000")
+     conn = openeo.connect(configglobals.server)
      conn.authenticate_basic("tester", "pwd") 
-     ##conn = openeo.connect("http://cityregions.roaming.utwente.nl:5000")
      return conn
  
 def getAssetValue(job):
@@ -98,7 +98,7 @@ def checksum(p):
                data = f.read(BLOCKSIZE)
                if not data:
                     break
-               asum = adler32(data, asum)
+               asum = zlib.adler32(data, asum)
                if asum < 0:
                     asum += 2**32
 

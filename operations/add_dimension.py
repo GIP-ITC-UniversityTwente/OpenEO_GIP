@@ -20,7 +20,7 @@ class AddDimension(OpenEoOperation):
         for raster in rasters:
             if not isinstance(raster, RasterData):
                 self.handleError(toServer, job_id, 'data','data must be a raster', 'ProcessParameterInvalid')
-            for fname in raster[STRUCTUREDEFDIM]:
+            for fname in raster[DIMORDER]:
                 if fname == dimname:
                     self.handleError(toServer, job_id, 'data','A dimension with the specified name already exists', 'ProcessParameterInvalid') 
         self.dimname = dimname 
@@ -36,10 +36,10 @@ class AddDimension(OpenEoOperation):
             for raster in self.rasters:
                 exrasters = {}                
                 if self.dimname == DIMTEMPORALLAYER:
-                    p = len(raster[STRUCTUREDEFDIM])
-                    raster[STRUCTUREDEFDIM].insert(p - 1, DIMTEMPORALLAYER)
+                    p = len(raster[DIMORDER])
+                    raster[DIMORDER].insert(p - 1, DIMTEMPORALLAYER)
                 else:    
-                    raster[STRUCTUREDEFDIM].insert(0, self.dimname)
+                    raster[DIMORDER].insert(0, self.dimname)
                     for key, value in raster['rasters'].items():
                         exrasters['0:' + key] = value  
                     raster['rasters'] = exrasters
@@ -54,7 +54,7 @@ class AddDimension(OpenEoOperation):
                     labels.append(label)               
                     items[label] = layer  
                 refsystem =  'Gregorian calendar / UTC' if self.dimname == DIMTEMPORALLAYER else ''                                                                           
-                raster[METADATDEFDIM][self.dimname] =  {'items' :items, 'labels' : labels,'unit' : '' , 'RefSystem': refsystem} 
+                raster[DIMENSIONSLABEL][self.dimname] =  {'items' :items, 'labels' : labels,'unit' : '' , 'RefSystem': refsystem} 
                 
                 outData.append(raster)
             self.logEndOperation(processOutput,openeojob)
