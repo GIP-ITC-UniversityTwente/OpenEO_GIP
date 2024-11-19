@@ -56,6 +56,7 @@ from openeoudfruntimes import OpenEOUdfRuntimes
 from openeofiles import OpenEODownloadFile
 from datadownload import OpenEODataDownload
 from authentication import Authenitication
+from openeouploadfile import OpenEOUploadFile
 
 
 from processmanager import globalProcessManager
@@ -114,6 +115,7 @@ api.add_resource( OpenEOUdfRuntimes,'/udf_runtimes')
 api.add_resource( OpenEODownloadFile,'/files/<string:filepath>')
 api.add_resource( OpenEODataDownload,'/download/<token>')
 api.add_resource( Authenitication,'/credentials/basic')
+api.add_resource( OpenEOUploadFile,'/files/<path>')
 
 CORS(app)
 

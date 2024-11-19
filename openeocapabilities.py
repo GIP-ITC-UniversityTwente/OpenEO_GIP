@@ -109,6 +109,12 @@ CAPABILITIES = {
                 "methods": [
                     "POST"
                 ]
+            },
+            {
+                "path": "/files/{path}",
+                "methods": [
+                    "PUT"
+                ]
             }                                              
         ],
         "links": [
