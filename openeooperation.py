@@ -434,6 +434,7 @@ class OpenEoOperation:
         return None
             
 def setWorkingCatalog(raster):
+    common.logMessage(logging.INFO, 'new working catalog:' + str(raster.dataFolder() ) )
     path = Path(raster.dataFolder()).as_uri()
     ilwis.setWorkingCatalog(path)
     return path    

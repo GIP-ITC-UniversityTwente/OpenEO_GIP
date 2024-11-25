@@ -7,6 +7,7 @@ import os
 from pathlib import Path
 import constants.constants as cc
 from datetime import datetime, timedelta
+import logging
 
 
 def createEmptySmallNumericRaster(alternate):
@@ -82,8 +83,10 @@ def setTestRaster(dims, bndcount = 1, version = 0):
         rcs.append(rc)
 
     url = rc.url()
+    url.replace('////', '///') # if at all
     path = url.split('//')
     folder = os.path.dirname("/"+ path[1])
+    common.logMessage(logging.INFO, 'new working folder:' + folder + '>>' + str(url)) 
     path = Path(folder).as_uri()
     ilwis.setWorkingCatalog(path)  
 

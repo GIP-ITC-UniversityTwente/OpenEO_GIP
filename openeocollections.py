@@ -70,6 +70,7 @@ def loadCollections():
                     if os.path.isdir(fullPath):
                         continue 
                     name = os.path.splitext(filename)[0]
+                    common.logMessage(logging.INFO, 'reading file ' + filename,common.process_user)
                     raster = globalsSingleton.id2Raster(name)
                     if raster == None:
                         raster = loadFile(fullPath, extraMetadataAll)                  
@@ -77,13 +78,14 @@ def loadCollections():
                             continue
 
                     collectionJsonDict = raster.toShortDictDefinition()
-                       
+                    common.logMessage(logging.INFO, 'finished file ' + filename,common.process_user)  
                     if collectionJsonDict != {}:
                         allCollections.append(collectionJsonDict)
 
     allJson["collections"] = allCollections
     allJson["links"] = globalsSingleton.openeoip_config['links']
 
+   
     globalsSingleton.saveIdDatabase() 
     rasters = tr.setTestRasters(5)
     for r in rasters:

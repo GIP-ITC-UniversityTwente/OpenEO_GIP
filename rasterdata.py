@@ -9,6 +9,7 @@ from constants.constants import *
 import common
 import copy
 import pathlib
+import logging
 
 
 
@@ -238,7 +239,7 @@ class RasterData(dict):
         url = ilwisRaster.url()
         path = url.split('//')
         head = os.path.dirname(path[1])
-        self['dataSource'] = url
+        self['dataSource'] = path[1]
         self['dataFolder'] = head
         self['nodata'] = RUNDEFFL
         self[DIMENSIONSLABEL] = {}
@@ -667,9 +668,17 @@ class RasterData(dict):
         return False  
 
     def dataFolder(self):
-        if 'dataSource' in self:
-            fpath = os.path.dirname(self['dataSource']) 
-            return os.path.join(fpath, self['dataFolder'])  
+        if 'dataFolder' in self:
+            common.logMessage(logging.INFO, '>>>>>>>>' + self['dataFolder'] + " "  + self['dataSource']) 
+            
+        if 'dataFolder' in self:
+            fpath = self['dataFolder']
+            if ( fpath.find('/')) == 0:
+                return fpath
+            if 'dataSource' in self:
+                fds = self['dataSource']
+                folder = os.path.dirname(fds)
+                return folder 
         return ''   
     
 # stores the metadata for a seperate band. Note that the details section can contain
