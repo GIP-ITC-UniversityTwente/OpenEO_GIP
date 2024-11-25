@@ -3,6 +3,8 @@ version: '3.8'
 services:
   openeo:
     user: 111:1007
+    environment:
+      - USER_NAME=${USER_NAME}
     build:
       context: .
       dockerfile: Dockerfile

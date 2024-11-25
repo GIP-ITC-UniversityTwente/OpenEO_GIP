@@ -24,8 +24,8 @@ COPY . /app
 
 EXPOSE 5000
 
-ARG OPENEO_UID=1000
-ARG OPENEO_GID=1000
+ARG OPENEO_UID=111
+ARG OPENEO_GID=1007
 
 RUN groupadd --gid ${OPENEO_GID} openeo \
  && useradd --uid ${OPENEO_UID} --gid ${OPENEO_GID} --no-create-home openeo
