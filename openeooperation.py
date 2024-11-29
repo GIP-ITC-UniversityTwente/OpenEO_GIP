@@ -219,7 +219,8 @@ class OpenEoOperation:
         self.extra = { TEMPORALEXTENT : r[TEMPORALEXTENT], 'bands' : bands, 'epsg' : r['proj:epsg'], 'rasterkeys': rasterKeys }
         if reduce: # we cut out the implementation level(=reduced) as this is now become one level higher
             self.extra = {}
-            self.extra['textsublayers'] = {} 
+            self.extra['textsublayers'] = {}
+            self.extra = { TEMPORALEXTENT : r[TEMPORALEXTENT],  'bands' : bands, 'epsg' : r['proj:epsg'], 'rasterkeys': rasterKeys } 
         else:                    
             self.extra['textsublayers'] = r.getLayersTempExtent()
             self.extra['data'] = r.getRasters()

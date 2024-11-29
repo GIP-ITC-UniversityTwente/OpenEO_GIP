@@ -28,6 +28,8 @@ class BaseAggregateData(OpenEoOperation):
     
             elif isinstance(inpData ,list):
                 self.array = inpData
+
+           # self.createExtra(inpData[0],False, self.name)                
     
     def base_run(self,openeojob, processOutput, processInput):
         if self.runnable:

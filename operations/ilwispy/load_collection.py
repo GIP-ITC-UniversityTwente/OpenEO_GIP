@@ -150,11 +150,13 @@ class LoadCollectionOperation(OpenEoOperation):
                     datapath = os.path.join(path, source)                            
                     rband = ilwis.RasterCoverage(datapath)
         
-                common.registerIlwisIds(rband)                    
+                common.registerIlwisIds(rband) 
+                p21 = str(rband.envelope())                   
                 csyLL = ilwis.CoordinateSystem("epsg:4326")
                 llenv = ilwis.Envelope(ilwis.Coordinate(sect['west'], sect['south']), ilwis.Coordinate(sect['east'], sect['north']))
                 envCube = rband.coordinateSystem().convertEnvelope(csyLL, llenv)
                 e = str(envCube)
+                p22 = str(e)
                 # if there is no overlap between input data and spatial_extent an error will be thrown as
                 # any processing is pointless.
                 self.checkOverlap(toServer, job_id,envCube, rband.envelope())
@@ -271,7 +273,6 @@ class LoadCollectionOperation(OpenEoOperation):
                     rc = ilwis.do("selection", raster, "envelope(" + env + ") with: " + bandIndexList)
                 else:
                     rc = ilwis.do("selection", raster, "envelope(" + env + ")")  
-                dd = str(rc.size())
                 rcList.append(rc)
                 bands.append(self.inputRaster.index2band(bandIndex))
             extra = { TEMPORALEXTENT : self.temporalExtent, 'bands' : bands, 'epsg' : self.inputRaster['proj:epsg'], 'details': {}, 'name' : 'dummy'}                
@@ -394,8 +395,8 @@ class LoadCollectionOperation(OpenEoOperation):
             indexes = str(self.bandIdxs).lstrip('[').rstrip(']')
             indexes = [int(ele) for ele in indexes.split(',')]
             ext = self.inputRaster['spatialExtent']
-            env = str(ext[0]) + " "+ str(ext[2]) + "," + str(ext[1]) + " " +str(ext[3])
-            #env = str(ext[0]) + " "+ str(ext[3]) + "," + str(ext[1]) + " " +str(ext[2])
+            #env = str(ext[0]) + " "+ str(ext[2]) + "," + str(ext[1]) + " " +str(ext[3])
+            env = str(ext[0]) + " "+ str(ext[1]) + "," + str(ext[2]) + " " +str(ext[3])
 
             outputRasters = self.selectData(processOutput,openeojob, indexes, env)
 
