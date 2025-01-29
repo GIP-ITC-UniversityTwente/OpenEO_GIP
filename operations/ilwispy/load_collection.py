@@ -86,7 +86,18 @@ class LoadCollectionOperation(OpenEoOperation):
             self.handleError(toServer, job_id, 'temporal extents','invalid extent', 'ProcessParameterInvalid')
         if (dt1 < dr1 and dt2 < dr1) or ( dt1 > dr2 and dt2 > dr2):
             self.handleError(toServer, job_id, 'temporal extents','extents dont overlap', 'ProcessParameterInvalid')
+    
+    def id2Raster(self, db, id):
+        items = db.items()
+       
+        for item in items:
+            if id == item[0] or id == item[1]['title']:
+                raster = item[1]
+                if not os.path.exists(raster['dataSource']): #virtual datasets with no real source
+                    return RasterData(raster)
+                return RasterData(raster)
 
+        return None        
     # checks if the given parameters makes senses given the input data. It may also convert data to a more suitable
     # (performant) format if needed.
     def prepare(self, arguments):
@@ -99,11 +110,10 @@ class LoadCollectionOperation(OpenEoOperation):
 
         fileIdDatabase = getRasterDataSets()
         # the requested data could not be found on the server
-        id = arguments['id']['resolved']
-        if not id in fileIdDatabase:
+        rd = self.id2Raster(fileIdDatabase, arguments['id']['resolved'])
+        if rd == None:
             self.handleError(toServer, job_id,'input raster not found', 'ProcessParameterInvalid')
-        metaJson = fileIdDatabase[id]            
-        rd = RasterData(metaJson)            
+        
         self.inputRaster = rd        
         self.dataSource = ''
         oldFolder = folder = self.inputRaster['dataFolder']
@@ -153,10 +163,9 @@ class LoadCollectionOperation(OpenEoOperation):
                 common.registerIlwisIds(rband) 
                 p21 = str(rband.envelope())                   
                 csyLL = ilwis.CoordinateSystem("epsg:4326")
-                llenv = ilwis.Envelope(ilwis.Coordinate(sect['west'], sect['south']), ilwis.Coordinate(sect['east'], sect['north']))
+                llenv = ilwis.Envelope(ilwis.Coordinate(sect['west'], sect['north']), ilwis.Coordinate(sect['east'], sect['south']))
                 envCube = rband.coordinateSystem().convertEnvelope(csyLL, llenv)
                 e = str(envCube)
-                p22 = str(e)
                 # if there is no overlap between input data and spatial_extent an error will be thrown as
                 # any processing is pointless.
                 self.checkOverlap(toServer, job_id,envCube, rband.envelope())
@@ -275,7 +284,7 @@ class LoadCollectionOperation(OpenEoOperation):
                     rc = ilwis.do("selection", raster, "envelope(" + env + ")")  
                 rcList.append(rc)
                 bands.append(self.inputRaster.index2band(bandIndex))
-            extra = { TEMPORALEXTENT : self.temporalExtent, 'bands' : bands, 'epsg' : self.inputRaster['proj:epsg'], 'details': {}, 'name' : 'dummy'}                
+            extra = { TEMPORALEXTENT : self.temporalExtent, 'bands' : bands, 'epsg' : self.inputRaster['proj'], 'details': {}, 'name' : 'dummy'}                
             if len(layerTempExtent) > 0:
                 extra['textsublayers'] = layerTempExtent 
             common.registerIlwisIds(rcList)                              
@@ -322,7 +331,7 @@ class LoadCollectionOperation(OpenEoOperation):
                         ilwRasters.append(rc) 
                         bands.append(band)
 
-            extra = { TEMPORALEXTENT : self.temporalExtent, 'bands' : bands, 'epsg' : self.inputRaster['proj:epsg'], 'details': {}, 'name' : 'dummy'}                
+            extra = { TEMPORALEXTENT : self.temporalExtent, 'bands' : bands, 'epsg' : self.inputRaster['proj'], 'details': {}, 'name' : 'dummy'}                
             if len(layerTempExtent) > 0:
                 extra['textsublayers'] = layerTempExtent 
             common.registerIlwisIds(ilwRasters)                              
