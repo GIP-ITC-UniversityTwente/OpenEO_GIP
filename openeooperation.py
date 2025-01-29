@@ -216,11 +216,11 @@ class OpenEoOperation:
                 bands.append({'type' : 'float', BANDINDEX : count, 'name' : basename + '_b' + str(count),'details' : {} } )
    
                 count = count + 1
-        self.extra = { TEMPORALEXTENT : r[TEMPORALEXTENT], 'bands' : bands, 'epsg' : r['proj:epsg'], 'rasterkeys': rasterKeys }
+        self.extra = { TEMPORALEXTENT : r[TEMPORALEXTENT], 'bands' : bands, 'epsg' : r['proj'], 'rasterkeys': rasterKeys }
         if reduce: # we cut out the implementation level(=reduced) as this is now become one level higher
             self.extra = {}
             self.extra['textsublayers'] = {}
-            self.extra = { TEMPORALEXTENT : r[TEMPORALEXTENT],  'bands' : bands, 'epsg' : r['proj:epsg'], 'rasterkeys': rasterKeys } 
+            self.extra = { TEMPORALEXTENT : r[TEMPORALEXTENT],  'bands' : bands, 'epsg' : r['proj'], 'rasterkeys': rasterKeys } 
         else:                    
             self.extra['textsublayers'] = r.getLayersTempExtent()
             self.extra['data'] = r.getRasters()
@@ -305,8 +305,12 @@ class OpenEoOperation:
                 meta = rasterData[DIMENSIONSLABEL][dimName]
                 for dimItem in meta:
                     if 'label' in dimItem:
-                        if dimItem['label'] == arguments['label']['resolved']:
+                        if dimItem['label'].lower() == arguments['label']['resolved'].lower():
                             return dimItem[BANDINDEX]
+                    if 'commonbandname' in dimItem:
+                        # strictly speaking this should not be working but for users the differences between label and commonbandname is fairly vague. so...
+                        if dimItem['commonbandname'].lower() == arguments['label']['resolved'].lower():
+                            return dimItem[BANDINDEX] 
         return arrIndex
     
     
@@ -318,7 +322,7 @@ class OpenEoOperation:
             if band == None:
                 band = {'name' : self.name + "_band_" + str(idx), 'details' : {}}
             bands.append(band)
-         extra = { TEMPORALEXTENT : temporalExtent, 'bands' : bands, 'epsg' : raster['proj:epsg'], 'details': bands[0]['details'], 'name' : bands[0]['name']} 
+         extra = { TEMPORALEXTENT : temporalExtent, 'bands' : bands, 'epsg' : raster['proj'], 'details': bands[0]['details'], 'name' : bands[0]['name']} 
 
          return extra
     
@@ -380,7 +384,7 @@ class OpenEoOperation:
         inputRaster = targetRaster.getRaster()
         env = inputRaster.envelope()
         pixSize = targetRaster.getRaster().geoReference().pixelSize()
-        projection = 'epsg:' + str(targetRaster['proj:epsg'])
+        projection = 'epsg:' + str(targetRaster['proj'])
         csy = ilwis.CoordinateSystem(projection)
         grf = ilwis.do('createcornersgeoreference', \
                            env.minCorner().x, env.minCorner().y, env.maxCorner().x, env.maxCorner().y, \
@@ -395,7 +399,7 @@ class OpenEoOperation:
         sourceRasterIlw = sourceRaster.getRaster() 
         if targetRasterIlw.size() != sourceRasterIlw.size():
             return True
-        if targetRaster['proj:epsg'] != sourceRaster['proj:epsg']:
+        if not targetRaster.matchProjection(sourceRaster):
             return True
         return False
     

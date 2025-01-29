@@ -38,9 +38,9 @@ class FilterBBox(OpenEoOperation):
                         self.handleError(toServer, job_id, "bounding box", "Invalid extents deifinition", 'ProcessParameterInvalid')                                      
                 
                 self.env = ilwis.Envelope(ilwis.Coordinate(ext['west'], ext['south']), ilwis.Coordinate(ext['east'], ext['north']))
-                if self.data['proj:epsg'] != crs:
+                if self.data['proj'] != crs:
                        csyExt = ilwis.CoordinateSystem("epsg:" + str(crs))
-                       csyData = ilwis.CoordinateSystem("epsg:" + self.data['proj:epsg'])
+                       csyData = ilwis.CoordinateSystem("epsg:" + self.data['proj'])
                        self.env = csyData.convertEnvelope(csyExt, self.env)
                 rband = self.data.getRaster()
                 self.checkOverlap(toServer, job_id, self.env, rband.envelope())

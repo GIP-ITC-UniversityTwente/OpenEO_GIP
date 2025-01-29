@@ -2,7 +2,7 @@ import os
 
 testdir = '/home/mschouwen/testdata/openeo/result'
 server = 'http://127.0.0.1:5000'
-#server = "http://cityregions.roaming.utwente.nl:5000"
+#server = "http://cityregions.roaming.utwente.nl/openeo"
 
 class TestManager:
     def __new__(cls):

@@ -107,7 +107,7 @@ class RasterData(dict):
     def fromEOReader(self, prod):
         time = [str(prod.stac.datetime), str(prod.stac.datetime)]
         self[TEMPORALEXTENT] = time
-        self['proj:epsg'] = prod.stac.proj.epsg
+        self['proj'] = prod.stac.proj.epsg
         self['spatialExtent'] = prod.stac.proj.bbox
         self['summaries']= {}
         self.setSummariesValue('constellation', prod.stac)
@@ -143,8 +143,8 @@ class RasterData(dict):
 
         if not DIMXRASTER in self:
             ext = self['spatialExtent']
-            self.setItem(DIMXRASTER, {'extent' : [ float(ext[0]), float(ext[2])], 'unit' : 'meter', 'reference_system' : self['proj:epsg']} )
-            self.setItem(DIMYRASTER, {'extent' : [ float(ext[1]), float(ext[3])], 'unit' : 'meter', 'reference_system' : self['proj:epsg']} )            
+            self.setItem(DIMXRASTER, {'extent' : [ float(ext[0]), float(ext[2])], 'unit' : 'meter', 'reference_system' : self['proj']} )
+            self.setItem(DIMYRASTER, {'extent' : [ float(ext[1]), float(ext[3])], 'unit' : 'meter', 'reference_system' : self['proj']} )            
 
     def fromMetadata(self, metadata):
         self['type'] = 'metadata' 
@@ -157,7 +157,7 @@ class RasterData(dict):
         self['links'] = getMandatoryValue("links", metadata) 
         ext = getMandatoryValue("dimensions", metadata)
         self['boundingbox'] = getMandatoryValue("boundingbox", ext)
-        self['proj:epsg'] = getValue('proj:epsg' , metadata, '0')
+        self['proj'] = getValue('proj' , metadata, '0')
         self['nodata'] = getValue('nodata' , metadata, -9999)
         self[DIMENSIONSLABEL] = {}
         bands = getMandatoryValue(DIMSPECTRALBANDS, ext)
@@ -200,8 +200,8 @@ class RasterData(dict):
             self['implementation'] = [DIMTEMPORALLAYER, DIMSPECTRALBANDS]            
         self[DIMENSIONSLABEL]['boundingbox'] = metadata[DIMENSIONSLABEL]['boundingbox']
         if not DIMXRASTER in self:
-            self.setItem(DIMXRASTER, {'extent' : [ float(xext[0]), float(xext[1])], 'unit' : 'meter', 'reference_system' : self['proj:epsg']} )
-            self.setItem(DIMYRASTER, {'extent' : [ float(yext[0]), float(yext[1])], 'unit' : 'meter', 'reference_system' : self['proj:epsg']} )        
+            self.setItem(DIMXRASTER, {'extent' : [ float(xext[0]), float(xext[1])], 'unit' : 'meter', 'reference_system' : self['proj']} )
+            self.setItem(DIMYRASTER, {'extent' : [ float(yext[0]), float(yext[1])], 'unit' : 'meter', 'reference_system' : self['proj']} )        
       
 
     def fromIlwisRaster(self, ilwisRaster, extraParams):
@@ -213,9 +213,11 @@ class RasterData(dict):
             rasterList = [ilwisRaster]            
             
         self.lastmodified = datetime.now()
-        self['id'] = ilwisRaster.ilwisID()
-        self['title'] = ilwisRaster.name()
-        if 'basename' in extraParams:
+        self['id'] = str(ilwisRaster.ilwisID())
+        n = ilwisRaster.name()
+        parts = n.split('.')
+        self['title'] = parts[0]
+        if not extraParams == None and 'basename' in extraParams:
             self['title'] = extraParams['basename'] + '_' + str(self['id'])
         self['description'] = "internally generated"
         self['license'] = "none"            
@@ -224,11 +226,16 @@ class RasterData(dict):
         self['type'] = 'data'
         self['links'] = ''
         ext = str(ilwisRaster.envelope())
-        csyLL = ilwis.CoordinateSystem("epsg:4326")
+        csyLL = ilwis.CoordinateSystem("code=epsg:4326")
         env = csyLL.convertEnvelope(ilwisRaster.coordinateSystem(), ilwisRaster.envelope())
         self['boundingbox'] = str(env)
-        epsg = extraParams['epsg']
-        self['proj:epsg'] = epsg
+        if not extraParams == None and 'epsg' in extraParams:
+            prj = extraParams['epsg']
+        else:
+            prj = ilwisRaster.coordinateSystem().toEpsg();            
+        self['proj'] = prj
+        if prj == '?':
+            self['proj'] = ilwisRaster.coordinateSystem().toProj4();
         self[TEMPORALEXTENT] = getValue(TEMPORALEXTENT, extraParams, [str(date.today()),str(date.today())])
         extparts = ext.split()
         x1 = float(extparts[0])
@@ -246,7 +253,7 @@ class RasterData(dict):
         count = 0
         self['implementation'] = [DIMSPECTRALBANDS, DIMTEMPORALLAYER]
 
-        if DIMSPECTRALBANDS in extraParams:
+        if extraParams != None and DIMSPECTRALBANDS in extraParams:
             for b in extraParams[DIMSPECTRALBANDS]:
                 band = RasterBand()
                 band['name'] = b['name']
@@ -270,9 +277,22 @@ class RasterData(dict):
                 band['label'] = band['name']
                 self.setItem(DIMSPECTRALBANDS, band)
 
-                count = count + 1                
+                count = count + 1 
+        else:
+            ilwRaster = rasterList[0]
+            z = ilwRaster.size().zsize
+            for b in range(0,z):
+                band = RasterBand()
+                band['commonbandname']  = band['name'] = 'band' + str(b)
+                band['type'] = 'float'            
+                band['label'] = band['name']
+                band['details'] = {'gsd' : rasterList[0].geoReference().pixelSize()}
+                band[BANDINDEX] = b
+                name = rasterList[0].name()
+                band[DATASOURCE] = name
+                self.setItem(DIMSPECTRALBANDS, band)
      
-        if TEMPORALEXTENT in extraParams:
+        if extraParams != None and TEMPORALEXTENT in extraParams:
             self.layerIndex = 0
             if 'textsublayers' in extraParams:
                 textsublayers = extraParams['textsublayers']
@@ -282,10 +302,23 @@ class RasterData(dict):
                 for index in range(0, len(textsublayers)):
                     layer = RasterLayer({DATASOURCE : '', TEMPORALEXTENT : textsublayers[index], LAYERINDEX : index + 1, 'eo:cloud_cover' : 0, 'label': str(textsublayers[index][1:-1]).replace("'", ""), 'reference_system' : 'Gregorian calendar / UTC', 'unit' : STATUSUNKNOWN})
                     self.setItem(DIMTEMPORALLAYER, layer)
+        else:
+            now = datetime.now()
+            date_string = now.strftime("%Y-%m-%dT%H:%M:%S")
+            time = [date_string, date_string]
+            layer = RasterLayer({DATASOURCE : 'all', TEMPORALEXTENT :  self[TEMPORALEXTENT], LAYERINDEX : 0, 'eo:cloud_cover' : 0, 'label' : str(time)[1:-1].replace("'", ""), 'reference_system' : 'Gregorian calendar / UTC', 'unit' : STATUSUNKNOWN})                    
+            self.setItem(DIMTEMPORALLAYER, layer)
+            name = rasterList[0].name()
+            layer = RasterLayer({DATASOURCE : '', TEMPORALEXTENT :  self[TEMPORALEXTENT], LAYERINDEX : 1, 'eo:cloud_cover' : 0, 'label' : str(time)[1:-1].replace("'", ""), 'reference_system' : 'Gregorian calendar / UTC', 'unit' : STATUSUNKNOWN})                    
+            self.setItem(DIMTEMPORALLAYER, layer)
+            parts = name.split('.')
+            self['dataSource'] = os.path.join(head, parts[0] + '.metadata')
+            self['dataFolder'] = os.path.join(head, parts[0])
+
         self[DIMENSIONSLABEL]['boundingbox'] = [float(i) for i in extparts]
         if not DIMXRASTER in self:
-            self.setItem(DIMXRASTER, {'extent' : [ float(extparts[0]), float(extparts[2])], 'unit' : 'meter', 'reference_system' : self['proj:epsg']} )
-            self.setItem(DIMYRASTER, {'extent' : [ float(extparts[1]), float(extparts[3])], 'unit' : 'meter', 'reference_system' : self['proj:epsg']} )
+            self.setItem(DIMXRASTER, {'extent' : [ float(extparts[0]), float(extparts[2])], 'unit' : 'meter', 'reference_system' : self['proj']} )
+            self.setItem(DIMYRASTER, {'extent' : [ float(extparts[1]), float(extparts[3])], 'unit' : 'meter', 'reference_system' : self['proj']} )
 
     def setItem(self, dimension, item):
         if not dimension in self[DIMENSIONSLABEL]:
@@ -347,8 +380,10 @@ class RasterData(dict):
             dictDef['summaries']['eo:cloud_cover'] = [0, self['eo:cloud_cover']]
         dictDef['eo:snow'] = [0,0]
         if 'eo:snow' in self:
-            dictDef['summaries']['eo:snow'] = [0, self['snow']]            
-        dictDef['summaries']['proj:epsg'] = { 'min' :self['proj:epsg'], 'max' : self['proj:epsg']} 
+            dictDef['summaries']['eo:snow'] = [0, self['snow']] 
+        dictDef['summaries']['proj:epsg'] = { 'min' : '?', 'max' : '?'}             
+        if self.projType() == 'epsg':           
+            dictDef['summaries']['proj:epsg'] = { 'min' :self['proj'], 'max' : self['proj']} 
 
         gsds = set()
         bandlist = []
@@ -395,8 +430,9 @@ class RasterData(dict):
                     }
         return toplvl_dict
     
-    def toMetadataFile(self, folder):  
-        filename = os.path.join(folder, self['id'] + ".metadata")
+    def toMetadataFile(self, folder, name=''): 
+        nm = self['id'] if name=='' else name 
+        filename = os.path.join(folder, nm)
         meta = copy.deepcopy(self)
         
 
@@ -409,7 +445,7 @@ class RasterData(dict):
     # translates the spatial extent to a json format. Used to translate a rasterdata instance to a dict
     def getJsonExtent(self):
         bbox = self['spatialExtent']
-        epsg = self['proj:epsg']
+        epsg = self['proj']
         lyr = self.idx2layer(0)
         if lyr == None:
             time = self[TEMPORALEXTENT]
@@ -598,6 +634,14 @@ class RasterData(dict):
         
         return None
 
+    def projType(self): 
+        if 'proj' in self and self['proj'] != None:
+            if str(self['proj']).find('+proj') != -1:
+                return 'proj4'
+            if self['proj'].isnumeric():
+                return 'epsg'
+        return '?'
+    
     def loadRaster(self, d):
         pdir = os.path.dirname(self['dataSource'])
         spath = os.path.join(pdir, self['dataFolder'], d[DATASOURCE] ) 
@@ -615,7 +659,12 @@ class RasterData(dict):
                 ilwRaster = self.loadRaster(item)
                 if ilwRaster:
                     data.append(ilwRaster)
-        return data              
+        return data
+
+    def matchProjection(self, otherRaster):
+        if 'proj' in otherRaster and 'proj' in self:
+            return self['proj'] == otherRaster['proj']
+        return False               
 
     def getImplementationDimension(self):
         return next(iter(self['implementation']))
@@ -647,7 +696,7 @@ class RasterData(dict):
             return result                          
 
     def createRasterDatafromBand(self, bands):
-        extra = { TEMPORALEXTENT : self[TEMPORALEXTENT], 'bands' : bands, 'epsg' : self['proj:epsg']}
+        extra = { TEMPORALEXTENT : self[TEMPORALEXTENT], 'bands' : bands, 'epsg' : self['proj']}
         extra['textsublayers'] = self.getLayersTempExtent()
         extra['rasterkeys'] = []
         rasters = []
@@ -723,7 +772,11 @@ class RasterBand(dict):
         if 'details' in self:
             if property in self['details']:
                 return self['details'][property]
-        return None            
+        return None  
+
+
+
+  
    
 class RasterLayer(dict):
     def fromMetadataFile(self, metadata, index):
@@ -767,4 +820,6 @@ def matchBands(existingBands : list, toBeCheckedBands : list):
             return False
 
     return True
+
+
     
