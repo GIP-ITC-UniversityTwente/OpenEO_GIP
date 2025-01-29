@@ -15,6 +15,8 @@ import jsonschema
 from jsonschema import validate
 import glob
 from rasterdata import RasterData
+import ilwis
+import shutil
 
 
 def find_sources(data):
@@ -64,7 +66,21 @@ def checkdata(folder, fpath):
     
     file_extension = os.path.splitext(fpath)[1]
     if file_extension != '.zip'and file_extension != '.gz':
-        return "uploaded file must be a tuple of data-file and a metadata file in zipped format"
+        if file_extension == '.tif' or file_extension == '.nc' :
+            ilwRaster = ilwis.RasterCoverage(fpath)
+            if ilwRaster:
+                raster = RasterData() 
+                raster.load(ilwRaster, 'ilwisraster')
+                globalsSingleton.insertRasterInDatabase(raster) 
+                globalsSingleton.saveIdDatabase() 
+                datafolder = raster['dataFolder']
+                if not os.path.exists(datafolder):
+                    os.makedirs(datafolder)
+                shutil.move(fpath, datafolder)
+                raster.toMetadataFile(folder, raster['title'] + '.metadata') 
+            else:            
+                return "uploaded file must be a tuple of data-file and a metadata file in zipped format"
+            
     if file_extension == '.gz':
         b = os.path.basename(fpath)
         parts = b.split('.')
@@ -104,15 +120,19 @@ class OpenEOUploadFile(AuthenticatedResource):
             err = globalsSingleton.errorJson('FilePathInvalid', -1,'')
             return make_response(jsonify(err),err['code']) 
         filename = os.path.basename(path)
+
+        dir = username + "/" + filename
         fpath = os.path.join(folder, filename)
+
         with open(fpath, 'wb') as f:
             f.write(binary_data)
+
+        file_size = os.path.getsize(fpath)
+        mod_time = os.path.getmtime(fpath)
+        mod_date = datetime.fromtimestamp(mod_time).strftime('%Y-%m-%d %H:%M:%S') 
+
         err = checkdata(folder, fpath)
         if err == "":
-            dir = username + "/" + filename
-            file_size = os.path.getsize(fpath)
-            mod_time = os.path.getmtime(fpath)
-            mod_date = datetime.fromtimestamp(mod_time).strftime('%Y-%m-%d %H:%M:%S')
             r = {'path' : dir, 'size' : file_size, 'modified' : mod_date}
             return make_response(r, 200) 
         return make_response(makeBaseResponseDict(-1, 'error', 404, None, err),400) 
