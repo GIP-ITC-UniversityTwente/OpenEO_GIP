@@ -89,14 +89,14 @@ class Globals :
                 items = self.internal_database.items()
        
         for item in items:
-            p = item[0]
-            if p == id:
+            if id == item[0] or id == item[1]['title']:
                 raster = item[1]
                 if not os.path.exists(raster['dataSource']): #virtual datasets with no real source
                     return RasterData(raster)
                 mttime = str(datetime.datetime.fromtimestamp(os.path.getmtime(raster['dataSource'])))
                 #if mttime == str(raster['lastmodified']):
                 return RasterData(raster)
+
         return None        
     
     def saveIdDatabase(self):
@@ -111,7 +111,7 @@ class Globals :
         cp_db = {}
         #keys SYNTHETIC_DATA may not be saved as they contain a 'unpickable' member and are generated anyway
         for key,value in self.internal_database.items():
-            if key.find('SYNTHETIC_DATA') == -1:
+            if str(key).find('SYNTHETIC_DATA') == -1:
                 cp_db[key] = value
 
         s = json.dumps(cp_db, default=str) 
