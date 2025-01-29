@@ -32,7 +32,8 @@ class ArrayElementOperation(OpenEoOperation):
             if isinstance(inpData[0], RasterData):
                 idx = self.findBandIndex(toServer, job_id, inpData[0], arguments )
                 if idx == -1:
-                    self.handleError(toServer, job_id, 'band label or index',"label or index can't be found", 'ProcessParameterInvalid')
+                    v = str(arguments['label']['resolved'])
+                    self.handleError(toServer, job_id, 'band label or index',"label or index can't be found: " + v, 'ProcessParameterInvalid')
                 self.inputRasters = inpData                
                 self.bandIndex = idx  
             
