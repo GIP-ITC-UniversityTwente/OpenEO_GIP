@@ -15,15 +15,15 @@ class Count(OpenEoOperation):
 
     def prepare(self, arguments):
         self.runnable = False
-        if 'serverChannel' in arguments:
-                toServer = arguments['serverChannel']
-                job_id = arguments['job_id']
+        toServer, job_id = self.getDefaultArgs(arguments) 
+        self.logStartPrepareOperation(job_id)                
         self.data = arguments['data']['resolved']
         if not isinstance(self.data, list):
             self.handleError(toServer, job_id, 'Input data',"Input data must be a array/list", 'ProcessParameterInvalid')
         self.condition = arguments['condition']['resolved']
             
-        self.runnable = True           
+        self.runnable = True 
+        self.logEndPrepareOperation(job_id)                
 
     def run(self,openeojob, processOutput, processInput):
         if self.runnable:

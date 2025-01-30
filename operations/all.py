@@ -11,9 +11,8 @@ class All(OpenEoOperation):
 
     def prepare(self, arguments):
         self.runnable = False 
-        if 'serverChannel' in arguments:
-            toServer = arguments['serverChannel']
-            job_id = arguments['job_id']        
+        toServer, job_id = self.getDefaultArgs(arguments) 
+        self.logStartPrepareOperation(job_id)                   
         if 'data' in arguments and isinstance(arguments['data']['resolved'], list):
             self.data = arguments['data']['resolved']
             for b in self.data:
@@ -22,6 +21,8 @@ class All(OpenEoOperation):
             self.runnable = True
         else:
             self.handleError(toServer, job_id, 'Input list','Input must be a list', 'ProcessParameterInvalid')
+
+        self.logEndPrepareOperation(job_id)            
 
     def run(self,openeojob, processOutput, processInput):
         if self.runnable:

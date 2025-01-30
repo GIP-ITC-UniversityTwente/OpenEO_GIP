@@ -326,20 +326,34 @@ class OpenEoOperation:
 
          return extra
     
+    def getDefaultArgs(self, arguments):
+          toServer = ''
+          job_id = ''
+          if 'serverChannel' in arguments:
+            toServer = arguments['serverChannel']
+            job_id = arguments['job_id']
+          return toServer, job_id
+                
     def logProgress(self, processOutput, job_id, message,  status, progress=0, ids = []):
         timenow = str(datetime.now())
         log = {'type' : 'progressevent', 'job_id': job_id, 'progress' : message , 'last_updated' : timenow, 'status' : status, 'progress' : progress, 'current_operation' : self.name, 'objectids' : ids }   
         put2Queue(processOutput, log)
     
+    def logStartPrepareOperation(self, jobid):
+        common.logMessage(logging.INFO, self.name + " started prepare. job name:" + jobid,common.process_user)
+
+    def logEndPrepareOperation(self, jobid):
+        common.logMessage(logging.INFO, self.name + " ended prepare. with job name:" + jobid,common.process_user)        
+
     def logStartOperation(self, processOutput,openeojob, extraMessage=""):
-        common.logMessage(logging.INFO, 'started: ' + self.name + " with job name:" + openeojob.title,common.process_user)
+        common.logMessage(logging.INFO, self.name + " started run. with job name:" + openeojob.title,common.process_user)
         if extraMessage == "":
             return self.logProgress(processOutput, openeojob.job_id, self.name ,constants.STATUSRUNNING, 0)
         else:
             return self.logProgress(processOutput, openeojob.job_id, self.name + ": " + extraMessage ,constants.STATUSRUNNING, 0)
 
     def logEndOperation(self, processOutput,openeojob, outputs = None, extraMessage=""):
-        common.logMessage(logging.INFO, 'ended: ' + self.name + " with job name:" + openeojob.title, common.process_user)
+        common.logMessage(logging.INFO,self.name + " ended run. with job name:" + openeojob.title, common.process_user)
         if extraMessage == "":
             return self.logProgress(processOutput, openeojob.job_id, 'finished ' + self.name,constants.STATUSFINISHED,100, common.ilwobj_created_ids)
         else:

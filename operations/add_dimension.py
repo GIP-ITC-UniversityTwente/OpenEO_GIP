@@ -11,9 +11,9 @@ class AddDimension(OpenEoOperation):
 
     def prepare(self, arguments):
         self.runnable = False
-        if 'serverChannel' in arguments:
-                toServer = arguments['serverChannel']
-                job_id = arguments['job_id']
+
+        toServer, job_id = self.getDefaultArgs(arguments) 
+        self.logStartPrepareOperation(job_id)                
         dimname = arguments['name']['resolved']
         dimname = self.mapname(dimname)                
         rasters = arguments['data']['resolved']
@@ -27,7 +27,8 @@ class AddDimension(OpenEoOperation):
         self.labels = arguments['label']['resolved']
         self.rasters = rasters
                    
-        self.runnable = True           
+        self.runnable = True
+        self.logEndPrepareOperation(job_id)                    
 
     def run(self,openeojob, processOutput, processInput):
         if self.runnable:

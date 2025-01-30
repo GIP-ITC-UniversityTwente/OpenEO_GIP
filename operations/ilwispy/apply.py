@@ -14,6 +14,8 @@ class ApplyOperation(OpenEoOperation):
 
     def prepare(self, arguments):
         self.runnable = True
+        toServer, job_id = self.getDefaultArgs(arguments) 
+        self.logStartPrepareOperation(job_id)        
         self.apply = arguments['process']['base']
         self.pgraph = self.apply['process_graph']
         rootNode = next(iter(self.pgraph))
@@ -22,7 +24,8 @@ class ApplyOperation(OpenEoOperation):
         for key, value in args.items(): 
             if isinstance(value, dict) and 'from_parameter' in value:
                 self.args = { key : arguments['data']}
-             
+                
+        self.logEndPrepareOperation(job_id)      
 
 
     def run(self,openeojob, processOutput, processInput):

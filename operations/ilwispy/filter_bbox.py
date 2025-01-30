@@ -10,9 +10,8 @@ class FilterBBox(OpenEoOperation):
 
         def prepare(self, arguments):
                 self.runnable = False
-                if 'serverChannel' in arguments:
-                        toServer = arguments['serverChannel']
-                        job_id = arguments['job_id']
+                toServer, job_id = self.getDefaultArgs(arguments) 
+                self.logStartPrepareOperation(job_id)   
                 self.data = self.getMandatoryParam(toServer, job_id, arguments, 'data')
                 
                 if len(self.data) == 0:
@@ -45,6 +44,7 @@ class FilterBBox(OpenEoOperation):
                 rband = self.data.getRaster()
                 self.checkOverlap(toServer, job_id, self.env, rband.envelope())
                 self.runnable = True
+                self.logEndPrepareOperation(job_id)
 
 
 

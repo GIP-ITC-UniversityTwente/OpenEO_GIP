@@ -12,9 +12,8 @@ class MaskOperation(OpenEoOperation):
 
     def prepare(self, arguments):
         self.runnable = False
-        if 'serverChannel' in arguments:
-            toServer = arguments['serverChannel']
-            job_id = arguments['job_id']
+        toServer, job_id = self.getDefaultArgs(arguments) 
+        self.logStartPrepareOperation(job_id) 
 
         self.rasterSizesEqual = True                     
         dataRasters = arguments['data']['resolved'] 
@@ -46,6 +45,7 @@ class MaskOperation(OpenEoOperation):
         self.createExtra(self.rasters[0]['data']) 
         setWorkingCatalog(self.rasters[0]['data'])                                                                
         self.runnable = True
+        self.logEndPrepareOperation(job_id)           
 
 
     def run(self,openeojob, processOutput, processInput):

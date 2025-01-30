@@ -10,16 +10,16 @@ class ArrayCreate(OpenEoOperation):
 
     def prepare(self, arguments):
         self.runnable = False
-        if 'serverChannel' in arguments:
-                toServer = arguments['serverChannel']
-                job_id = arguments['job_id']
+        toServer, job_id = self.getDefaultArgs(arguments) 
+        self.logStartPrepareOperation(job_id)                
         self.array = arguments['data']['resolved'] 
         self.repeat = 1
         if 'repeat' in arguments:
             self.repeat = arguments['repeat']['resolved']
 
                   
-        self.runnable = True           
+        self.runnable = True
+        self.logEndPrepareOperation(job_id)                    
 
     def run(self,openeojob, processOutput, processInput):
         if self.runnable:

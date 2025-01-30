@@ -11,13 +11,13 @@ class Int(OpenEoOperation):
 
     def prepare(self, arguments):
         self.runnable = False
-        if 'serverChannel' in arguments:
-            toServer = arguments['serverChannel']
-            job_id = arguments['job_id']        
+        toServer, job_id = self.getDefaultArgs(arguments) 
+        self.logStartPrepareOperation(job_id)       
         self.value = arguments['x']['resolved']
         if not isinstance(self.value, numbers.Number):
             self.handleError(toServer, job_id, "x", "Value is not a number " + str(self.value), 'ProcessParameterInvalid')         
-        self.runnable = True           
+        self.runnable = True
+        self.logEndPrepareOperation(job_id)            
 
     def run(self,openeojob, processOutput, processInput):
         if self.runnable:

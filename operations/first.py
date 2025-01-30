@@ -10,12 +10,15 @@ class First(OpenEoOperation):
 
     def prepare(self, arguments):
         self.runnable = False
+        toServer, job_id = self.getDefaultArgs(arguments)
+        self.logStartPrepareOperation(job_id)  
         self.array = arguments['data']['resolved']
         self.ignore_data = True
         if 'ignore_data' in arguments:
             self.ignore_data = arguments['igonre_data']['resolved']
                  
-        self.runnable = True           
+        self.runnable = True  
+        self.logEndPrepareOperation(job_id)          
 
     def run(self,openeojob, processOutput, processInput):
         if self.runnable:

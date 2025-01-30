@@ -10,7 +10,10 @@ class Pi(OpenEoOperation):
                         
 
     def prepare(self, arguments):
-        self.runnable = True           
+        toServer, job_id = self.getDefaultArgs(arguments) 
+        self.logStartPrepareOperation(job_id)            
+        self.runnable = True 
+        self.logEndPrepareOperation(job_id)           
 
     def run(self,openeojob, processOutput, processInput):
         if self.runnable:

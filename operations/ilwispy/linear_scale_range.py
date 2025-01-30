@@ -12,9 +12,8 @@ class LinearScaleRangeOperation(OpenEoOperation):
 
     def prepare(self, arguments):
         self.runnable = True
-        if 'serverChannel' in arguments:
-            toServer = arguments['serverChannel']
-            job_id = arguments['job_id']
+        toServer, job_id = self.getDefaultArgs(arguments) 
+        self.logStartPrepareOperation(job_id) 
 
         self.rasterSizesEqual = True
         self.inpMax = arguments['inputMax']['resolved']
@@ -32,7 +31,7 @@ class LinearScaleRangeOperation(OpenEoOperation):
         setWorkingCatalog( raster)
         self.inputRaster = raster.getRaster()
         self.createExtra(raster, 0) 
-        return ""
+        self.logEndPrepareOperation(job_id) 
               
 
     def run(self,openeojob, processOutput, processInput):

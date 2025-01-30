@@ -12,11 +12,14 @@ class SaveResultOperation(OpenEoOperation):
         self.kind = constants.PDPREDEFINED
 
     def prepare(self, arguments):
+        toServer, job_id = self.getDefaultArgs(arguments) 
+        self.logStartPrepareOperation(job_id)
         self.runnable = False
         self.format = arguments['format']['resolved']
         self.data = arguments['data']['resolved']
         self.options = arguments['options']['resolved']
         self.runnable = True
+        self.logEndPrepareOperation(job_id) 
 
               
 

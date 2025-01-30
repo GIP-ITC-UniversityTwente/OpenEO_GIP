@@ -86,7 +86,7 @@ def setTestRaster(dims, bndcount = 1, version = 0):
     url.replace('////', '///') # if at all
     path = url.split('//')
     folder = os.path.dirname("/"+ path[1])
-    common.logMessage(logging.INFO, 'new working folder:' + folder + '>>' + str(url)) 
+    common.logMessage(logging.INFO, 'new working folder:' + folder) 
     path = Path(folder).as_uri()
     ilwis.setWorkingCatalog(path)  
 

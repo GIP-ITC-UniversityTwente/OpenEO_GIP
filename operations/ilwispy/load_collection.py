@@ -103,11 +103,8 @@ class LoadCollectionOperation(OpenEoOperation):
     def prepare(self, arguments):
         self.runnable = False 
         toServer = None
-        job_id = None
-        if 'serverChannel' in arguments:
-            toServer = arguments['serverChannel']
-            job_id = arguments['job_id']
-        common.logMessage(logging.INFO, 'fetching raster id from database: ' + str(arguments['id']['resolved']))
+        toServer, job_id = self.getDefaultArgs(arguments) 
+        self.logStartPrepareOperation(job_id) 
         fileIdDatabase = getRasterDataSets()
         # the requested data could not be found on the server
         rd = self.id2Raster(fileIdDatabase, arguments['id']['resolved'])
@@ -186,7 +183,7 @@ class LoadCollectionOperation(OpenEoOperation):
             
         self.runnable = True
         self.rasterSizesEqual = True
-        common.logMessage(logging.INFO, 'done preparing input data' + str(arguments['id']['resolved']))
+        self.logEndPrepareOperation(job_id)
  
     # unpacks primairy satelite data. creates a metadata file that represents the file and 
     # creates a folder where all the unpacked binary data of the satellite data resides. The orignal

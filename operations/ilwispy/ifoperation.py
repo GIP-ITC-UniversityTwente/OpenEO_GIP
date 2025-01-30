@@ -32,14 +32,14 @@ class IfOperation(OpenEoOperation):
         def prepare(self, arguments):
                 ##TODO
                 self.runnable = False
-                if 'serverChannel' in arguments:
-                        toServer = arguments['serverChannel']
-                        job_id = arguments['job_id']
+                toServer, job_id = self.getDefaultArgs(arguments) 
+                self.logStartPrepareOperation(job_id) 
                 condition = arguments['value']['resolved']
                 p1 = arguments['accept']['resolved']
                 p2 = arguments['reject']['resolved']
                 self.parmValue1 = self.checkArgument(p1)
                 self.parmValue2 = self.checkArgument(p2)
+                self.logEndPrepareOperation(job_id) 
         
 
         def run(self,openeojob, processOutput, processInput):

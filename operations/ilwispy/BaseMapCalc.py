@@ -9,9 +9,8 @@ class BaseUnarymapCalc(OpenEoOperation):
         self.runnable = False
         self.rasterSizesEqual = True
                 
-        if 'serverChannel' in arguments:
-            toServer = arguments['serverChannel']
-            job_id = arguments['job_id']  
+        toServer, job_id = self.getDefaultArgs(arguments) 
+        self.logStartPrepareOperation(job_id) 
       
         p1 = self.getMandatoryParam(toServer, job_id, arguments, 'x|p')
         if isinstance(p1, list):
@@ -32,7 +31,8 @@ class BaseUnarymapCalc(OpenEoOperation):
         self.dimension = self.getOptionalParam(toServer, job_id, arguments, 'dimension')
         if self.operation in ['pow']:
             self.operation = 'power'
-        self.runnable = True                                      
+        self.runnable = True 
+        self.logEndPrepareOperation(job_id)                                              
                 
 
     def base_run(self,openeojob, processOutput, processInput):
@@ -61,6 +61,8 @@ class BaseUnarymapCalc(OpenEoOperation):
     
 class BaseBinarymapCalcBase(OpenEoOperation):
     def base_prepare(self, arguments, oper):
+        toServer, job_id = self.getDefaultArgs(arguments) 
+        self.logStartPrepareOperation(job_id)         
         self.runnable = False
         self.rasterSizesEqual = True
         if 'serverChannel' in arguments:
@@ -89,7 +91,8 @@ class BaseBinarymapCalcBase(OpenEoOperation):
                 self.handleError(toServer,job_id, 'band math', "the parameter a is not a number in operation", 'ProcessParameterInvalid')
         
         self.runnable = True
-        self.operation = oper                           
+        self.operation = oper
+        self.logEndPrepareOperation(job_id)                            
             
         
     def base_prepare2(self, arguments, oper):

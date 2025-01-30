@@ -10,9 +10,8 @@ class Between(OpenEoOperation):
 
     def prepare(self, arguments):
         self.runnable = False
-        if 'serverChannel' in arguments:
-                toServer = arguments['serverChannel']
-                job_id = arguments['job_id']
+        toServer, job_id = self.getDefaultArgs(arguments) 
+        self.logStartPrepareOperation(job_id)                
         self.min = arguments['min']['resolved']
         self.max = arguments['max']['resolved']
         self.value = arguments['x']['resolved']
@@ -22,7 +21,8 @@ class Between(OpenEoOperation):
         if 'exclude_max' in arguments:
              self.exclude_max = arguments['exclude_max']['resolved']
                   
-        self.runnable = True           
+        self.runnable = True   
+        self.logEndPrepareOperation(job_id)       
 
     def run(self,openeojob, processOutput, processInput):
         if self.runnable:

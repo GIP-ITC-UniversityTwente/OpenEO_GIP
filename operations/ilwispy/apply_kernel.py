@@ -13,9 +13,8 @@ class ApplyKernel(OpenEoOperation):
     def prepare(self, arguments):
         self.runnable = True
      
-        if 'serverChannel' in arguments:
-            toServer = arguments['serverChannel']
-            job_id = arguments['job_id']
+        toServer, job_id = self.getDefaultArgs(arguments) 
+        self.logStartPrepareOperation(job_id)   
         self.data = arguments['data']['resolved']
         self.kernel = arguments['kernel']['resolved']
         self.replaceInvalid = arguments['replace_invalid']['resolved']
@@ -39,7 +38,8 @@ class ApplyKernel(OpenEoOperation):
                 if self.lenRows != lr:
                   self.handleError(toServer, job_id, "kernel", "Kernel row sizes must be equal", 'ProcessParameterInvalid')                  
         self.rasterSizesEqual = True
-        self.createExtra(self.data[0], False) 
+        self.createExtra(self.data[0], False)
+        self.logEndPrepareOperation(job_id)  
              
 
 

@@ -11,9 +11,12 @@ class Is_Nan(OpenEoOperation):
 
     def prepare(self, arguments):
         self.runnable = False
+        toServer, job_id = self.getDefaultArgs(arguments) 
+        self.logStartPrepareOperation(job_id)         
         self.value = arguments['x']['resolved']
                    
-        self.runnable = True           
+        self.runnable = True 
+        self.logEndPrepareOperation(job_id)           
 
     def run(self,openeojob, processOutput, processInput):
         if self.runnable:

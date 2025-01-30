@@ -10,7 +10,11 @@ class E(OpenEoOperation):
                         
 
     def prepare(self, arguments):
-        self.runnable = True           
+        self.runnable = True
+        toServer, job_id = self.getDefaultArgs(arguments)
+        self.logStartPrepareOperation(job_id)  
+        self.logEndPrepareOperation(job_id) 
+                                            
 
     def run(self,openeojob, processOutput, processInput):
         if self.runnable:

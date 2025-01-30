@@ -12,9 +12,8 @@ class NormalizedDifference(OpenEoOperation):
 
     def prepare(self, arguments):
         self.runnable = False
-        if 'serverChannel' in arguments:
-            toServer = arguments['serverChannel']
-            job_id = arguments['job_id']        
+        toServer, job_id = self.getDefaultArgs(arguments) 
+        self.logStartPrepareOperation(job_id)       
         self.rasterSizesEqual = True
         self.inputRaster1 = arguments['x']['resolved']
         self.inputRaster2 = arguments['y']['resolved']
@@ -28,6 +27,7 @@ class NormalizedDifference(OpenEoOperation):
         self.createExtra(self.inputRaster1[0], 0) 
         setWorkingCatalog(self.inputRaster1[0]) 
         self.runnable = True
+        self.logEndPrepareOperation(job_id)         
               
 
     def run(self,openeojob, processOutput, processInput):

@@ -13,9 +13,8 @@ class ArrayApply(OpenEoOperation):
 
     def prepare(self, arguments):
         self.runnable = False
-        if 'serverChannel' in arguments:
-                toServer = arguments['serverChannel']
-                job_id = arguments['job_id']
+        toServer, job_id = self.getDefaultArgs(arguments) 
+        self.logStartPrepareOperation(job_id)                
         data = arguments['data']['resolved']
         if not isinstance(data, list) and not isinstance(data, numpy.array):
              self.handleError(toServer, job_id, 'data','Not an array(like) object', 'ProcessParameterInvalid')

@@ -106,9 +106,8 @@ class AggregateTemporal(OpenEoOperation):
 
     def prepare(self, arguments):
         self.runnable = False
-        if 'serverChannel' in arguments:
-            toServer = arguments['serverChannel']
-            job_id = arguments['job_id']
+        toServer, job_id = self.getDefaultArgs(arguments) 
+        self.logStartPrepareOperation(job_id)
         self.inputRaster = arguments['data']['resolved']
         self.dates = arguments['intervals']['resolved']
         if len(self.dates) == 0:
@@ -149,7 +148,8 @@ class AggregateTemporal(OpenEoOperation):
             if isinstance(value, dict) and 'from_parameter' in value:
                 self.args[key] =  arguments['data']                    
 
-        self.runnable = True                
+        self.runnable = True 
+        self.logEndPrepareOperation(job_id)                       
 
 
     def run(self,openeojob, processOutput, processInput):
@@ -220,9 +220,8 @@ class AggregateTemporalPeriod(AggregateTemporal):
     
     def prepare(self, arguments):
         self.runnable = False
-        if 'serverChannel' in arguments:
-            toServer = arguments['serverChannel']
-            job_id = arguments['job_id']        
+        toServer, job_id = self.getDefaultArgs(arguments) 
+        self.logStartPrepareOperation(job_id)      
         inputRaster = arguments['data']['resolved']
         raster = inputRaster[0]
         tempExtent = raster[TEMPORALEXTENT]
@@ -245,7 +244,8 @@ class AggregateTemporalPeriod(AggregateTemporal):
 
 
         arguments['intervals'] = {'base' : period, 'resolved' : periods}
-        super().prepare(arguments)            
+        super().prepare(arguments)
+        self.logEndPrepareOperation(job_id)             
 
 
 

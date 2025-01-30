@@ -12,10 +12,8 @@ class ArrayConcat(OpenEoOperation):
 
     def prepare(self, arguments):
         self.runnable = False
-        if 'serverChannel' in arguments:
-                toServer = arguments['serverChannel']
-                job_id = arguments['job_id']
-
+        toServer, job_id = self.getDefaultArgs(arguments) 
+        self.logStartPrepareOperation(job_id)
         self.targetRaster = None                
         self.sourceRaster = None 
         self.resampleNeeded = False
@@ -58,7 +56,8 @@ class ArrayConcat(OpenEoOperation):
             self.array2 = list2
             self.array1 = list1
                   
-        self.runnable = True           
+        self.runnable = True 
+        self.logEndPrepareOperation(job_id)                  
 
     def run(self,openeojob, processOutput, processInput):
         if self.runnable:

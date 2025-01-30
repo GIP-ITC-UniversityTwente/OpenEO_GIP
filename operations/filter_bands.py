@@ -10,10 +10,9 @@ class FilterBands(OpenEoOperation):
     def prepare(self, arguments):
         self.runnable = False 
         self.bandsByWavelength = []    
-        selectedBands = []   
-        if 'serverChannel' in arguments:
-            toServer = arguments['serverChannel']
-            job_id = arguments['job_id']
+        selectedBands = []  
+        toServer, job_id = self.getDefaultArgs(arguments) 
+        self.logStartPrepareOperation(job_id)              
         self.inpData = arguments['data']['resolved']
         if len(self.inpData) == 0:
             message =  "invalid input. Number of rasters is 0 in operation:" + self.name
@@ -62,7 +61,8 @@ class FilterBands(OpenEoOperation):
                 name = sb['name']
                 if not name in names:
                     self.selectedBands.append(sb)
-            self.runnable = True                                 
+            self.runnable = True 
+            self.logEndPrepareOperation(job_id)                                 
                 
 
     def run(self,openeojob , processOutput, processInput):

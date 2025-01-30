@@ -13,9 +13,8 @@ class RasterCalc(OpenEoOperation):
         self.kind = constants.PDPREDEFINED
 
     def prepare(self, arguments):
-        if 'serverChannel' in arguments:
-            toServer = arguments['serverChannel']
-            job_id = arguments['job_id']
+        toServer, job_id = self.getDefaultArgs(arguments) 
+        self.logStartPrepareOperation(job_id)   
         self.finalRasters = {}
         if isinstance(arguments['v']['resolved'], dict):
             rasterParms = list(arguments['v']['resolved'].items())
@@ -48,6 +47,7 @@ class RasterCalc(OpenEoOperation):
         self.createExtra(firstRaster[0], basename=self.name) 
         setWorkingCatalog(firstRaster[0]) 
         self.runnable = True
+        self.logEndPrepareOperation(job_id)
     
              
 

@@ -12,9 +12,8 @@ class Quantiles(OpenEoOperation):
 
     def prepare(self, arguments):
         self.runnable = False
-        if 'serverChannel' in arguments:
-            toServer = arguments['serverChannel']
-            job_id = arguments['job_id']
+        toServer, job_id = self.getDefaultArgs(arguments) 
+        self.logStartPrepareOperation(job_id) 
 
         self.array = self.getMandatoryParam(toServer, job_id, arguments, 'data')
         self.probabilities = self.getMandatoryParam(toServer, job_id, arguments,'probabilities')
@@ -33,7 +32,8 @@ class Quantiles(OpenEoOperation):
         if 'ignore_nodata' in arguments:
             self.ignore_nodata = arguments['ignore_nodata']['resolved']
      
-        self.runnable = True           
+        self.runnable = True
+        self.logEndPrepareOperation(job_id)                     
 
     def run(self,openeojob, processOutput, processInput):
         if self.runnable:

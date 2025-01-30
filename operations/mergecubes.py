@@ -13,9 +13,8 @@ class MergeCubes(OpenEoOperation):
 
     def prepare(self, arguments):
         self.runnable = False
-        if 'serverChannel' in arguments:
-            toServer = arguments['serverChannel']
-            job_id = arguments['job_id'] 
+        toServer, job_id = self.getDefaultArgs(arguments) 
+        self.logStartPrepareOperation(job_id)
         self.rasterSizesEqual = True                     
         self.targetRasters = arguments['cube1']['resolved'] 
         self.mergeRasters = arguments['cube2']['resolved']
@@ -26,7 +25,8 @@ class MergeCubes(OpenEoOperation):
         self.checkSublayerCount(toServer, job_id, self.mergeRasters, fixedCount)
         self.mergeCases = self.checkMergeConditions(toServer, job_id) 
                                     
-        self.runnable = True 
+        self.runnable = True
+        self.logEndPrepareOperation(job_id)  
 
     def checkMergeConditions(self, toServer, job_id):
         mergeCases = []

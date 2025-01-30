@@ -13,6 +13,8 @@ class ReduceDimensionsOperation(OpenEoOperation):
         self.kind = constants.PDPREDEFINED
 
     def prepare(self, arguments):
+        toServer, job_id = self.getDefaultArgs(arguments) 
+        self.logStartPrepareOperation(job_id) 
         self.runnable = False
         self.reducer= arguments['reducer']['resolved']
         self.dimension = arguments['dimension']['resolved']
@@ -24,7 +26,7 @@ class ReduceDimensionsOperation(OpenEoOperation):
             if isinstance(value, dict) and 'from_parameter' in value:
                 self.args[key] =  arguments['data']
         self.runnable = True
-        return ""
+        self.logEndPrepareOperation(job_id)
               
 
     def run(self,openeojob, processOutput, processInput):

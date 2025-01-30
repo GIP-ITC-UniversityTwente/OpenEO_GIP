@@ -718,9 +718,6 @@ class RasterData(dict):
 
     def dataFolder(self):
         if 'dataFolder' in self:
-            common.logMessage(logging.INFO, '>>>>>>>>' + self['dataFolder'] + " "  + self['dataSource']) 
-            
-        if 'dataFolder' in self:
             fpath = self['dataFolder']
             if ( fpath.find('/')) == 0:
                 return fpath
