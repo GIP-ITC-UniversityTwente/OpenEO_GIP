@@ -61,7 +61,8 @@ class RasterCalc(OpenEoOperation):
             outputs.append(outputRc)
             common.registerIlwisIds(outputs)  
             outputRasters.extend(self.makeOutput(outputs, self.extra))
-            out =  createOutput(constants.STATUSFINISHED, outputRasters, constants.DTRASTER)              
+            out =  createOutput(constants.STATUSFINISHED, outputRasters, constants.DTRASTER)    
+            self.logEndOperation(processOutput, openeojob)          
             return out
         
         return createOutput('error', "operation not runnable", constants.DTERROR)

@@ -252,9 +252,9 @@ class ProcessManager:
         with open(filepath, 'r') as fp:
             lines = fp.readlines()
             lineCount = len(lines)
-        if lineCount > 1000:         
+        if lineCount > 5000:         
             with open(filepath, 'w') as fp:
-                limit  = 500
+                limit  = 1000
                 for number, line in enumerate(lines):
                     if number > limit:
                         fp.write(line) 
@@ -299,6 +299,7 @@ class ProcessManager:
                 # for the moment not relevant
                 self.dumpProcessTables()
                 self.removeTemps()
+                self.reduceLogFile()
                 startTimerDump = endTimer
 
             delta = endTimer - startTimerCheckTokens
