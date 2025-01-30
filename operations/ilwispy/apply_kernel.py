@@ -25,7 +25,7 @@ class ApplyKernel(OpenEoOperation):
                 self.handleError(toServer, job_id, "data", "All data must be rasterdata", 'ProcessParameterInvalid')
         if len(self.kernel) % 2 != 1:
             self.handleError(toServer, job_id, "kernel", "Kernel column size must be odd", 'ProcessParameterInvalid')
-        setWorkingCatalog(rd)
+        setWorkingCatalog(rd, self.name)
         self.lenRows = -1
         self.lenColumns = len(self.kernel)
         for arr in self.kernel:

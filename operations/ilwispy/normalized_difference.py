@@ -25,7 +25,7 @@ class NormalizedDifference(OpenEoOperation):
                 self.handleError(toServer, job_id, 'Input raster','invalid input. rasters are not valid', 'ProcessParameterInvalid')
         
         self.createExtra(self.inputRaster1[0], 0) 
-        setWorkingCatalog(self.inputRaster1[0]) 
+        setWorkingCatalog(self.inputRaster1[0], self.name) 
         self.runnable = True
         self.logEndPrepareOperation(job_id)         
               

@@ -25,7 +25,7 @@ class LoadCollectionOperation(OpenEoOperation):
         self.lyrIdxs = []
 
     def unpackOriginalData(self, data, folder):
-        common.logMessage(logging.INFO, 'unpacking original data using eoreader')
+        common.logMessage(logging.INFO, self.name + ' unpacking original data using eoreader')
         reader = Reader()
         prod = reader.open(data)
         prod.output = folder
@@ -57,7 +57,7 @@ class LoadCollectionOperation(OpenEoOperation):
                 src = os.path.join(origin, file_name)
                 tar = os.path.join(unpack_folder, file_name)
                 shutil.copy(src, tar)
-        common.logMessage(logging.INFO, 'done unpacking original data')
+        common.logMessage(logging.INFO, self.name + ' done unpacking original data')
         return sourceList, unpackFolderName
 
     def clean_tmp(self, tmp_path):
@@ -123,7 +123,7 @@ class LoadCollectionOperation(OpenEoOperation):
                 self.logProgress(toServer, job_id,"load collection : transforming data", constants.STATUSRUNNING)  
                 folder = self.transformOriginalData(fileIdDatabase, folder, oldFolder)                  
             
-        common.logMessage(logging.INFO, 'checking the bands parameter value')   
+        common.logMessage(logging.INFO, self.name + ' checking the bands parameter value')   
         if 'bands'in arguments :
             if arguments['bands']['resolved'] != None: #translate band names to indexes as they are easier to work with
                 self.bandIdxs = self.inputRaster.getBandIndexes(arguments['bands']['resolved'])
@@ -131,7 +131,7 @@ class LoadCollectionOperation(OpenEoOperation):
                 self.bandIdxs.append(0)
         else: # default all bands
             self.bandIdxs = self.inputRaster.getBandIndexes([])
-        common.logMessage(logging.INFO, 'checking the temporal extent parameter value')   
+        common.logMessage(logging.INFO, self.name + ' checking the temporal extent parameter value')   
         if 'temporal_extent' in arguments:
             # if there is no overlap between temporal extent given and the temporal extent of the actual data
             # an error will thrown as no processing is possible
@@ -141,9 +141,9 @@ class LoadCollectionOperation(OpenEoOperation):
             self.lyrIdxs = self.inputRaster.getLayerIndexes(arguments['temporal_extent']['resolved'])
             # else:
             #     self.lyrIdxs.append(0)  
-        path = setWorkingCatalog(self.inputRaster)
+        path = setWorkingCatalog(self.inputRaster, self.name)
 
-        common.logMessage(logging.INFO, 'checking the spatial extent parameter value')  
+        common.logMessage(logging.INFO, self.name + ' checking the spatial extent parameter value')  
         if 'spatial_extent' in arguments:
             sect = arguments['spatial_extent']['resolved']
             if sect != None:
@@ -189,7 +189,7 @@ class LoadCollectionOperation(OpenEoOperation):
     # creates a folder where all the unpacked binary data of the satellite data resides. The orignal
     # data will be moved to a seperate folder and no longer be visible to the system
     def transformOriginalData(self, fileIdDatabase, folder, oldFolder):
-        common.logMessage(logging.INFO, 'unpacking original data to a metadata format: ' + str(self.inputRaster['dataSource']))                 
+        common.logMessage(logging.INFO, self.name + ' unpacking original data to a metadata format: ' + str(self.inputRaster['dataSource']))                 
         self.dataSource = self.inputRaster['dataSource']
 
         # unpck the original data. EOReader will do this an create a folder where all the data resides
@@ -204,7 +204,7 @@ class LoadCollectionOperation(OpenEoOperation):
         self.dataSource = folder
         newDataSource = self.inputRaster.toMetadataFile(oldFolder)
         # move the original data to a folder 'original_data'. It is now invisble to the system
-        common.logMessage(logging.INFO, 'move original data to a backup folder: ' + str(self.inputRaster['dataSource']))   
+        common.logMessage(logging.INFO, self.name + ' move original data to a backup folder: ' + str(self.inputRaster['dataSource']))   
         mvfolder = os.path.join(oldFolder, 'original_data')
         file_name = os.path.basename(self.inputRaster['dataSource'])
         common.makeFolder(mvfolder)
@@ -212,7 +212,7 @@ class LoadCollectionOperation(OpenEoOperation):
         #internal databse up to tdata to reflect the new (transformed) data
         self.inputRaster['dataSource'] = newDataSource
         fileIdDatabase[self.inputRaster['id']] = self.inputRaster
-        common.logMessage(logging.INFO, 'update file id database')  
+        common.logMessage(logging.INFO, self.name + ' update file id database')  
         saveIdDatabase(fileIdDatabase)
         return folder
     
@@ -302,7 +302,7 @@ class LoadCollectionOperation(OpenEoOperation):
         layerTempExtent = []
         bands = []
         ev = ilwis.Envelope("(" + env + ")")
-        common.logMessage(logging.INFO, 'select layers nds from appropriate bands')                   
+        common.logMessage(logging.INFO, self.name + ' select layers from appropriate bands')                   
         for lyrIdx in self.lyrIdxs:
             layer = self.inputRaster.idx2layer(lyrIdx)
             if layer != None:
@@ -347,7 +347,7 @@ class LoadCollectionOperation(OpenEoOperation):
         layerTempExtent = []
         loadedRasters = []
         outputRasters = []
-        common.logMessage(logging.INFO, 'load data by layer')  
+        common.logMessage(logging.INFO, self.name + ' load data by layer')  
         for lyrIdx in self.lyrIdxs:
             layer = self.inputRaster.idx2layer(lyrIdx)
             if layer != None:
@@ -378,7 +378,7 @@ class LoadCollectionOperation(OpenEoOperation):
         ev = ilwis.Envelope("(" + env + ")")
         ilwRasters = [] 
         outRasters = [] 
-        common.logMessage(logging.INFO, 'select bands from appropriate layers: ')                    
+        common.logMessage(logging.INFO, self.name + ' select bands from appropriate layers: ')                    
         for bandIndex in bandIndexes:
             bandIndexList = 'rasterbands(' + str(bandIndex) + ')'
 

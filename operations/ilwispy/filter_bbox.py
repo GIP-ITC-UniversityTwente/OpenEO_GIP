@@ -20,7 +20,7 @@ class FilterBBox(OpenEoOperation):
                     self.handleError(toServer, job_id, "parameter", "Input data is not rasterdata", 'ProcessParameterInvalid')
 
                 self.data = self.data[0]
-                setWorkingCatalog( self.data)
+                setWorkingCatalog( self.data, self.name)
                 ext = bb = self.getMandatoryParam(toServer, job_id, arguments, 'extent')
                 crs = 4326
                 if isinstance(bb, list):

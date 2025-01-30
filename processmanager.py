@@ -9,6 +9,7 @@ import os
 from authenticationdatabase import authenticationDB
 import ilwis
 import glob
+import logging
 
 lockLogger = threading.Lock()
 
@@ -233,6 +234,7 @@ class ProcessManager:
         self.running = False
 
     def removeFromOutputs(self, key, whenTimer):
+        common.logMessage(logging.INFO, 'removing output out of date outout data')
         endTimer = datetime.now()
         delta2 = endTimer - self.outputs[key].last_updated
         if delta2.seconds > whenTimer:
@@ -240,11 +242,13 @@ class ProcessManager:
             out.cleanUp()
             
     def removeTemps(self):
+        common.logMessage(logging.INFO, 'removing temporary data')
         for out in self.outputs.values():
             if out.status == constants.STATUSJOBDONE:
                 out.cleanUp()
 
     def reduceLogFile(self):
+        common.logMessage(logging.INFO, 'reduce size log file')
         lockLogger.acquire()
         logpath = os.path.join(os.path.dirname(__file__), 'log')
         filepath = "{0}/{1}.log".format(logpath, 'openeoserver' )

@@ -55,7 +55,7 @@ class ResampleSpatial(OpenEoOperation):
         self.csy = ilwis.CoordinateSystem('epsg:' + str(projection))
         if bool(self.csy) == False:
             self.handleError(toServer, job_id, 'projection', 'Coordinate system invalid in resample_spatial', 'ProcessParameterInvalid')
-        setWorkingCatalog(self.inputRaster) 
+        setWorkingCatalog(self.inputRaster, self.name) 
         self.runnable = True
         self.logEndPrepareOperation(job_id) 
 

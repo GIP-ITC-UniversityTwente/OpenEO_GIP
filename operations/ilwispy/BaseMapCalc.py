@@ -17,7 +17,7 @@ class BaseUnarymapCalc(OpenEoOperation):
             rasterList = []
             for ras in p1:
                 if type(ras) is RasterData:
-                    setWorkingCatalog(ras)
+                    setWorkingCatalog(ras, self.name)
                     self.createExtra(ras,False, self.name)
                     raster = ras.getRaster()
                     rasterList.append(raster)

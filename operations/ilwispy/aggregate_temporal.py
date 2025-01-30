@@ -123,7 +123,7 @@ class AggregateTemporal(OpenEoOperation):
                 self.handleError(toServer, job_id, 'labels','number of labels must match number of intervals', 'ProcessParameterInvalid')    
         # check if given temporal selection fits the actual data in the raster
         for raster in self.inputRaster:
-            setWorkingCatalog(raster)
+            setWorkingCatalog(raster, self.name)
             dt1 = parser.parse(dbegin) 
             dt2 =  parser.parse(dend)
             dr1 = parser.parse(raster[TEMPORALEXTENT][0])
