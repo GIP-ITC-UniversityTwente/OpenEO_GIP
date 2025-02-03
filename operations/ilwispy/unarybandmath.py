@@ -1,7 +1,9 @@
 from operations.ilwispy.BaseMapCalc import BaseUnarymapCalc
+from constants import constants
 
 class ArcCosOperation(BaseUnarymapCalc):
     def __init__(self):
+        self.kind = constants.PDPREDEFINED
         self.loadOpenEoJsonDef('arccos.json')
 
     def prepare(self, arguments):
@@ -13,6 +15,7 @@ class ArcCosOperation(BaseUnarymapCalc):
     
 class ArcCosHOperation(BaseUnarymapCalc):
     def __init__(self):
+        self.kind = constants.PDPREDEFINED
         self.loadOpenEoJsonDef('arcosh.json')
 
     def prepare(self, arguments):
@@ -24,6 +27,7 @@ class ArcCosHOperation(BaseUnarymapCalc):
 
 class CosHOperation(BaseUnarymapCalc):
     def __init__(self):
+        self.kind = constants.PDPREDEFINED        
         self.loadOpenEoJsonDef('cosh.json')
 
     def prepare(self, arguments):
@@ -35,6 +39,7 @@ class CosHOperation(BaseUnarymapCalc):
     
 class CosOperation(BaseUnarymapCalc):
     def __init__(self):
+        self.kind = constants.PDPREDEFINED        
         self.loadOpenEoJsonDef('cos.json')
 
     def prepare(self, arguments):
@@ -46,6 +51,7 @@ class CosOperation(BaseUnarymapCalc):
 
 class ASinOperation(BaseUnarymapCalc):
     def __init__(self):
+        self.kind = constants.PDPREDEFINED        
         self.loadOpenEoJsonDef('arcsin.json')
 
     def prepare(self, arguments):
@@ -57,6 +63,7 @@ class ASinOperation(BaseUnarymapCalc):
     
 class ASinHOperation(BaseUnarymapCalc):
     def __init__(self):
+        self.kind = constants.PDPREDEFINED        
         self.loadOpenEoJsonDef('arsinh.json')
 
     def prepare(self, arguments):
@@ -68,6 +75,7 @@ class ASinHOperation(BaseUnarymapCalc):
         
 class SinOperation(BaseUnarymapCalc):
     def __init__(self):
+        self.kind = constants.PDPREDEFINED        
         self.loadOpenEoJsonDef('sin.json')
 
     def prepare(self, arguments):
@@ -79,6 +87,7 @@ class SinOperation(BaseUnarymapCalc):
     
 class SinHOperation(BaseUnarymapCalc):
     def __init__(self):
+        self.kind = constants.PDPREDEFINED        
         self.loadOpenEoJsonDef('sinh.json')
 
     def prepare(self, arguments):
@@ -90,6 +99,7 @@ class SinHOperation(BaseUnarymapCalc):
 
 class TanOperation(BaseUnarymapCalc):
     def __init__(self):
+        self.kind = constants.PDPREDEFINED        
         self.loadOpenEoJsonDef('tan.json')
 
     def prepare(self, arguments):
@@ -101,6 +111,7 @@ class TanOperation(BaseUnarymapCalc):
     
 class TanHOperation(BaseUnarymapCalc):
     def __init__(self):
+        self.kind = constants.PDPREDEFINED        
         self.loadOpenEoJsonDef('tanh.json')
 
     def prepare(self, arguments):
@@ -112,6 +123,7 @@ class TanHOperation(BaseUnarymapCalc):
 
 class ATanOperation(BaseUnarymapCalc):
     def __init__(self):
+        self.kind = constants.PDPREDEFINED        
         self.loadOpenEoJsonDef('arctan.json')
 
     def prepare(self, arguments):
@@ -123,6 +135,7 @@ class ATanOperation(BaseUnarymapCalc):
 
 class ATanHOperation(BaseUnarymapCalc):
     def __init__(self):
+        self.kind = constants.PDPREDEFINED        
         self.loadOpenEoJsonDef('artanh.json')
 
     def prepare(self, arguments):
@@ -134,6 +147,7 @@ class ATanHOperation(BaseUnarymapCalc):
 
 class AbsOperation(BaseUnarymapCalc):
     def __init__(self):
+        self.kind = constants.PDPREDEFINED        
         self.loadOpenEoJsonDef('absolute.json')
 
     def prepare(self, arguments):
@@ -145,6 +159,7 @@ class AbsOperation(BaseUnarymapCalc):
     
 class CeilOperation(BaseUnarymapCalc):
     def __init__(self):
+        self.kind = constants.PDPREDEFINED        
         self.loadOpenEoJsonDef('ceil.json')
 
     def prepare(self, arguments):
@@ -156,6 +171,7 @@ class CeilOperation(BaseUnarymapCalc):
 
 class FloorOperation(BaseUnarymapCalc):
     def __init__(self):
+        self.kind = constants.PDPREDEFINED        
         self.loadOpenEoJsonDef('floor.json')
 
     def prepare(self, arguments):
@@ -167,6 +183,7 @@ class FloorOperation(BaseUnarymapCalc):
 
 class IntOperation(BaseUnarymapCalc):
     def __init__(self):
+        self.kind = constants.PDPREDEFINED        
         self.loadOpenEoJsonDef('int.json')
 
     def prepare(self, arguments):
@@ -178,6 +195,7 @@ class IntOperation(BaseUnarymapCalc):
 
 class RoundOperation(BaseUnarymapCalc):
     def __init__(self):
+        self.kind = constants.PDPREDEFINED        
         self.loadOpenEoJsonDef('round.json')
 
     def prepare(self, arguments):
@@ -189,6 +207,7 @@ class RoundOperation(BaseUnarymapCalc):
 
 class LnOperation(BaseUnarymapCalc):
     def __init__(self):
+        self.kind = constants.PDPREDEFINED        
         self.loadOpenEoJsonDef('ln.json')
 
     def prepare(self, arguments):
@@ -200,6 +219,7 @@ class LnOperation(BaseUnarymapCalc):
     
 class PowerOperation(BaseUnarymapCalc):
     def __init__(self):
+        self.kind = constants.PDPREDEFINED        
         self.loadOpenEoJsonDef('power.json')
 
     def prepare(self, arguments):
@@ -211,6 +231,7 @@ class PowerOperation(BaseUnarymapCalc):
 
 class SqrtOperation(BaseUnarymapCalc):
     def __init__(self):
+        self.kind = constants.PDPREDEFINED        
         self.loadOpenEoJsonDef('sqrt.json')
 
     def prepare(self, arguments):
@@ -222,6 +243,7 @@ class SqrtOperation(BaseUnarymapCalc):
 
 class ExpOperation(BaseUnarymapCalc):
     def __init__(self):
+        self.kind = constants.PDPREDEFINED        
         self.loadOpenEoJsonDef('exp.json')
 
     def prepare(self, arguments):
@@ -233,6 +255,7 @@ class ExpOperation(BaseUnarymapCalc):
 
 class NotOperation(BaseUnarymapCalc):
     def __init__(self):
+        self.kind = constants.PDPREDEFINED        
         self.loadOpenEoJsonDef('not.json')
 
     def prepare(self, arguments):

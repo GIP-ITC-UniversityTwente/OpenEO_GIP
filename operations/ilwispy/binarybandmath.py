@@ -1,7 +1,9 @@
 from operations.ilwispy.BaseMapCalc import BaseBinarymapCalcBase
+from constants import constants
 
 class AddOperation(BaseBinarymapCalcBase):
     def __init__(self):
+        self.kind = constants.PDPREDEFINED
         self.loadOpenEoJsonDef('add.json')
 
     def prepare(self, arguments):
@@ -13,6 +15,7 @@ class AddOperation(BaseBinarymapCalcBase):
 
 class DivideOperation(BaseBinarymapCalcBase):
     def __init__(self):
+        self.kind = constants.PDPREDEFINED
         self.loadOpenEoJsonDef('divide.json')
 
     def prepare(self, arguments):
@@ -24,6 +27,7 @@ class DivideOperation(BaseBinarymapCalcBase):
     
 class MultiplyOperation(BaseBinarymapCalcBase):
     def __init__(self):
+        self.kind = constants.PDPREDEFINED
         self.loadOpenEoJsonDef('multiply.json')
 
     def prepare(self, arguments):
@@ -35,9 +39,11 @@ class MultiplyOperation(BaseBinarymapCalcBase):
      
 class SubtractOperation(BaseBinarymapCalcBase):
     def __init__(self):
+        self.kind = constants.PDPREDEFINED
         self.loadOpenEoJsonDef('subtract.json')
 
     def prepare(self, arguments):
+        self.kind = constants.PDPREDEFINED
         self.base_prepare(arguments, '-')
        
 
@@ -46,6 +52,7 @@ class SubtractOperation(BaseBinarymapCalcBase):
 
 class LogNOperation(BaseBinarymapCalcBase):
     def __init__(self):
+        self.kind = constants.PDPREDEFINED
         self.loadOpenEoJsonDef('log.json')
 
     def prepare(self, arguments):
@@ -57,6 +64,7 @@ class LogNOperation(BaseBinarymapCalcBase):
 
 class GTOperation(BaseBinarymapCalcBase):
     def __init__(self):
+        self.kind = constants.PDPREDEFINED
         self.loadOpenEoJsonDef('gt.json')
 
     def prepare(self, arguments):
@@ -68,6 +76,7 @@ class GTOperation(BaseBinarymapCalcBase):
 
 class GTEOperation(BaseBinarymapCalcBase):
     def __init__(self):
+        self.kind = constants.PDPREDEFINED
         self.loadOpenEoJsonDef('gte.json')
 
     def prepare(self, arguments):
@@ -79,6 +88,7 @@ class GTEOperation(BaseBinarymapCalcBase):
 
 class LTOperation(BaseBinarymapCalcBase):
     def __init__(self):
+        self.kind = constants.PDPREDEFINED
         self.loadOpenEoJsonDef('lt.json')
 
     def prepare(self, arguments):
@@ -90,6 +100,7 @@ class LTOperation(BaseBinarymapCalcBase):
 
 class LTEOperation(BaseBinarymapCalcBase):
     def __init__(self):
+        self.kind = constants.PDPREDEFINED
         self.loadOpenEoJsonDef('lte.json')
 
     def prepare(self, arguments):
@@ -101,6 +112,7 @@ class LTEOperation(BaseBinarymapCalcBase):
 
 class EqOperation(BaseBinarymapCalcBase):
     def __init__(self):
+        self.kind = constants.PDPREDEFINED
         self.loadOpenEoJsonDef('eq.json')
 
     def prepare(self, arguments):
@@ -112,6 +124,7 @@ class EqOperation(BaseBinarymapCalcBase):
 
 class OrOperation(BaseBinarymapCalcBase):
     def __init__(self):
+        self.kind = constants.PDPREDEFINED
         self.loadOpenEoJsonDef('or.json')
 
     def prepare(self, arguments):
@@ -123,6 +136,7 @@ class OrOperation(BaseBinarymapCalcBase):
 
 class AndOperation(BaseBinarymapCalcBase):
     def __init__(self):
+        self.kind = constants.PDPREDEFINED
         self.loadOpenEoJsonDef('and.json')
 
     def prepare(self, arguments):
@@ -134,6 +148,7 @@ class AndOperation(BaseBinarymapCalcBase):
 
 class XorOperation(BaseBinarymapCalcBase):
     def __init__(self):
+        self.kind = constants.PDPREDEFINED
         self.loadOpenEoJsonDef('xor.json')
 
     def prepare(self, arguments):
@@ -145,6 +160,7 @@ class XorOperation(BaseBinarymapCalcBase):
 
 class PowerOperation(BaseBinarymapCalcBase):
     def __init__(self):
+        self.kind = constants.PDPREDEFINED
         self.loadOpenEoJsonDef('power.json')
 
     def prepare(self, arguments):
