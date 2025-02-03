@@ -234,7 +234,7 @@ class ProcessManager:
         self.running = False
 
     def removeFromOutputs(self, key, whenTimer):
-        common.logMessage(logging.INFO, 'removing output out of date outout data')
+        common.logMessage(logging.INFO, 'removing output from of date output data')
         endTimer = datetime.now()
         delta2 = endTimer - self.outputs[key].last_updated
         if delta2.seconds > whenTimer:
