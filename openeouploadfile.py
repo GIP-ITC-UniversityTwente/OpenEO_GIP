@@ -116,6 +116,7 @@ def checkdata(folder, fpath):
 class OpenEOUploadFile(AuthenticatedResource):
    
     def put(self, path):
+        common.logMessage(logging.INFO, 'uploading file')
         binary_data = request.data
         user = UserInfo(request)
         username = user.username
