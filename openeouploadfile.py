@@ -123,9 +123,12 @@ class OpenEOUploadFile(AuthenticatedResource):
         rootdata = globalsSingleton.openeoip_config['data_locations']['root_user_data_location']['location']
     
         folder = os.path.join(rootdata, username)
+
+        common.logMessage(logging.INFO, 'uploading file ' + folder)
         
 
         if not os.path.exists(folder):
+            common.logMessage(logging.INFO, 'uploading file 2' + folder)
             err = globalsSingleton.errorJson('FilePathInvalid', -1,'')
             return make_response(jsonify(err),err['code']) 
         filename = os.path.basename(path)
