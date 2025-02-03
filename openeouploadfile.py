@@ -124,21 +124,21 @@ class OpenEOUploadFile(AuthenticatedResource):
     
         folder = os.path.join(rootdata, username)
 
-        common.logMessage(logging.INFO, 'uploading file ' + folder)
+        common.logMessage(logging.INFO, 'uploading file to ' + folder)
         
 
         if not os.path.exists(folder):
-            common.logMessage(logging.INFO, 'uploading file 2' + folder)
-            err = globalsSingleton.errorJson('FilePathInvalid', -1,'')
-            return make_response(jsonify(err),err['code']) 
+            os.makedirs(folder)
         filename = os.path.basename(path)
-        common.logMessage(logging.INFO, 'uploading ' + filename + " to " + folder)
+
 
         dir = username + "/" + filename
         fpath = os.path.join(folder, filename)
 
         with open(fpath, 'wb') as f:
             f.write(binary_data)
+
+        common.logMessage(logging.INFO, 'file uploaded to ' + filename + " to " + folder)            
 
         file_size = os.path.getsize(fpath)
         mod_time = os.path.getmtime(fpath)
