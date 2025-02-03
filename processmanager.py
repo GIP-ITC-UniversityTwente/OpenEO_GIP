@@ -248,7 +248,7 @@ class ProcessManager:
                 out.cleanUp()
 
     def reduceLogFile(self):
-        common.logMessage(logging.INFO, 'reduce size log file')
+        
         lockLogger.acquire()
         logpath = os.path.join(os.path.dirname(__file__), 'log')
         filepath = "{0}/{1}.log".format(logpath, 'openeoserver' )
@@ -256,7 +256,8 @@ class ProcessManager:
         with open(filepath, 'r') as fp:
             lines = fp.readlines()
             lineCount = len(lines)
-        if lineCount > 5000:         
+        if lineCount > 5000:
+            common.logMessage(logging.INFO, 'reduce size log file')         
             with open(filepath, 'w') as fp:
                 limit  = 1000
                 for number, line in enumerate(lines):
@@ -299,7 +300,7 @@ class ProcessManager:
                 self.changeOutputStatus(item)
             endTimer = datetime.now()
             delta = endTimer - startTimerDump
-            if delta.seconds > 120:
+            if delta.seconds > 10*60:
                 # for the moment not relevant
                 self.dumpProcessTables()
                 self.removeTemps()
