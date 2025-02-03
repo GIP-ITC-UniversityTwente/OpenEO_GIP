@@ -17,6 +17,9 @@ import glob
 from rasterdata import RasterData
 import ilwis
 import shutil
+import logging
+import common
+
 
 
 def find_sources(data):
@@ -76,6 +79,10 @@ def checkdata(folder, fpath):
                 datafolder = raster['dataFolder']
                 if not os.path.exists(datafolder):
                     os.makedirs(datafolder)
+                filename = os.path.basename(fpath)
+                target = os.path.join(datafolder, filename)
+                if os.path.exists(target):
+                    os.remove(target)
                 shutil.move(fpath, datafolder)
                 raster.toMetadataFile(folder, raster['title'] + '.metadata') 
             else:            
@@ -115,11 +122,13 @@ class OpenEOUploadFile(AuthenticatedResource):
         rootdata = globalsSingleton.openeoip_config['data_locations']['root_user_data_location']['location']
     
         folder = os.path.join(rootdata, username)
+        
 
         if not os.path.exists(folder):
             err = globalsSingleton.errorJson('FilePathInvalid', -1,'')
             return make_response(jsonify(err),err['code']) 
         filename = os.path.basename(path)
+        common.logMessage(logging.INFO, 'uploading ' + filename + " to " + folder)
 
         dir = username + "/" + filename
         fpath = os.path.join(folder, filename)
