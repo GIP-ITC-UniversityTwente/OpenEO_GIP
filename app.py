@@ -63,7 +63,7 @@ from processmanager import globalProcessManager
 from threading import Thread
 from wellknown import WellKnown
 import common
-
+import ilwis
 
 #init part
 
@@ -125,7 +125,10 @@ def startProcesses():
 t1 = Thread(target=startProcesses)
 t1.start()
 
-
+f = ilwis.contextProperty('cachelocation')
+common.logMessage(logging.INFO, 'cache location ' + f)
+f = ilwis.contextProperty('systemcatalog')
+common.logMessage(logging.INFO, 'system catalog ' + f)
 common.logMessage(logging.INFO, 'server started, initialization finished')
 
 if __name__ == '__main__':
