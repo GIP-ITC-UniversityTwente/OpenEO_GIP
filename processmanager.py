@@ -242,9 +242,12 @@ class ProcessManager:
             out.cleanUp()
             
     def removeTemps(self):
-        common.logMessage(logging.INFO, 'removing temporary data')
+        shown = False
         for out in self.outputs.values():
             if out.status == constants.STATUSJOBDONE:
+                if not shown:
+                    common.logMessage(logging.INFO, 'removing temporary data')
+                    shown = True
                 out.cleanUp()
 
     def reduceLogFile(self):
