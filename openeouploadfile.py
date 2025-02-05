@@ -70,7 +70,7 @@ def checkdata(folder, fpath):
     file_extension = os.path.splitext(fpath)[1]
     if file_extension != '.zip'and file_extension != '.gz':
         if file_extension == '.tif' or file_extension == '.nc' :
-            common.logMessage(logging.INFO, 'load for processing ' + fpath) 
+            common.logMessage(logging.INFO, 'load file for processing ' + fpath) 
             ilwRaster = ilwis.RasterCoverage(fpath)
             if ilwRaster:
                 raster = RasterData() 
