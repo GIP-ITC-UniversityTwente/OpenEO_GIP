@@ -125,6 +125,12 @@ def startProcesses():
 t1 = Thread(target=startProcesses)
 t1.start()
 
+f = common.openeoip_config['data_locations']['cached_data']
+ilwis.setContextProperty('cachelocation', f['location'])
+f = common.openeoip_config['data_locations']['system_files']
+ilwis.setContextProperty('initlogger', f['location'])
+
+
 common.logMessage(logging.INFO, 'ilwis cache location ' + ilwis.contextProperty('cachelocation'))
 common.logMessage(logging.INFO, 'ilwis system catalog ' +  ilwis.contextProperty('systemcatalog'))
 common.logMessage(logging.INFO, 'ilwis root ' +  ilwis.contextProperty('ilwisfolder'))
