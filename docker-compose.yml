@@ -15,6 +15,7 @@ services:
       - './../config:/app/config'
       - './../properties:/app/properties'
       - './../data2/userdata:/app/data/userdata'
+      - './../temp/cache:/app/cache'
     #environment:
     #  - 'FLASK_DEBUG': '1'
     ports:
