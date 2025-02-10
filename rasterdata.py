@@ -158,6 +158,8 @@ class RasterData(dict):
         ext = getMandatoryValue("dimensions", metadata)
         self['boundingbox'] = getMandatoryValue("boundingbox", ext)
         self['proj'] = getValue('proj' , metadata, '0')
+        if self['proj'] == '0':
+           self['proj'] = str(getValue('proj:epsg' , metadata, '0'))
         self['nodata'] = getValue('nodata' , metadata, -9999)
         self[DIMENSIONSLABEL] = {}
         bands = getMandatoryValue(DIMSPECTRALBANDS, ext)
@@ -653,7 +655,7 @@ class RasterData(dict):
         data = []
         implDim = next(iter(self['implementation']))  
         for item in self[DIMENSIONSLABEL][implDim]:
-            if RASTERDATA in item:
+            if RASTERDATA in item and (not isinstance(item[RASTERDATA], str)):
                 data.append(item[RASTERDATA])  
             else:
                 ilwRaster = self.loadRaster(item)
