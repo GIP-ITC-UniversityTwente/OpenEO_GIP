@@ -16,7 +16,11 @@
             "udf_locations" : [{
                 "description": "testing udf locations", 
                 "location" : "/home/mschouwen/projects/openeo/properties/udf"
-            }]
+            }],
+            "cached_data" : {
+                "description" : "place were we store intermediate results",
+                "location" : "/home/mschouwen/temp/cache"
+            }
             
     },
     "stac_version" : "1.0",
