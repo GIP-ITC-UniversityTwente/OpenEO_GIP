@@ -214,6 +214,22 @@ class ProcessManager:
                 return processes[0] # case were only on job is queried   
             return None            
 
+    def add2log(self, item):
+        for key,value in self.outputs.items():
+            if  item['job_id'] == str(value.eoprocess.job_id):
+                logEntry = {}
+                logEntry['time'] = item['last_updated']
+                if item['status'] == constants.STATUSJOBDONE:
+                    logEntry['message'] = 'job done :' + item['job_id']
+                else:                    
+                    logEntry['message'] = item['message']
+                logEntry['level'] = item['status']
+                #logEntry['job_id'] = item['job_id']
+                logEntry['id'] = item['job_id']
+                logEntry['code'] = item['type']
+                value.logs.append(logEntry)
+                break
+
     def alllogs4job(self, user, jobid):
         with self.lockOutput:
 
@@ -222,14 +238,9 @@ class ProcessManager:
                     if  jobid == str(value.eoprocess.job_id):
                         logs = []
                         for log in value.logs:
-                            logEntry = {}
-                            logEntry['timestamp'] = log.timestamp
-                            logEntry['message'] = log.message
-                            logEntry['level'] = log.level
-                            logs.append(logEntry) 
+                            logs.append(log) 
                         return logs                           
         return []                    
-    
     
     def stop(self):
         self.running = False
@@ -302,6 +313,7 @@ class ProcessManager:
                 # update the output objects
                 item = self.outputQueue.get()
                 self.changeOutputStatus(item)
+                self.add2log(item)
             endTimer = datetime.now()
             delta = endTimer - startTimerDump
             if delta.seconds > 10*60:
@@ -377,9 +389,6 @@ class ProcessManager:
                             self.outputs[job_id].message = item['message']
                         if 'code' in item :                           
                             self.outputs[job_id].code = item['code']
-                if type == 'logginevent':
-                    del item['type']
-                    self.outputs[job_id].logs.append(item)
 
     def dumpProcessTables(self):
         #for the moment disabled

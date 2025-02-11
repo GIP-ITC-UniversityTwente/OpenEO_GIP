@@ -336,7 +336,7 @@ class OpenEoOperation:
                 
     def logProgress(self, processOutput, job_id, message,  status, progress=0, ids = []):
         timenow = str(datetime.now())
-        log = {'type' : 'progressevent', 'job_id': job_id, 'progress' : message , 'last_updated' : timenow, 'status' : status, 'progress' : progress, 'current_operation' : self.name, 'objectids' : ids }   
+        log = {'type' : 'progressevent', 'job_id': job_id, 'message' : message , 'last_updated' : timenow, 'status' : status, 'progress' : progress, 'current_operation' : self.name, 'objectids' : ids }   
         put2Queue(processOutput, log)
     
     def logStartPrepareOperation(self, jobid):
@@ -350,7 +350,7 @@ class OpenEoOperation:
         if extraMessage == "":
             return self.logProgress(processOutput, openeojob.job_id, self.name ,constants.STATUSRUNNING, 0)
         else:
-            return self.logProgress(processOutput, openeojob.job_id, self.name + ": " + extraMessage ,constants.STATUSRUNNING, 0)
+            return self.logProgress(processOutput, openeojob.job_id, "started " + self.name + ": " + extraMessage ,constants.STATUSRUNNING, 0)
 
     def logEndOperation(self, processOutput,openeojob, outputs = None, extraMessage=""):
         common.logMessage(logging.INFO,self.name + " ended run. with job name:" + openeojob.title, common.process_user)
