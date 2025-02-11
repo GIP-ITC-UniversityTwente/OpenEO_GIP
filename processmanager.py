@@ -92,6 +92,7 @@ class ProcessManager:
 
     def addProcess(self, eoproces):
         with self.lockProcessQue:
+            self.createNewEmptyOutput(eoproces)
             self.processQueue.append( eoproces)
 
     def createNewEmptyOutput(self, eoprocess):
@@ -288,7 +289,7 @@ class ProcessManager:
                 # is started basicall all info about the running process is in the output object. This includes
                 # log information, errors and ofc output products
                 p = Process(target=worker, args=(eoprocess,self.outputQueue))
-                self.createNewEmptyOutput(eoprocess)
+                #self.createNewEmptyOutput(eoprocess)
                 # the process gets now the status of running, before it was queued
                 self.outputs[str(eoprocess.job_id)].status = constants.STATUSRUNNING
                 self.outputs[str(eoprocess.job_id)].pythonProcess = p
