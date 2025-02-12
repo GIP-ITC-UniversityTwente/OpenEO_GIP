@@ -7,6 +7,7 @@ import logging
 import common
 import customexception
 from pathlib import Path
+from urllib.parse import urlparse, unquote
 
 
 operations1 = {}
@@ -455,8 +456,15 @@ class OpenEoOperation:
 def setWorkingCatalog(raster, name):
     common.logMessage(logging.INFO, name + ' new working catalog:' + str(raster.dataFolder() ) )
     path = Path(raster.dataFolder()).as_uri()
-    ilwis.setWorkingCatalog(path)
-    return path    
+    if path.find('file://') == -1:
+        folderPath = path + "/" + raster['dataFolder']
+    else:
+        folderPath = path
+
+    ilwis.setWorkingCatalog(folderPath)
+    parsed = urlparse(folderPath)
+    filepath = unquote(parsed.path.lstrip('/'))
+    return filepath    
     
 def createOutput(status, value, datatype, format='')        :
     return {"status" : status, "value" : value, "datatype" : datatype, 'format' : format}  
