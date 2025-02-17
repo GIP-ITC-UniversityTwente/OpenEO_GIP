@@ -73,8 +73,8 @@ class ResampleSpatial(OpenEoOperation):
 
             outputRc = ilwis.do("resample", self.inputRaster, grf, self.method)
             outputRasters = [] 
-            common.registerIlwisIds(outputRc)                 
-            outputRasters.extend(self.setOutput([outputRc], self.extra))
+            common.registerIlwisIds(openeojob.job_id, outputRc)                 
+            outputRasters.extend(self.setOutput(openeojob.job_id, [outputRc], self.extra))
             ##put2Queue(processOutput,{'progress' : 100, 'job_id' : openeojob.job_id, 'status' : 'finished'}) 
             self.logEndOperation(processOutput,openeojob, outputs=outputRasters)
             return createOutput(constants.STATUSFINISHED, outputRasters, constants.DTRASTER)  

@@ -59,7 +59,7 @@ class RasterCalc(OpenEoOperation):
             outputs = []             
             outputRc = eval(self.expr)
             outputs.append(outputRc)
-            common.registerIlwisIds(outputs)  
+            common.registerIlwisIds(openeojob.job_id, outputs)  
             outputRasters.extend(self.makeOutput(outputs, self.extra))
             out =  createOutput(constants.STATUSFINISHED, outputRasters, constants.DTRASTER)    
             self.logEndOperation(processOutput, openeojob)          

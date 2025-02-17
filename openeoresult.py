@@ -8,7 +8,12 @@ from authentication import AuthenticatedResource
 import pathlib
 import logging
 import common
+import datetime
+from constants import constants
 from customexception import CustomException
+import ilwis
+import os
+import glob
 
 def getMimeType(filename):
     try:
@@ -30,6 +35,7 @@ class OpenEOIPResult(AuthenticatedResource):
         user = UserInfo(request)
         try:
             process = OpenEOProcess(user, request_json,0)
+            
             ''' seems the client already sends a validate request befor trying to run it so this one is superflous
             errors =  process.validate()
             if len(errors) > 0:
@@ -39,6 +45,7 @@ class OpenEOIPResult(AuthenticatedResource):
             if process.processGraph != None:
                 outputInfo = process.processGraph.run(process, None, None)
                 common.logMessage(logging.INFO, 'ended sync: ' + process.job_id , common.process_user)
+                common.removeTempFiles(process.job_id)
                 return common.makeResponse(outputInfo)#, {'removedata' : process.job_id})
         except (Exception, CustomException) as ex:
             code = 'unknow error'
@@ -48,6 +55,8 @@ class OpenEOIPResult(AuthenticatedResource):
                 common.logMessage(logging.ERROR, 'error: ' + message , common.process_user)
                 return make_response(makeBaseResponseDict(process.job_id, 'error', code, None, message),int(code))
             return make_response(makeBaseResponseDict(-1, 'error', 404, None, str(ex)),400)
+
+   
         
 
     def makeType(self, tp):

@@ -40,8 +40,8 @@ class LinearScaleRangeOperation(OpenEoOperation):
 
             outputRc = ilwis.do("linearstretch", self.inputRaster,self.inpMin, self.inpMax, self.outMin, self.outMax)
             outputRasters = []   
-            common.registerIlwisIds([outputRc])               
-            outputRasters.extend(self.setOutput([outputRc], self.extra))
+            common.registerIlwisIds(openeojob.job_id, [outputRc])               
+            outputRasters.extend(self.setOutput(openeojob.job_id,[outputRc], self.extra))
             return createOutput(constants.STATUSFINISHED, outputRasters, constants.DTRASTERLIST)
         
         return createOutput('error', "operation no runnable", constants.DTERROR)

@@ -64,15 +64,8 @@ class OutputInfo:
         return self.progress == 1
     
     def cleanUp(self):
-        tempFiles = ilwis.contextProperty('cachelocation')
-        for id in self.ids:
-            ilwis.removeObject(id)
-            mask = os.path.join(tempFiles, '*' + str(id) + '*.temp') 
-            file_list = glob.glob(mask)
-            for file in file_list:
-                os.remove(file)
-
-
+        common.removeTempFiles(self.eoprocess.job_id)
+  
 
 class ProcessManager:
     def __new__(cls):
@@ -316,7 +309,7 @@ class ProcessManager:
                 self.add2log(item)
             endTimer = datetime.now()
             delta = endTimer - startTimerDump
-            if delta.seconds > 10*60:
+            if delta.seconds >10*60:
                 # for the moment not relevant
                 self.dumpProcessTables()
                 self.removeTemps()

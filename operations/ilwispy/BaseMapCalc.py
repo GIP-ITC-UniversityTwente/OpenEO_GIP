@@ -46,8 +46,8 @@ class BaseUnarymapCalc(OpenEoOperation):
                     oper = self.operation + '(@1)'
                     outputRc = ilwis.do('mapcalc', oper, raster)
                     ilwRasters.append(outputRc)
-                common.registerIlwisIds(ilwRasters)                      
-                outputRasters.extend(self.setOutput(ilwRasters, self.extra))
+                common.registerIlwisIds(openeojob.job_id, ilwRasters)                      
+                outputRasters.extend(self.setOutput(openeojob.job_id, ilwRasters, self.extra))
                 out =  createOutput(constants.STATUSFINISHED, outputRasters, constants.DTRASTER)
                 self.logEndOperation(processOutput,openeojob,outputRasters)                
             else:
@@ -161,7 +161,7 @@ class BaseBinarymapCalcBase(OpenEoOperation):
                 out = createOutput(constants.STATUSFINISHED, output, constants.DTNUMBER) 
 
             if self.ismaps1 or self.ismaps2:
-                common.registerIlwisIds(outputs)  
+                common.registerIlwisIds(openeojob.job_id, outputs)  
                 outputRasters.extend(self.makeOutput(outputs, self.extra))
                 out =  createOutput(constants.STATUSFINISHED, outputRasters, constants.DTRASTER)                
               
@@ -200,7 +200,7 @@ class BaseBinarymapCalcBase(OpenEoOperation):
                 out = createOutput(constants.STATUSFINISHED, output, constants.DTNUMBER) 
 
             if self.ismaps1 or self.ismaps2:
-                outputRasters.extend(self.setOutput(outputs, self.extra))
+                outputRasters.extend(self.setOutput(openeojob.job_id, outputs, self.extra))
                 out =  createOutput(constants.STATUSFINISHED, outputRasters, constants.DTRASTER)                
               
                 

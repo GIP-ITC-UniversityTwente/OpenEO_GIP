@@ -61,8 +61,8 @@ class ApplyKernel(OpenEoOperation):
                 for ilwRaster in rd.getRasters():
                     rc = ilwis.do("linearrasterfilter", ilwRaster, code)
                     ilwRasters.append(rc)
-                common.registerIlwisIds(ilwRasters)                       
-                outputRasters.extend(self.setOutput(ilwRasters, self.extra))
+                common.registerIlwisIds(openeojob.job_id, ilwRasters)                       
+                outputRasters.extend(self.setOutput(openeojob.job_id, ilwRasters, self.extra))
 
             self.logEndOperation(processOutput,openeojob, outputRasters)                      
             return createOutput(constants.STATUSFINISHED, outputRasters, constants.DTRASTER)

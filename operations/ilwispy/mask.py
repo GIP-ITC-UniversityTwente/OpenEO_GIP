@@ -70,7 +70,7 @@ class MaskOperation(OpenEoOperation):
                         idxs.append(count)
                         count = count + 1
 
-                common.registerIlwisIds(ilwRasters)  
+                common.registerIlwisIds(openeojob.job_id, ilwRasters)  
                 outputRasters.extend(self.makeOutput(ilwRasters, self.extra))
 
             self.logEndOperation(processOutput,openeojob, outputs=outputRasters)

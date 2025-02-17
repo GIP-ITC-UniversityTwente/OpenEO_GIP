@@ -15,8 +15,10 @@ from datetime import datetime
 from dateutil import parser
 import tests.addTestRasters as tr
 from processmanager import lockLogger
+import ilwis
+import glob
 
-ilwobj_created_ids = []
+ilwobj_created_ids = {}
 
 
 possible_time_formats = [
@@ -127,7 +129,8 @@ def makeResponse(outputInfo, context = None):
     if outputInfo["status"] == STATUSFINISHED:
         if outputInfo["datatype"] == DTRASTER or outputInfo["datatype"] == DTRASTERLIST :
             if len(outputInfo["value"]) ==1:
-                filename = outputInfo["value"][0]
+                vs = outputInfo["value"]
+                filename = vs[0]
                 mimet = mimetypes.guess_type(filename)
                 with open(filename, 'rb') as file:
                     binary_data = file.read()
@@ -181,9 +184,28 @@ def temporalOverlap(l1, l2):
     d11 = parser.parse(l2[1])
     return not (d00 < d10 and d00 < d11 and d01 < d10 and d01 < d11)
 
-def registerIlwisIds(objs):
+def registerIlwisIds(job_id, objs):
     if not isinstance(objs, list):
         objs = [objs]
-    for obj in objs:        
-        ilwobj_created_ids.append(obj.ilwisID())
+    if not job_id in ilwobj_created_ids:
+        ilwobj_created_ids[job_id] = []        
+    for obj in objs:
+ 
+        ilwobj_created_ids[job_id].append(obj.ilwisID())
     return ilwobj_created_ids
+
+def getIdsForJob(job_id):
+    result = []
+    if job_id in ilwobj_created_ids:
+        result = ilwobj_created_ids[job_id]
+    return result        
+
+def removeTempFiles(job_id):
+        ids = getIdsForJob(job_id)                
+        tempFiles = ilwis.contextProperty('cachelocation')
+        for id in ids:
+            ilwis.removeObject(id)
+            mask = os.path.join(tempFiles, '*' + str(id) + '*.temp') 
+            file_list = glob.glob(mask)
+            for file in file_list:
+                os.remove(file)

@@ -42,7 +42,7 @@ class BaseAggregateData(OpenEoOperation):
                     for ilwRaster in rc.getRasters():
                         outputRc = ilwis.do("aggregaterasterstatistics", ilwRaster,self.method)
                         ilwRasters.append(outputRc)
-                    common.registerIlwisIds(ilwRasters)  
+                    common.registerIlwisIds(openeojob.job_id, ilwRasters)  
                     outputRasters.extend(self.makeOutput(ilwRasters, self.extra))
 
                 self.logEndOperation(processOutput,openeojob, outputs = outputRasters)

@@ -59,7 +59,7 @@ class FilterBBox(OpenEoOperation):
                                         rc = ilwis.do("selection", raster, "envelope(" + v + ")") 
                                         ilwRasters.append(rc)
                         self.createExtra(self.data)
-                        common.registerIlwisIds(ilwRasters)  
+                        common.registerIlwisIds(openeojob.job_id, ilwRasters)  
                         outputRasters.append(self.createOutput(0, ilwRasters, self.extra))
 
                         self.logEndOperation(processOutput,openeojob, outputs=outputRasters)                      

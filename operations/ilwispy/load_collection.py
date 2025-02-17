@@ -158,7 +158,7 @@ class LoadCollectionOperation(OpenEoOperation):
                     datapath = os.path.join(path, source)                            
                     rband = ilwis.RasterCoverage(datapath)
         
-                common.registerIlwisIds(rband) 
+                common.registerIlwisIds(job_id, rband) 
                 p21 = str(rband.envelope())                   
                 csyLL = ilwis.CoordinateSystem("epsg:4326")
                 llenv = ilwis.Envelope(ilwis.Coordinate(sect['west'], sect['north']), ilwis.Coordinate(sect['east'], sect['south']))
@@ -289,7 +289,7 @@ class LoadCollectionOperation(OpenEoOperation):
             extra = { TEMPORALEXTENT : self.temporalExtent, 'bands' : bands, 'epsg' : self.inputRaster['proj'], 'details': {}, 'name' : 'dummy'}                
             if len(layerTempExtent) > 0:
                 extra['textsublayers'] = layerTempExtent 
-            common.registerIlwisIds(rcList)                              
+            common.registerIlwisIds(openeojob.job_id, rcList)                              
             rasterData = RasterData()
             rasterData.load(rcList, 'ilwisraster', extra )
             outputRasters.append(rasterData) 
@@ -329,14 +329,14 @@ class LoadCollectionOperation(OpenEoOperation):
                             rc = ilwis.do("selection", ilwBand, undefRepl + " with: envelope(" + env + ")") 
                         else:
                             rc = ilwis.do("selection", ilwBand, undefRepl )
-                        common.registerIlwisIds(rc)  
+                        common.registerIlwisIds(openeojob.job_id, rc)  
                         ilwRasters.append(rc) 
                         bands.append(band)
 
             extra = { TEMPORALEXTENT : self.temporalExtent, 'bands' : bands, 'epsg' : self.inputRaster['proj'], 'details': {}, 'name' : 'dummy'}                
             if len(layerTempExtent) > 0:
                 extra['textsublayers'] = layerTempExtent 
-            common.registerIlwisIds(ilwRasters)                              
+            common.registerIlwisIds(openeojob.job_id, ilwRasters)                              
             rasterData = RasterData()
             rasterData.load(ilwRasters, 'ilwisraster', extra )
             outputRasters.append(rasterData)   
@@ -363,7 +363,7 @@ class LoadCollectionOperation(OpenEoOperation):
                     ilwLayer = ilwis.RasterCoverage(layer[DATASOURCE])
                     if ilwLayer.size() == ilwis.Size(0,0,0):
                         self.handleError(processOutput, openeojob.job_id, 'Input raster', 'invalid sub-band:' + layer[DATASOURCE], 'ProcessParameterInvalid')
-                    common.registerIlwisIds(ilwLayer)
+                    common.registerIlwisIds(openeojob.job_id, ilwLayer)
                     loadedRasters.append(ilwLayer) 
             
         newRasters = self.selectBandsFromLayers(bandIndexes, env, loadedRasters)

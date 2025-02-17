@@ -167,16 +167,16 @@ class OpenEoOperation:
             rasterData['title'] = extra['name']
         return rasterData
 
-    def collectRasters(self, rasters):
+    def collectRasters(self,job_id, rasters):
         if len(rasters) == 1:
             return rasters[0]
         
-        ilwisRaster = self.createNewRaster(rasters)
+        ilwisRaster = self.createNewRaster( rasters)
 
         for index in range(0, len(rasters)):
             iter = rasters[index].begin()
             ilwisRaster.addBand(index, iter) ## will add to the end
-        common.registerIlwisIds(ilwisRaster)                
+        common.registerIlwisIds(job_id, ilwisRaster)                
         return ilwisRaster
 
     def createNewRaster(self, rasters):
@@ -255,18 +255,18 @@ class OpenEoOperation:
   
                    
         
-    def makeOutput(self, ilwisRasters, extra):
+    def makeOutput(self,  ilwisRasters, extra):
         outputRasters = []
         rasterData = RasterData()
         rasterData.load(ilwisRasters, 'ilwisraster', extra )
         outputRasters.append(rasterData)
         return outputRasters 
     
-    def setOutput(self, ilwisRasters, extra):
+    def setOutput(self, job_id, ilwisRasters, extra):
         outputRasters = []
         if len(ilwisRasters) > 0:
             if self.rasterSizesEqual:
-                ilwisRaster = self.collectRasters(ilwisRasters)
+                ilwisRaster = self.collectRasters(job_id, ilwisRasters)
                 outputRasters.append(self.createOutput(0, ilwisRaster, extra))
             else:
                 count = 0
@@ -356,9 +356,9 @@ class OpenEoOperation:
     def logEndOperation(self, processOutput,openeojob, outputs = None, extraMessage=""):
         common.logMessage(logging.INFO,self.name + " ended run. with job name:" + openeojob.title, common.process_user)
         if extraMessage == "":
-            return self.logProgress(processOutput, openeojob.job_id, 'finished ' + self.name,constants.STATUSFINISHED,100, common.ilwobj_created_ids)
+            return self.logProgress(processOutput, openeojob.job_id, 'finished ' + self.name,constants.STATUSFINISHED,100, common.getIdsForJob(openeojob.job_id))
         else:
-            return self.logProgress(processOutput, openeojob.job_id, 'finished ' + self.name +": " + extraMessage,constants.STATUSFINISHED,100, common.ilwobj_created_ids)
+            return self.logProgress(processOutput, openeojob.job_id, 'finished ' + self.name +": " + extraMessage,constants.STATUSFINISHED,100, common.getIdsForJob(openeojob.job_id))
     
     def handleError(self, processOutput, job_id, parameter, message, code):
         common.logMessage(logging.ERROR, 'error: ' + self.name + " with job:" + job_id + " ;" + message, common.process_user)

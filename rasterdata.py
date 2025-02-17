@@ -34,8 +34,8 @@ def getMandatoryValue(key, extraMetaData):
 def isPrimitive(obj):
     return not hasattr(obj, '__dict__')
 
-
-def createNewRaster(rasters):
+"""
+def createNewRaster(job_id, rasters):
     stackIndexes = []
     for index in range(0, len(rasters)):
         stackIndexes.append(index)
@@ -53,12 +53,14 @@ def createNewRaster(rasters):
     rc.setStackDefinition(dom, stackIndexes)
     rc.setDataDef(dataDefRaster)
 
-    common.registerIlwisIds([grf, rc])
+    common.registerIlwisIds(job_id, [grf, rc])
 
     for index in range(0, len(rasters)):
         rc.setBandDefinition(index, rasters[index].datadef())
 
     return rc 
+"""
+
 # class that collects all metadata and binary data of a dataset. A RasterData is multidimensional,
 # though limited to 4 dimensions atm. I can use .metadat files, primarr satlite data and 
 # Ilwis.RasterCoverage objects to creates its metadata/data structure. Apart from adminstrative members

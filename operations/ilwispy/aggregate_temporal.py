@@ -173,7 +173,7 @@ class AggregateTemporal(OpenEoOperation):
                     for rimpl in raster.getRasters():
                         rc = ilwis.do("selection", rimpl,"with: " + layerIndexes) 
                         rasters.append(rc)
-                    common.registerIlwisIds(rasters)                        
+                    common.registerIlwisIds(openeojob.job_id,rasters)                        
                     self.extra[TEMPORALEXTENT] = interv
                     # translate the ilwis raster to a rasterdata as we need to pass it to the 
                     # reducer graph which assumes all input are rasterdata (in this case)
