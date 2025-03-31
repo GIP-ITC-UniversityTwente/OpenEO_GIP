@@ -253,60 +253,190 @@ class OpenEOProcess(multiprocessing.Process):
     # executes the process graph and is the end point for all raised exceptions that occur while running
     # the process graph.
     def run(self, toServer):
-        if self.processGraph != None:
-            try:
-                timeStart = str(datetime.now())
-                common.logMessage(logging.INFO, 'started job_id: ' + self.job_id + "with name: " + self.title,common.process_user)
-                
-                # start the process graph
-                outputinfo = self.processGraph.run(self, toServer, self.fromServer)
-                timeEnd = str(datetime.now())
-                if 'spatialextent' in outputinfo:
-                    self.spatialextent = outputinfo['spatialextent']
-                self.returns = outputinfo                   
-                log = {'type' : 'progressevent', 'job_id': self.job_id, 'progress' : 'job finished' , 'last_updated' : timeEnd, 'status' : constants.STATUSJOBDONE, 'current_operation' : '?'}   
-                # communicate to the main server process that a job has finished
-                toServer.put(log)
-                if outputinfo != None:
-                    if outputinfo['status'] == constants.STATUSSTOPPED:
-                        self.cleanup()
-                    else:
-                        self.status = constants.STATUSJOBDONE                      
-                else:                    
-                    self.status = constants.STATUSJOBDONE 
-                # dump a metadata file with info about the just finished process graph in the output folder                    
-                path = common.openeoip_config['data_locations']['root_user_data_location']
-                filedir = os.path.join(path['location'], str(self.job_id))
-                path = os.path.join(filedir , "jobmetadata.json")
-                dict = self.toDict(False) 
-                dict['start_datetime']  = timeStart
-                dict['end_datetime']  = timeEnd
-                #if not (outputinfo['datatype'] == constants.DTRASTER  or outputinfo['datatype'] == constants.DTRASTERLIST): 
-                #    dict["assets"] = outputinfo
+        """
+        Executes the process graph and handles all raised exceptions during execution.
 
-                if not os.path.exists(filedir): # this the case were not save_result was part of the workflow  
-                    os.makedirs(filedir)
-                    if outputinfo['datatype'] == constants.DTRASTER:
-                        dict['spatialextent'] = self.saveResult( filedir, outputinfo['value'], "GTiff")                 
-                with open(path, "w") as fp:
-                    json.dump(dict, fp) 
-                   
-                common.logMessage(logging.INFO,'finished job_id: ' + self.job_id ,common.process_user)
-            except  (Exception, BaseException, customexception.CustomException) as ex:
-                # end point for all exceptions. There should be no exception handlers in the running
-                # of the graph (unless really, really needed) as it is assumed that a 'stopping' error
-                # ends up here
-                timeEnd = str(datetime.now()) 
-                code = ''               
-                if isinstance(ex, customexception.CustomException):
-                    code = ex.jsonErr['code']
-                    message = ex.jsonErr['message']
-                else:                    
-                    message = 'failed job_id: ' + self.job_id + " with error " + str(ex)
-                log = {'type' : 'progressevent', 'job_id': self.job_id, 'progress' : 'job finished' , 'last_updated' : timeEnd, 'status' : constants.STATUSERROR, 'message': message, 'code': code, 'current_operation' : '?'}   
-                # communicate to the main server process that an error has occured in a certain job
-                toServer.put(log)
-                common.logMessage(logging.ERROR,message,common.process_user)    
+        Args:
+            toServer: The server object for communication.
+        """
+        if self.processGraph is not None:
+            try:
+                time_start = str(datetime.now())
+                self._logJobStart(time_start)
+
+                # Start the process graph
+                output_info = self._executeProcessGraph(toServer)
+
+                time_end = str(datetime.now())
+                self._handleProcessGraphOutput(output_info, toServer, time_start, time_end)
+
+            except (Exception, BaseException, customexception.CustomException) as ex:
+                self._handleRunException(ex, toServer)
+
+# Helper Functions
+
+    def _logJobStart(self, time_start):
+        """
+        Logs the start of the job.
+
+        Args:
+            time_start: The start time of the job.
+        """
+        common.logMessage(
+            logging.INFO,
+            f"started job_id: {self.job_id} with name: {self.title}",
+            common.process_user
+        )
+
+    def _executeProcessGraph(self, toServer):
+        """
+        Executes the process graph.
+
+        Args:
+            toServer: The server object for communication.
+
+        Returns:
+            The output information from the process graph.
+        """
+        return self.processGraph.run(self, toServer, self.fromServer)
+
+    def _handleProcessGraphOutput(self, output_info, toServer, time_start, time_end):
+        """
+        Handles the output of the process graph.
+
+        Args:
+            output_info: The output information from the process graph.
+            toServer: The server object for communication.
+            time_start: The start time of the job.
+            time_end: The end time of the job.
+        """
+        if 'spatialextent' in output_info:
+            self.spatialextent = output_info['spatialextent']
+        self.returns = output_info
+
+        log = {
+            'type': 'progressevent',
+            'job_id': self.job_id,
+            'progress': 'job finished',
+            'last_updated': time_end,
+            'status': constants.STATUSJOBDONE,
+            'current_operation': '?'
+        }
+        toServer.put(log)
+
+        if output_info is not None:
+            if output_info['status'] == constants.STATUSSTOPPED:
+                self.cleanup()
+            else:
+                self.status = constants.STATUSJOBDONE
+        else:
+            self.status = constants.STATUSJOBDONE
+
+        self._saveMetadata(output_info, time_start, time_end)
+
+    def _saveMetadata(self, output_info, time_start, time_end):
+        """
+        Saves metadata about the finished process graph.
+
+        Args:
+            output_info: The output information from the process graph.
+            time_start: The start time of the job.
+            time_end: The end time of the job.
+        """
+        path = common.openeoip_config['data_locations']['root_user_data_location']
+        filedir = os.path.join(path['location'], str(self.job_id))
+        metadata_path = os.path.join(filedir, "jobmetadata.json")
+
+        metadata = self.toDict(False)
+        metadata['start_datetime'] = time_start
+        metadata['end_datetime'] = time_end
+
+        if not os.path.exists(filedir):
+            os.makedirs(filedir)
+            if output_info['datatype'] == constants.DTRASTER:
+                metadata['spatialextent'] = self.saveResult(filedir, output_info['value'], "GTiff")
+
+        with open(metadata_path, "w") as fp:
+            json.dump(metadata, fp)
+
+        common.logMessage(logging.INFO, f"finished job_id: {self.job_id}", common.process_user)
+
+    def _handleRunException(self, ex, toServer):
+        """
+        Handles exceptions raised during the execution of the process graph.
+
+        Args:
+            ex: The exception that was raised.
+            toServer: The server object for communication.
+        """
+        time_end = str(datetime.now())
+        code = ''
+        if isinstance(ex, customexception.CustomException):
+            code = ex.jsonErr['code']
+            message = ex.jsonErr['message']
+        else:
+            message = f"failed job_id: {self.job_id} with error {str(ex)}"
+
+        log = {
+            'type': 'progressevent',
+            'job_id': self.job_id,
+            'progress': 'job finished',
+            'last_updated': time_end,
+            'status': constants.STATUSERROR,
+            'message': message,
+            'code': code,
+            'current_operation': '?'
+        }
+        toServer.put(log)
+        common.logMessage(logging.ERROR, message, common.process_user)
+
+    def _logJobStart(self, time_start):
+        """
+        Logs the start of the job.
+
+        Args:
+            time_start: The start time of the job.
+        """
+        common.logMessage(
+            logging.INFO,
+            f"started job_id: {self.job_id} with name: {self.title}",
+            common.process_user
+        )
+
+    def _handleProcessGraphOutput(self, output_info, toServer, time_start, time_end):
+        """
+        Handles the output of the process graph.
+
+        Args:
+            output_info: The output information from the process graph.
+            toServer: The server object for communication.
+            time_start: The start time of the job.
+            time_end: The end time of the job.
+        """
+        if 'spatialextent' in output_info:
+            self.spatialextent = output_info['spatialextent']
+        self.returns = output_info
+
+        log = {
+            'type': 'progressevent',
+            'job_id': self.job_id,
+            'progress': 'job finished',
+            'last_updated': time_end,
+            'status': constants.STATUSJOBDONE,
+            'current_operation': '?'
+        }
+        toServer.put(log)
+
+        if output_info is not None:
+            if output_info['status'] == constants.STATUSSTOPPED:
+                self.cleanup()
+            else:
+                self.status = constants.STATUSJOBDONE
+        else:
+            self.status = constants.STATUSJOBDONE
+
+        self._saveMetadata(output_info, time_start, time_end)        
+
     
   
         
