@@ -2,7 +2,7 @@ from openeooperation import *
 from operationconstants import *
 from constants import constants
 from rasterdata import *
-from common import getRasterDataSets, saveIdDatabase
+from common import openeoip_config, saveIdDatabase
 import ilwis
 from pathlib import Path
 from eoreader import *
@@ -14,7 +14,33 @@ from dateutil import parser
 from globals import getOperation
 from workflow.processGraph import ProcessGraph
 import copy
+from multiprocessing import Lock
+import tests.addTestRasters as tr
 
+# gets all rasterdata sets that are registered in the system
+# this is basically a cached value for performance reasons and consitency
+def getRasterDataSets(includeSynteticData=True):
+    home = Path.home()
+    loc = openeoip_config['data_locations']['system_files']
+    sytemFolder = os.path.join(home, loc['location'])        
+    propertiesFolder = os.path.join(home, sytemFolder)
+    raster_data_sets = dict()
+    if ( os.path.exists(propertiesFolder)):
+        propertiesPath = os.path.join(propertiesFolder, 'id2filename.table')
+        if ( os.path.exists(propertiesPath)):
+            lock = Lock()
+            lock.acquire()
+            with open(propertiesPath, 'r') as f:
+                data = f.read()
+            f.close()
+            lock.release()    
+            raster_data_sets =  json.loads(data)
+
+    if includeSynteticData:      
+        rasters = tr.setTestRasters(5)
+        for r in rasters:
+            raster_data_sets[r['id']] = r         
+    return raster_data_sets
 
 class LoadCollectionOperation(OpenEoOperation):
     def __init__(self):
