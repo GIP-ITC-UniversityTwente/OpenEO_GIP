@@ -24,7 +24,22 @@ def get(key,values,  defaultValue):
 # helper class for the process graph to store the passed parameter values(process) and use
 # them while executing the process
 class OpenEOParameter:
-    def __init__(self, parm):
+    schema = {}
+    name = ''
+    description = ''
+    optional = False
+    deprecated = False
+    experimental = False
+    default = None
+    returnValue = None
+    parameters = []
+    spatial_organization = []
+    datatype = None
+    datacube = None    
+   
+    def __init__(self, parm=None):
+        if parm == None:
+            return
         self.schema = parm['schema']
         subt = self.schema['subtype']
         self.name = get('name', parm, '')
@@ -53,7 +68,25 @@ class OpenEOParameter:
                     self.spatial_organization.append((tp, get('geometry', dimensions, '')))
                 if tp in ['eo:bands', 'temporal', 'other']:
                     self.spatial_organization.append(tp, tp)
-
+    def __eq__(self, other):
+        if not isinstance(other, OpenEOParameter):
+            return False
+        schema_equal = self.schema == other.schema
+        return (schema_equal and
+                self.name == other.name and
+                self.description == other.description and
+                self.optional == other.optional and
+                self.deprecated == other.deprecated and
+                self.experimental == other.experimental and
+                self.default == other.default and   
+                self.returnValue == other.returnValue and
+                self.parameters == other.parameters and
+                self.spatial_organization == other.spatial_organization and
+                self.datatype == other.datatype and
+                self.datacube == other.datacube)
+    
+    
+   
     def toDict(self):
             parmDict = {}
             parmDict = self.schema
@@ -272,8 +305,6 @@ class OpenEOProcess(multiprocessing.Process):
 
             except (Exception, BaseException, customexception.CustomException) as ex:
                 self._handleRunException(ex, toServer)
-
-# Helper Functions
 
     def _logJobStart(self, time_start):
         """
