@@ -24,48 +24,105 @@ class SaveResultOperation(OpenEoOperation):
               
 
     def run(self,openeojob , processOutput, processInput):
+        """
+        Executes the save result operation.
+
+        Args:
+            openeojob: The OpenEO job object.
+            processOutput: The output object for logging and communication.
+            processInput: The input object for the operation.
+
+        Returns:
+            A dictionary containing the output information.
+        """        
         if self.runnable:
             self.logStartOperation(processOutput, openeojob)
-            filePath = openeoip_config['data_locations']['root_user_data_location']
-            filePath = filePath['location'] + '/' + str(openeojob.job_id) 
-            if not os.path.exists(filePath):   
-                os.makedirs(filePath)
+            filePath = self._createOutputDirectory(openeojob)
 
             env = ilwis.Envelope()
-            count = 1
-            if self.data != None:
-                if isinstance(self.data, list):
-                    for d in self.data:
-                        if isinstance(d, RasterData):
-                            name = d['title'] 
-                            name = name.replace('_ANONYMOUS', 'raster')                    
-                            for raster in d.getRasters():
-                                outpath = filePath + '/' + name + "_"+ str(count)
-                                raster.store("file://" + outpath,self.format, "gdal")
-                                envTemp = raster.envelope()
-                                if not env:
-                                    env = envTemp
-                                else:
-                                    env.add(envTemp)
-                                count = count + 1                        
-                    
+      
+            if self.data is not None:
+                    if isinstance(self.data, list):
+                        outputInfo = self._processRasterData(filePath, env)
+                    else:
+                        outputInfo = createOutput(constants.STATUSFINISHED, self.data, constants.DTNUMBER)
 
-                            ext = ('.tif','.dat','.mpr','.tiff','.jpg', '.png')
-                            file_names = [f for f in os.listdir(filePath) if f.endswith(ext)]
-                            files = []
-                            for filename in file_names:
-                                fn = filePath + "/"  + filename
-                                files.append(fn)
-                        self.logEndOperation(processOutput,openeojob)
-                        outputInfo =  createOutput(constants.STATUSFINISHED, files, constants.DTRASTERLIST)
-                else:
-                    outputInfo = createOutput(constants.STATUSFINISHED, self.data, constants.DTNUMBER)                       
-            if env:
-                parts = re.split("[\s,]+", str(env))
-                outputInfo['spatialextent'] = parts
-            return outputInfo
-        message = common.notRunnableError(self.name, openeojob.job_id) 
+                    if env:
+                        outputInfo['spatialextent'] =  re.split(r"[\s,]+", str(env))
+
+                    self.logEndOperation(processOutput, openeojob)
+                    return outputInfo
+
+        message = common.notRunnableError(self.name, openeojob.job_id)
         return createOutput('error', message, constants.DTERROR)
+    
+    def _processRasterData(self, filePath, env):
+        """
+        Processes raster data and stores it in the output directory.
+
+        Args:
+            filePath: The path to the output directory.
+            env: The spatial envelope to update.
+
+        Returns:
+            A dictionary containing the output information.
+        """
+        count = 1
+        files = []
+
+        for data_item in self.data:
+            if isinstance(data_item, RasterData):
+                files.extend(self._storeRasterData(filePath, data_item, env, count))
+                count += len(data_item.getRasters())
+
+        return createOutput(constants.STATUSFINISHED, files, constants.DTRASTERLIST)
+    
+    def _createOutputDirectory(self, openeojob):
+        """
+        Creates the output directory for storing results.
+
+        Args:
+            openeojob: The OpenEO job object.
+
+        Returns:
+            The path to the output directory.
+        """
+        filePath = openeoip_config['data_locations']['root_user_data_location']
+        filePath = filePath['location'] + '/' + str(openeojob.job_id)
+        if not os.path.exists(filePath):
+            os.makedirs(filePath)
+        return filePath
+
+    def _storeRasterData(self, filePath, rasterData, env, count):
+            """
+            Stores raster data in the output directory.
+
+            Args:
+                filePath: The path to the output directory.
+                rasterData: The raster data to store.
+                env: The spatial envelope to update.
+                count: The starting count for naming files.
+
+            Returns:
+                A list of file paths for the stored raster data.
+            """
+            files = []
+            name = rasterData['title'].replace('_ANONYMOUS', 'raster')
+
+            for raster in rasterData.getRasters():
+                outpath = f"{filePath}/{name}_{count}"
+                raster.store(f"file://{outpath}", self.format, "gdal")
+
+                envTemp = raster.envelope()
+                if not env:
+                    env = envTemp
+                else:
+                    env.add(envTemp)
+
+                count += 1
+            ext = ('.tif', '.dat', '.mpr', '.tiff', '.jpg', '.png')
+            files.extend([os.path.join(filePath, f) for f in os.listdir(filePath) if f.endswith(ext)])
+            return files    
         
 def registerOperation():
      return SaveResultOperation()
