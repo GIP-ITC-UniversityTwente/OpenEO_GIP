@@ -2,8 +2,6 @@ from flask import make_response, jsonify, Response
 from werkzeug.wsgi import FileWrapper
 import json
 from pathlib import Path
-import os
-import pickle
 from multiprocessing import Lock
 import logging
 import mimetypes
@@ -13,7 +11,7 @@ from zipfile import ZipFile
 import os, shutil
 from datetime import datetime
 from dateutil import parser
-import tests.addTestRasters as tr
+# import tests.addTestRasters as tr
 from processmanager import lockLogger
 import ilwis
 import glob
@@ -41,29 +39,7 @@ raster_data_sets = None
 process_user = 'system'
 testRaster_openeo1  = None
 
-# gets all rasterdata sets that are registered in the system
-# this is basically a cached value for performance reasons and consitency
-def getRasterDataSets(includeSynteticData=True):
-    home = Path.home()
-    loc = openeoip_config['data_locations']['system_files']
-    sytemFolder = os.path.join(home, loc['location'])        
-    propertiesFolder = os.path.join(home, sytemFolder)
-    raster_data_sets = dict()
-    if ( os.path.exists(propertiesFolder)):
-        propertiesPath = os.path.join(propertiesFolder, 'id2filename.table')
-        if ( os.path.exists(propertiesPath)):
-            lock.acquire()
-            with open(propertiesPath, 'r') as f:
-                data = f.read()
-            f.close()
-            lock.release()    
-            raster_data_sets =  json.loads(data)
 
-    if includeSynteticData:      
-        rasters = tr.setTestRasters(5)
-        for r in rasters:
-            raster_data_sets[r['id']] = r         
-    return raster_data_sets
 
 # registers a data set in the system
 def saveIdDatabase(idDatabse):
