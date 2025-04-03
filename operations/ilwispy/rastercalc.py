@@ -13,45 +13,112 @@ class RasterCalc(OpenEoOperation):
         self.kind = constants.PDPREDEFINED
 
     def prepare(self, arguments):
-        toServer, job_id = self.getDefaultArgs(arguments) 
-        self.logStartPrepareOperation(job_id)   
-        self.finalRasters = {}
+        """
+        Prepares the RasterCalc operation by processing input arguments and setting up the operation.
+
+        Args:
+            arguments: The input arguments for the operation.
+        """
+        toServer, job_id = self._initializePreparation(arguments)
+        rasterParms = self._processRasterParameters(arguments)
+        self.finalRasters = self._processFinalRasters(rasterParms)
+        self.expr, self.rest = self._prepareExpression(arguments, self.finalRasters)
+        self._finalizePreparation(rasterParms, job_id)
+
+
+    def _initializePreparation(self, arguments):
+        """
+        Initializes the preparation process by extracting default arguments.
+
+        Args:
+            arguments: The input arguments for the operation.
+
+        Returns:
+            A tuple containing the server object and job ID.
+        """
+        toServer, job_id = self.getDefaultArgs(arguments)
+        self.logStartPrepareOperation(job_id)
+        return toServer, job_id
+
+    def _processRasterParameters(self, arguments):
+        """
+        Processes the 'v' argument to extract raster parameters.
+
+        Args:
+            arguments: The input arguments for the operation.
+
+        Returns:
+            A list of raster parameters.
+        """
         if isinstance(arguments['v']['resolved'], dict):
-            rasterParms = list(arguments['v']['resolved'].items())
-        else: # special case; only one element in a parameter value; as the one value per parm is the default for all most all operations this
-            # is used everywhere else. This operation may have mutiple values per parameter so we need a 'translation' 
+            return list(arguments['v']['resolved'].items())
+        else:
             org = arguments['v']['base']
             name = org['from_node'][0]
-            rasterParms = [(name, arguments['v']['resolved'])]
+            return [(name, arguments['v']['resolved'])]
 
-        item = rasterParms[0]           
-        firstRaster = item[1]
-        self.finalRasters[item[0]] = firstRaster[0].getRaster()
+    def _processFinalRasters(self, rasterParms):
+        """
+        Processes the final rasters by resampling if necessary.
+
+        Args:
+            rasterParms: A list of raster parameters.
+
+        Returns:
+            A dictionary of final rasters.
+        """
+        finalRasters = {}
+        firstRaster = rasterParms[0][1]
+        finalRasters[rasterParms[0][0]] = firstRaster[0].getRaster()
+
         for raster in rasterParms[1:]:
             if self.needResample(firstRaster[0], raster[1][0]):
-                newRaster =  self.resample(firstRaster[0], raster[1][0])
-                self.finalRasters[raster[0]] = newRaster
+                newRaster = self.resample(firstRaster[0], raster[1][0])
+                finalRasters[raster[0]] = newRaster
             else:
-                self.finalRasters[raster[0]] = raster[1][0].getRaster()  
-        self.expr = arguments['expression']['resolved']
-        self.rest = ''
+                finalRasters[raster[0]] = raster[1][0].getRaster()
+
+        return finalRasters
+
+    def _prepareExpression(self, arguments, finalRasters):
+        """
+        Prepares the mapcalc expression and the rest string.
+
+        Args:
+            arguments: The input arguments for the operation.
+            finalRasters: A dictionary of final rasters.
+
+        Returns:
+            A tuple containing the mapcalc expression and the rest string.
+        """
+        expr = arguments['expression']['resolved']
+        rest = ''
         count = 1
-        for r in self.finalRasters.items():
-            self.expr = self.expr.replace(r[0], '@' + str(count))
-            if self.rest != '':
-                self.rest = self.rest + ','
-            key = r[0]                
-            self.rest = self.rest + 'self.finalRasters["' + key + '"]'
-            count = count + 1
-        self.expr = 'ilwis.do("mapcalc","' + self.expr + '",' + self.rest + ')'
-        self.createExtra(firstRaster[0], basename=self.name) 
-        setWorkingCatalog(firstRaster[0], self.name) 
+
+        for key, raster in finalRasters.items():
+            expr = expr.replace(key, '@' + str(count))
+            if rest != '':
+                rest += ','
+            rest += f'self.finalRasters["{key}"]'
+            count += 1
+
+        expr = f'ilwis.do("mapcalc", "{expr}", {rest})'
+        return expr, rest
+
+    def _finalizePreparation(self, rasterParms, job_id):
+        """
+        Finalizes the preparation process by setting up the working catalog and marking the operation as runnable.
+
+        Args:
+            rasterParms: A list of raster parameters.
+            job_id: The job ID for logging.
+        """
+        firstRaster = rasterParms[0][1]
+        self.createExtra(firstRaster[0], basename=self.name)
+        setWorkingCatalog(firstRaster[0], self.name)
         self.runnable = True
         self.logEndPrepareOperation(job_id)
-    
-             
-
-
+ 
     def run(self,openeojob, processOutput, processInput):
         if self.runnable:
             self.logStartOperation(processOutput, openeojob)
