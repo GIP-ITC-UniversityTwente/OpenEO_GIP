@@ -1,14 +1,16 @@
 import ilwis
 import math
 import numpy as np
-import common
+# import common
 from rasterdata import RasterData, RasterBand
 import os
 from pathlib import Path
 import constants.constants as cc
 from datetime import datetime, timedelta
 import logging
+import common
 
+logger = logging.getLogger(__name__)
 
 def createEmptySmallNumericRaster(alternate):
     if alternate == 3:
@@ -86,7 +88,7 @@ def setTestRaster(dims, bndcount = 1, version = 0):
     url.replace('////', '///') # if at all
     path = url.split('//')
     folder = os.path.dirname("/"+ path[1])
-    common.logMessage(logging.INFO, 'creating synthetic data. new working folder:' + folder) 
+    logger.logMessage(logging.INFO, 'creating synthetic data. new working folder:' + folder) 
     path = Path(folder).as_uri()
     ilwis.setWorkingCatalog(path)  
 

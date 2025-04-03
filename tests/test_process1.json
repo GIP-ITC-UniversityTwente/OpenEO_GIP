@@ -37,12 +37,12 @@
 						"property1": null,
 						"property2": null
 					},
-					"name": "string",
-					"description": "string",
+					"name": "a name",
+					"description": "more text",
 					"optional" : false,
 					"deprecated": false,
 					"experimental": false,
-					"default": null
+					"default": "def 101"
 					}
 				],
 				"returns": {
