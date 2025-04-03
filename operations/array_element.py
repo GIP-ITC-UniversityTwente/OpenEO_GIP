@@ -2,8 +2,7 @@ from openeooperation import *
 from operationconstants import *
 from constants import constants
 from rasterdata import *
-from common import getRasterDataSets
-from pathlib import Path
+
 
 class ArrayElementOperation(OpenEoOperation):
     def __init__(self):
