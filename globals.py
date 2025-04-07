@@ -32,7 +32,7 @@ class Globals :
     try:
         serverValid = True
         openeoip_config = None
-        internal_database = {}
+        raster_database = {}
         signed_url_secret = str(uuid.uuid4())
         token_secret = str(uuid.uuid4()) 
         operations = initOperationMetadata(getOperation)
@@ -72,21 +72,21 @@ class Globals :
                 self.databseConn.close()
 
     def insertRasterInDatabase(self, raster):
-        self.internal_database[raster['id']] = raster
+        self.raster_database[raster['id']] = raster
 
     def filepath2raster(self, filename):
-        items = self.internal_database.items()
+        items = self.raster_database.items()
         for item in items:
             if item[0] == filename:
                 return item[1]
         return '?' 
     
     def id2Raster(self, id):
-        items = self.internal_database.items()
+        items = self.raster_database.items()
         #if size ==0 then the scan on data location has not happened so we look into the saved properties of a previous scan
         if len(items) == 0:
             if self.loadIdDatabase():
-                items = self.internal_database.items()
+                items = self.raster_database.items()
        
         for item in items:
             if id == item[0] or id == item[1]['title']:
@@ -110,7 +110,7 @@ class Globals :
         propsFile = open(propsPath, 'w')
         cp_db = {}
         #keys SYNTHETIC_DATA may not be saved as they contain a 'unpickable' member and are generated anyway
-        for key,value in self.internal_database.items():
+        for key,value in self.raster_database.items():
             if str(key).find('SYNTHETIC_DATA') == -1:
                 cp_db[key] = value
 
@@ -131,7 +131,7 @@ class Globals :
             if file_stats.st_size > 0:
                 with open(propertiesPath, 'r') as f:
                     data = f.read()
-                self.internal_database = json.loads(data) 
+                self.raster_database = json.loads(data) 
                 return True
         return False            
         

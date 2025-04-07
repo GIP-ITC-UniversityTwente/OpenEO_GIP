@@ -89,7 +89,7 @@ def loadCollections():
     globalsSingleton.saveIdDatabase() 
     rasters = tr.setTestRasters(5)
     for r in rasters:
-        globalsSingleton.internal_database[r['id']] = r
+        globalsSingleton.raster_database[r['id']] = r
     common.logMessage(logging.INFO, 'finished reading collections',common.process_user)
 
     return allJson 
