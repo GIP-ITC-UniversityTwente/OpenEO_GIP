@@ -155,14 +155,37 @@ A wrapper class for the process graph that is the core of openeo processing. It 
   - manage error messaging from the graph
 - translate the graph to json format that can be saved or send
 
-
-
 ![masterflow](https://github.com/user-attachments/assets/ecc0d491-9ed3-4be9-8501-2a5cbcbac840)
 
 The server (Flask thread) gets a HTTP request and creates a thread in which an object is instanced mapped to the request. 
+## Main API handlers
 
 #### OpenEOIPCollections
-Implements the get() method which loads all known collections (jsonifyed version) and return a list to the client wrapped in [openeo terms](https://api.openeo.org/#tag/EO-Data-Discovery/operation/list-collections),-GET. Collections are defined in .metadata files. If a raster data set is not yet translated it will be automatically translated into a .metadata file and its binary data moved to be into a seperate location for performance reasons.  
+Implements the get() method which loads all known collections (jsonifyed version) and return a list to the client wrapped in [openeo terms](https://api.openeo.org/#tag/EO-Data-Discovery/operation/list-collections). The data location are defined in openeoip_config['data_locations']['root_data_location'] for general data and openeoip_config['data_locations']['root_user_data_location'] for user data(combined with username). Collections are defined in .metadata files. If a raster data set is not yet translated it will be automatically translated into a .metadata file and its binary data moved to be into a seperate location for performance reasons.
+```
+for all locations
+   create extra metadata
+   for all files in a location
+      if file not yet unpacked
+          unpack file
+      jsonify file metadata and add to list
+wrap list and make response
+```
+
+#### OpenEOIPCollection
+Implements the get() method which loads for a specific collection (jsonifyed version) and return a collection to the client wrapped in [openeo terms](https://api.openeo.org/#tag/EO-Data-Discovery/operation/describe-collection). 
+```
+if the collection is net yet known
+  unpack collection
+jsonify collection metadata
+wrap metadat and make response
+```
+#### OpenEOIPCapabilities
+Implements the get() method which return the available capabilities of the server. [openeo terms](https://api.openeo.org/#tag/Capabilities). For the moment the capabilities are fixed json structure.
+
+#### OpenEOIPProcessDiscovery
+
+#### OpenEOIPResult
 
 ## Processing Backend
 
