@@ -162,7 +162,7 @@ A wrapper class for the process graph that is the core of openeo processing. It 
 The server (Flask thread) gets a HTTP request and creates a thread in which an object is instanced mapped to the request. 
 
 #### OpenEOIPCollections
-bla bla
+Implements the get() method which loads all known collections (jsonifyed version) and return a list to the client wrapped in [openeo terms](https://api.openeo.org/#tag/EO-Data-Discovery/operation/list-collections),-GET. Collections are defined in .metadata files. If a raster data set is not yet translated it will be automatically translated into a .metadata file and its binary data moved to be into a seperate location for performance reasons.  
 
 ## Processing Backend
 
