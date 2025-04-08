@@ -186,11 +186,13 @@ jsonify collection metadata
 wrap metadat and make response
 ```
 #### OpenEOIPCapabilities
-Implements the get() method which return the available capabilities of the server. [openeo terms](https://api.openeo.org/#tag/Capabilities). For the moment the capabilities are fixed json structure.
+Implements the get() method which return the available capabilities of the server. [openeo terms](https://api.openeo.org/#tag/Capabilities). For the moment the capabilities are a fixed json structure.
 
 #### OpenEOIPProcessDiscovery
+Implements the get() method which loads the metadata from all operations in [openeo terms](https://api.openeo.org/#tag/Process-Discovery). The metadata of an operation is available in the operation/metadata folder and each operation knows how to access it. The function wraps them in a list and makes a response to send back to the client.
 
 #### OpenEOIPResult
+A synchronus running of a process-graph through the post() method ( see [openeo terms](https://api.openeo.org/#tag/Data-Processing/operation/compute-result) ). There will be no feedback from the server until the operations is finished and the result is downloaded.
 
 #### OpenEOIPResult
 
