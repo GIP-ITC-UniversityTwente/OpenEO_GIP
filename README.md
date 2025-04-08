@@ -100,6 +100,7 @@ The framework communicate with the rest of the backend ( usually through an api)
 | ProcessManager | A class that registers all 'jobs' that are entered into the system |
 | openeoip_config | general locations and settings needed to run the server |
 | OpenEOProcess | A class that encapsulates a 'job' that has entered the systm |
+| operations | A list of all openeo operations available in the system |
 
 #### raster_database
 A simple dictionary that links that (internal)raster identifier to the id2filename.table. This file contains a json descriptions of the raster data sets. The location of this file is linked to openeoip_config['data_locations']['system_files']. Note that openeo describes a flat structure of files/data. Meaning that it easy to generate id conflicts ( duplicates). 
@@ -155,6 +156,10 @@ A wrapper class for the process graph that is the core of openeo processing. It 
   - manage error messaging from the graph
 - translate the graph to json format that can be saved or send
 
+#### operations
+A list of operations that is discovered by the RegisterOperation method that must be implemented by every operation implementation. The metadata of an operation is available in the operation/metadata folder and each operation knows how to access it. 
+
+## The server
 ![masterflow](https://github.com/user-attachments/assets/ecc0d491-9ed3-4be9-8501-2a5cbcbac840)
 
 The server (Flask thread) gets a HTTP request and creates a thread in which an object is instanced mapped to the request. 
@@ -187,7 +192,38 @@ Implements the get() method which return the available capabilities of the serve
 
 #### OpenEOIPResult
 
+#### OpenEOIPResult
+
+#### OpenEOIPFileFormats
+
+#### OpenEOIPFileFormats
+
+#### OpenEOIPServices
+
+#### OpenEOIPServiceTypes
+
+#### OpenEOIPJobs
+
+#### OpenEOMetadata4JobById
+
+#### OpenEOJobResults
+
+#### OpenEOIJobByIdEstimate
+
+#### OpenEOProcessGraphs
+
+#### OpenEOProcessGraph
+
+#### OpenEOIPLogs
+
+#### OpenEOIPValidate
+
+#### OpenEOUdfRuntimes
+
+#### OpenEODownloadFile
+
+#### Authenitication
+
+#### OpenEOUploadFile
+
 ## Processing Backend
-
-
-
