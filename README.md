@@ -90,11 +90,11 @@ The following classes implement the API
 | OpenEOUploadFile           | /files/<path>                             | |
 
 ## Backend structures
-The framework(Flask classes, see table 3) communicate with the rest of the backend ( usually through an api) through the following sources.
+In a nutshell the server follows the pattern below.
 
-![masterflow](https://github.com/user-attachments/assets/ecc0d491-9ed3-4be9-8501-2a5cbcbac840)
+![masterflow](https://github.com/user-attachments/assets/66d6fea2-8dea-4dae-adb7-3592bc71e1d2)
 
-The first lane is the Flask framework itself. The second lane is API handlers (see table 3). The third lane is the [ProcessManager](####processmanager). Entry into the server begins when 'Handle request' is called in the first lane. 
+The first lane is the Flask framework itself. The second lane is API handlers (see table 3). The third lane is the [ProcessManager](####processmanager). Entry into the server begins when 'Handle request' is called in the first lane. It instantiates an appropriate class and passes the request to it. Based on the class it uses backend resources to process and communicate the requests parameters. The process manager starts a seperate process when processesing starts and creates the fourth lane.
 
 *table 4: Key data sources*
 | Structure                        | Description                                  |
@@ -114,6 +114,28 @@ A class with only one instance that manages all registered jobs. The class has a
 - start a registered job
 - register any communcation from running jobs and pass it (if needed) to the client side.
 - remove a finished job and its adimistration after a set time ( see ...)
+
+The class runs a infinite loop in which it checks the status of the various responsibilities it is tasked to. 
+
+##### registering jobs
+This creates an 'output' object. An 'output' object is a container for all information about the newly created job. It also creates an object on the process queue but this object has a status STATUSCREATED and thus will not run. Only objects with status STATUSQUEUED will be considered by the ProcessManager to be 'started'. 
+
+| member| description|
+|----------------------------|-------------------------------------------|
+| eoprocess| an instance of the OpenEOProcess. A wrapper class for the process graph that is the core of openeo processing. Note that the EOProcess on this side of the process boundary and the instance on the other side are different instances and basically unreachable for each other. The instance on this side exists for administrative purposes|
+| pythonProcess| Each EoProcess is started(passed to) as a Python process. For communication reasons we want to have access to this instance|
+| progress| a number between 0 and 1 marking the current progress. Note that atm this has onnly the state 0 or 1 as the actual progress is in openeo terms a rather questionable number|
+| last_updated| marks the last moment communication was accepted from the running OpenEOProcess instance (the 'other' process)|
+| status| the current state of the job: STATUSQUEUED, STATUSCREATED, STATUSRUNNING, STATUSSTOPPED, STATUSFINISHED, STATUSJOBDONE, STATUSUNKNOWN, STATUSERROR, CUSTOMERROR|
+| logs| accumulated logs ( a list) of all log messages commin from the 'other' process|
+| message| last message from the 'other' process|
+| code| code classifying the last message|
+| output| references to the generate outputs of the process. Usually locations on the server where outputs are stored|
+
+The content of these fields is constantly modified and queried by the various requests/services running on the server thread. 
+
+##### Start a registered Job
+The ProcessManager changes the status of the job to STATUSQUEUED. 
 
 #### openip_config
 A simple dictionary that is loaded from config.json file that is located in the {root_project}/config folder.
