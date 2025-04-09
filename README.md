@@ -118,7 +118,7 @@ A class with only one instance that manages all registered jobs. The class has a
 The class runs a infinite loop in which it checks the status of the various responsibilities it is tasked to. 
 
 ##### registering jobs
-This creates an 'output' object. An 'output' object is a container for all information about the newly created job. It also creates an object on the process queue but this object has a status STATUSCREATED and thus will not run. Only objects with status STATUSQUEUED will be considered by the ProcessManager to be 'started'. 
+This creates an 'output' object. An 'output' object is a container for all information about the newly created job. It also creates an object on the process queue but this object has a status, STATUSCREATED and thus will not run. Only objects with status STATUSQUEUED will be considered by the ProcessManager to be 'started'. 
 
 | member| description|
 |----------------------------|-------------------------------------------|
@@ -135,7 +135,9 @@ This creates an 'output' object. An 'output' object is a container for all infor
 The content of these fields is constantly modified and queried by the various requests/services running on the server thread. 
 
 ##### Start a registered Job
-The ProcessManager changes the status of the job to STATUSQUEUED. 
+The ProcessManager changes the status of the job to STATUSQUEUED. This causes the object the picked up by the infinite loop. If it is picked up, it will be removed from the queue and a process will be started with an OpenEOProcess as parameter (and thus split of OpenEOProcess in the 'outputs' list).
+
+##### Communication
 
 #### openip_config
 A simple dictionary that is loaded from config.json file that is located in the {root_project}/config folder.
