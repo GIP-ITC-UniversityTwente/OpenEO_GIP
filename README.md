@@ -60,38 +60,41 @@ The following part of the OpenEO web API(https://api.openeo.org/) is implemented
 ## Python Implementation
 ### Flask Pattern
 Each call to the API is mapped to a specific class which implements set of methods which corresponds to the actual to the requests method (GET, POST, PUT, DELETE, PATCH).
-The following class implement the API
+
+### API handlers
+The following classes implement the API
 
 *table 3: Flask Implementation*
-| Name                        | Endpoint                                  |
-|----------------------------|-------------------------------------------|
-| [OpenEOIPCollections](####openeoipcollections)        | /collections                              |
-| OpenEOIPCollection         | /collections/<string:name>                |
-| OpenEOIPCapabilities       | /                                         |
-| OpenEOIPProcessDiscovery   | /processes                                |
-| OpenEOIPResult             | /result                                   |
-| OpenEOIPFileFormats        | /file_formats                             |
-| OpenEOIPServices           | /services                                 |
-| OpenEOIPServiceTypes       | /service_types                            |
-| OpenEOIPJobs               | /jobs                                     |
-| OpenEOMetadata4JobById     | /jobs/<string:job_id>                     |
-| OpenEOJobResults           | /jobs/<string:job_id>/results             |
-| OpenEOIJobByIdEstimate     | /jobs/<string:job_id>/estimate            |
-| OpenEOProcessGraphs        | /process_graphs                           |
-| OpenEOProcessGraph         | /process_graphs/<string:name>             |
-| OpenEOIPLogs               | /jobs/<string:job_id>/logs                |
-| OpenEOIPValidate           | /validation                               |
-| OpenEOUdfRuntimes          | /udf_runtimes                             |
-| OpenEODownloadFile         | /files/<string:filepath>                  |
-| OpenEODataDownload         | /download/<token>                         |
-| Authenitication            | /credentials/basic                        |
-| OpenEOUploadFile           | /files/<path>                             |
+| Name                        | Endpoint                                  | description |
+|----------------------------|-------------------------------------------|---------------------|
+| [OpenEOIPCollections](####openeoipcollections)        | /collections                              | Implements the get() method which loads for a specific collection (jsonifyed version) and return a collection to the client wrapped in [openeo terms](https://api.openeo.org/#tag/EO-Data-Discovery/operation/describe-collection). |
+| OpenEOIPCollection         | /collections/<string:name>                | Implements the get() method which loads for a specific collection (jsonifyed version) and return a collection to the client wrapped in [openeo terms](https://api.openeo.org/#tag/EO-Data-Discovery/operation/describe-collection). |
+| OpenEOIPCapabilities       | /                                         | Implements the get() method which return the available capabilities of the server. [openeo terms](https://api.openeo.org/#tag/Capabilities). For the moment the capabilities are a fixed json structure. |
+| OpenEOIPProcessDiscovery   | /processes                                |Implements the get() method which loads the metadata from all operations in [openeo terms](https://api.openeo.org/#tag/Process-Discovery). The metadata of an operation is available in the operation/metadata folder and each operation knows how to access it. The function wraps them in a list and makes a response to send back to the client. |
+| OpenEOIPResult             | /result                                   | A synchronus running of a process-graph through the post() method ( see [openeo terms](https://api.openeo.org/#tag/Data-Processing/operation/compute-result) ). There will be no feedback from the server until the operations is finished and the result is downloaded. |
+| OpenEOIPFileFormats        | /file_formats                             | Queries the system which output formats are available ( see [openeo terms](https://api.openeo.org/#tag/Capabilities/operation/list-file-types) ). For the moment it is fixed to GTiff though the underlying library can do much more. Will change in the future|
+| OpenEOIPServices           | /services                                 | Lists all secondary web services submitted by a user. For the moment not implemented |
+| OpenEOIPServiceTypes       | /service_types                            | Lists supported secondary web service protocols such as OGC WMS, OGC WCS,.... For the moment there are no secondary services |
+| OpenEOIPJobs               | /jobs                                     | Creates a new batch processing task (job) from one or more (chained) processes at the back-end ( see [openeo terms](https://api.openeo.org/#tag/Batch-Jobs/operation/create-job)) using the post() method. The job is not started but added to the ProcessManager. The process is added to the run queue (and is elegible for running) if an explicit command comes from the client. A job_id is returned to the client as unique identifier that must be used when subsequent communication with server takes place.|
+| OpenEOMetadata4JobById     | /jobs/<string:job_id>                     | Lists all information about a submitted batch job. . The metadata will be in json format|
+| OpenEOJobResults           | /jobs/<string:job_id>/results             | Moves the previous created job to the actual job queue to be ready for processing. ( see [openeo terms](https://api.openeo.org/#tag/Batch-Jobs/operation/start-job) ) The id used is the formentioned job_id as returned by OpenEOIPJobs.post(). Before this there is no processing for this job. This method also enusre that communication of progress can be communicated to the client|
+| OpenEOIJobByIdEstimate     | /jobs/<string:job_id>/estimate            | Calculates an estimate for a batch job ( see [openeo terms](https://api.openeo.org/#tag/Batch-Jobs/operation/estimate-job) )). Estimates are implemented empty at the moment until a clear model exist what an estimate is |
+| OpenEOProcessGraphs        | /process_graphs                           | Lists all user-defined processes (process graphs) of the authenticated user. see [openeo terms](https://api.openeo.org/#tag/Process-Discovery/operation/list-custom-processes) ). The json is the abbreviated form. The long form is delivered by /process_graphs/<string:name>  |
+| OpenEOProcessGraph         | /process_graphs/<string:name>             | Lists of a user-defined processes (process graphs) of the authenticated user. see [openeo terms](https://api.openeo.org/#tag/Process-Discovery/operation/describe-custom-process ). The json is the long form. |
+| OpenEOIPLogs               | /jobs/<string:job_id>/logs                | Lists log entries for the batch job, usually for debugging purposes.  see [openeo terms](https://api.openeo.org/#tag/Data-Processing/operation/debug-job ) |
+| OpenEOIPValidate           | /validation                               | |
+| OpenEOUdfRuntimes          | /udf_runtimes                             | |
+| OpenEODownloadFile         | /files/<string:filepath>                  | |
+| OpenEODataDownload         | /download/<token>                         | |
+| Authenitication            | /credentials/basic                        | |
+| OpenEOUploadFile           | /files/<path>                             | |
 
-e.g.
-The class **processPostJobId** (/jobs). Implements a 'post' method to handle the POST request method and 'get' method to handle to GET request method.
+## Backend structures
+The framework(Flask classes, see table 3) communicate with the rest of the backend ( usually through an api) through the following sources.
 
-### Backend structures
-The framework communicate with the rest of the backend ( usually through an api) through the following sources.
+![masterflow](https://github.com/user-attachments/assets/ecc0d491-9ed3-4be9-8501-2a5cbcbac840)
+
+The first lane is the Flask framework itself. The second lane is API handlers (see table 3). The third lane is the [ProcessManager](####processmanager). Entry into the server begins when 'Handle request' is called in the first lane. 
 
 *table 4: Key data sources*
 | Structure                        | Description                                  |
@@ -159,73 +162,5 @@ A wrapper class for the process graph that is the core of openeo processing. It 
 #### operations
 A list of operations that is discovered by the RegisterOperation method that must be implemented by every operation implementation. The metadata of an operation is available in the operation/metadata folder and each operation knows how to access it. 
 
-## The server
-![masterflow](https://github.com/user-attachments/assets/ecc0d491-9ed3-4be9-8501-2a5cbcbac840)
-
-The server (Flask thread) gets a HTTP request and creates a thread in which an object is instanced mapped to the request. 
-## Main API handlers
-
-#### OpenEOIPCollections
-Implements the get() method which loads all known collections (jsonifyed version) and return a list to the client wrapped in [openeo terms](https://api.openeo.org/#tag/EO-Data-Discovery/operation/list-collections). The data location are defined in openeoip_config['data_locations']['root_data_location'] for general data and openeoip_config['data_locations']['root_user_data_location'] for user data(combined with username). Collections are defined in .metadata files. If a raster data set is not yet translated it will be automatically translated into a .metadata file and its binary data moved to be into a seperate location for performance reasons.
-```
-for all locations
-   create extra metadata
-   for all files in a location
-      if file not yet unpacked
-          unpack file
-      jsonify file metadata and add to list
-wrap list and make response
-```
-
-#### OpenEOIPCollection
-Implements the get() method which loads for a specific collection (jsonifyed version) and return a collection to the client wrapped in [openeo terms](https://api.openeo.org/#tag/EO-Data-Discovery/operation/describe-collection). 
-```
-if the collection is net yet known
-  unpack collection
-jsonify collection metadata
-wrap metadat and make response
-```
-#### OpenEOIPCapabilities
-Implements the get() method which return the available capabilities of the server. [openeo terms](https://api.openeo.org/#tag/Capabilities). For the moment the capabilities are a fixed json structure.
-
-#### OpenEOIPProcessDiscovery
-Implements the get() method which loads the metadata from all operations in [openeo terms](https://api.openeo.org/#tag/Process-Discovery). The metadata of an operation is available in the operation/metadata folder and each operation knows how to access it. The function wraps them in a list and makes a response to send back to the client.
-
-#### OpenEOIPResult
-A synchronus running of a process-graph through the post() method ( see [openeo terms](https://api.openeo.org/#tag/Data-Processing/operation/compute-result) ). There will be no feedback from the server until the operations is finished and the result is downloaded.
-
-#### OpenEOIPResult
-
-#### OpenEOIPFileFormats
-
-#### OpenEOIPFileFormats
-
-#### OpenEOIPServices
-
-#### OpenEOIPServiceTypes
-
-#### OpenEOIPJobs
-
-#### OpenEOMetadata4JobById
-
-#### OpenEOJobResults
-
-#### OpenEOIJobByIdEstimate
-
-#### OpenEOProcessGraphs
-
-#### OpenEOProcessGraph
-
-#### OpenEOIPLogs
-
-#### OpenEOIPValidate
-
-#### OpenEOUdfRuntimes
-
-#### OpenEODownloadFile
-
-#### Authenitication
-
-#### OpenEOUploadFile
 
 ## Processing Backend
