@@ -43,56 +43,117 @@ def loadFile(fullPath, extraMetadataAll):
     return None
 
 def loadCollections():
+    """
+    Loads all collections for the current user by reading raster files.
+
+    Returns:
+        A dictionary containing all collections and links.
+    """
     user = UserInfo(request)
+    data_locations = _getDataLocations(user)
+    common.logMessage(logging.INFO, 'reading collections', common.process_user)
+
+    allCollections = []
+    for location in data_locations:
+        path = location["location"]
+        extraMetadataAll = _loadExtraMetadata(path)
+        allCollections.extend(_processLocation(path, extraMetadataAll))
+
+    allJson = {
+        "collections": allCollections,
+        "links": globalsSingleton.openeoip_config['links']
+    }
+
+    _finalizeCollections()
+    return allJson
+
+def _getDataLocations(user):
+    """
+    Retrieves the data locations for the current user.
+
+    Args:
+        user: The current user.
+
+    Returns:
+        A list of data location dictionaries.
+    """
     data_locations = []
     data_locations.append(globalsSingleton.openeoip_config['data_locations']['root_data_location'])
     loc = globalsSingleton.openeoip_config['data_locations']['root_user_data_location']
-    loc['location'] = os.path.join(loc['location'],user.username)
+    loc['location'] = os.path.join(loc['location'], user.username)
     data_locations.append(loc)
-    common.logMessage(logging.INFO, 'reading collections',common.process_user)
-       
-    allJson = {}
-    allCollections = []
+    return data_locations
 
+def _loadExtraMetadata(path):
+    """
+    Loads extra metadata from the specified path.
 
-    for location in data_locations:
-        path = location["location"]
+    Args:
+        path: The path to the directory containing the extra metadata file.
 
-        extraPath = os.path.join(path, 'extrametadata.json')
-        extraMetadataAll = openExtraMetadata(extraPath)  
-        if os.path.isdir(path):    
-            files = os.listdir(path)
-            
-            for filename in files:
-                collectionJsonDict = {}
-                if filename != 'extrametadata.json':
-                    fullPath = os.path.join(path,  filename)
-                    if os.path.isdir(fullPath):
-                        continue 
-                    name = os.path.splitext(filename)[0]
-                    common.logMessage(logging.INFO, 'reading file ' + filename,common.process_user)
-                    raster = globalsSingleton.id2Raster(name)
-                    if raster == None:
-                        raster = loadFile(fullPath, extraMetadataAll)                  
-                        if raster == None:
-                            continue
+    Returns:
+        The extra metadata as a dictionary, or None if the file does not exist.
+    """
+    extraPath = os.path.join(path, 'extrametadata.json')
+    return openExtraMetadata(extraPath)
 
-                    collectionJsonDict = raster.toShortDictDefinition()
-                    common.logMessage(logging.INFO, 'finished file ' + filename,common.process_user)  
-                    if collectionJsonDict != {}:
-                        allCollections.append(collectionJsonDict)
+def _processLocation(path, extraMetadataAll):
+    """
+    Processes a single data location, reading raster files and metadata.
 
-    allJson["collections"] = allCollections
-    allJson["links"] = globalsSingleton.openeoip_config['links']
+    Args:
+        path: The path to the data location.
+        extraMetadataAll: The extra metadata for the location.
 
-   
-    globalsSingleton.saveIdDatabase() 
+    Returns:
+        A list of collection dictionaries.
+    """
+    collections = []
+    if os.path.isdir(path):
+        files = os.listdir(path)
+        for filename in files:
+            if filename != 'extrametadata.json':
+                fullPath = os.path.join(path, filename)
+                if not os.path.isdir(fullPath):
+                    collection = _processFile(fullPath, filename, extraMetadataAll)
+                    if collection:
+                        collections.append(collection)
+    return collections
+
+def _processFile(fullPath, filename, extraMetadataAll):
+    """
+    Processes a single file, loading its raster data and metadata.
+
+    Args:
+        fullPath: The full path to the file.
+        filename: The name of the file.
+        extraMetadataAll: The extra metadata for the location.
+
+    Returns:
+        A dictionary representing the collection, or None if the file could not be processed.
+    """
+    name = os.path.splitext(filename)[0]
+    common.logMessage(logging.INFO, f'reading file {filename}', common.process_user)
+
+    raster = globalsSingleton.id2Raster(name)
+    if raster is None:
+        raster = loadFile(fullPath, extraMetadataAll)
+        if raster is None:
+            return None
+
+    collectionJsonDict = raster.toShortDictDefinition()
+    common.logMessage(logging.INFO, f'finished file {filename}', common.process_user)
+    return collectionJsonDict if collectionJsonDict else None
+
+def _finalizeCollections():
+    """
+    Finalizes the collection loading process by saving the ID database and adding test rasters.
+    """
+    globalsSingleton.saveIdDatabase()
     rasters = tr.setTestRasters(5)
     for r in rasters:
         globalsSingleton.raster_database[r['id']] = r
-    common.logMessage(logging.INFO, 'finished reading collections',common.process_user)
-
-    return allJson 
+    common.logMessage(logging.INFO, 'finished reading collections', common.process_user)
 
 def openExtraMetadata(extraPath):
     extraMetadataAll = None
