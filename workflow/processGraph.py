@@ -123,9 +123,7 @@ class ProcessGraph(OpenEoOperation):
           self.outputNodes[index][1].localArguments[key] = value
 
     def clearLocalArgument(self, index = 0):
-          s =str(type(self.outputNodes))
-          p = self.outputNodes[index]
-          if len(self.outputNodes) > 0 and len(self.outputNodes[index]) > 1:
+        if len(self.outputNodes) > 0 and len(self.outputNodes[index]) > 1:
             self.outputNodes[index][1].localArguments = {}
     
     def validateNode(self, node):
