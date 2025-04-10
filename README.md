@@ -1,3 +1,4 @@
+## Purpose
 This project is a backend for OpenEo clients(https://openeo.org/). It facilitates processing of geo spatial data (for the moment raster data) in a cloud enviroment. The goal of the project is to eventually realize a backend that can be used(and deployed) by typical users in a academical enviroment for research, teaching and projects.
 
 ## Setup
