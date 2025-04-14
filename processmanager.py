@@ -276,7 +276,7 @@ class ProcessManager:
     # this is the main function that handels process graph management. It starts, communicates with and stops
     # the process graphs that are requested. When created processes are put on a queue and started when there
     # is 'room' to do so. At the moment this is always, but might be more constrained in the future.
-    def startProcesses(self):
+    def runServer(self):
         self.loadProcessTables()
         startCheckRemoveOutput = startTimerCheckTokens = startTimerDump = datetime.now()            
         while self.running:

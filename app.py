@@ -120,7 +120,7 @@ api.add_resource( OpenEOUploadFile,'/files/<path>')
 CORS(app)
 
 def startProcesses():
-    globalProcessManager.startProcesses()
+    globalProcessManager.runServer()
 
 t1 = Thread(target=startProcesses)
 t1.start()
