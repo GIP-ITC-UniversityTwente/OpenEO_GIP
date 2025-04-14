@@ -147,7 +147,9 @@ The ProcessManager maintains an instance of type Queue. Which is in python an in
 |status| job status|
 |current_operation|in case of processing information it contains the now running node|
 
-#### openip_config
+![flowprocessmanager](https://github.com/user-attachments/assets/e0575726-71d6-4d56-971a-ab67947c691d)
+
+### openip_config
 A simple dictionary that is loaded from config.json file that is located in the {root_project}/config folder.
 ```
 {
@@ -183,7 +185,7 @@ A simple dictionary that is loaded from config.json file that is located in the 
 ```
 Note that the some root locationXXX may be the same locations.
 
-#### OpenEOProcess
+### OpenEOProcess
 A wrapper class for the process graph that is the core of openeo processing. It provides services (interface) to the rest of the system to query and run the process graph. 
 - run the process process graph
 - stop the process graph
@@ -215,8 +217,7 @@ The class splits the processing part( the graph) of a client processing request 
 
 The client is usually polling the server at regular intervals, that increase the longer the process takes, for information. This happens in the server process. The server process than asks the OpenEOProcess linked to the job_id to generate an appropriate response based on the state/value of its members. These members are filled initially by construction the instance, but are constantly updated by processing information from the inter-process Queue. Note that at the processing side of things(a seperate Process) a similar instance of OpenEOProcess exists. The Queue ensure that the state of these two instances remains consistent.
 
-
-#### operations
+### operations
 A list of operations that is discovered by the RegisterOperation method that **must** be implemented by every operation implementation. The metadata of an operation is available in the operation/metadata folder and each operation knows how to access it. 
 
 
