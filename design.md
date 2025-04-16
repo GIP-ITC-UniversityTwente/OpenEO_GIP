@@ -3,14 +3,14 @@
    1. [Flask Pattern](#flask-pattern)
    2. [API handlers](#api-handlers)
 3. [Backend structures](#backend-structures)
-      1. [raster\_database](#raster_database)
-      2. [ProcessManager](#processmanager)
-         1. [registering jobs](#registering-jobs)
-         2. [Start a registered Job](#start-a-registered-job)
-         3. [Communication](#communication)
-      3. [openip\_config](#openip_config)
-      4. [OpenEOProcess](#openeoprocess)
-      5. [operations](#operations)
+   1. [raster\_database](#raster_database)
+   2. [ProcessManager](#processmanager)
+      1. [registering jobs](#registering-jobs)
+      2. [Start a registered Job](#start-a-registered-job)
+      3. [Communication](#communication)
+   3. [openip\_config](#openip_config)
+   4. [OpenEOProcess](#openeoprocess)
+   5. [Operations](#operations)
 4. [Processing Backend](#processing-backend)
 ## OpenEO API
 The following part of the OpenEO web API(https://api.openeo.org/) is implemented.
@@ -94,10 +94,10 @@ The first lane is the Flask framework itself. The second lane is API handlers (s
 | OpenEOProcess | A class that encapsulates a 'job' that has entered the systm |
 | operations | A list of all openeo operations available in the system |
 
-#### raster_database
+### raster_database
 A simple dictionary that links that (internal)raster identifier to the id2filename.table. This file contains a json descriptions of the raster data sets. The location of this file is linked to openeoip_config['data_locations']['system_files']. Note that openeo describes a flat structure of files/data. Meaning that it easy to generate id conflicts ( duplicates). 
 
-#### ProcessManager
+### ProcessManager
 A class with only one instance that manages all registered jobs. The class has a number of responsibilities 
 - register a user defined progress graph ( a job)
 - start a registered job
@@ -113,7 +113,7 @@ A class with only one instance that manages all registered jobs. The class has a
 
 The class runs a infinite loop in which it checks the status of the various responsibilities it is tasked to. 
 
-##### registering jobs
+#### registering jobs
 This creates an 'output' object. An 'output' object is a container for all information about the newly created job. It also creates an object on the process queue. The output list and process queue are somewhat similar but server different purposes. The process queue is very temporary while the output queue lasts longer. The newly created object has a status, STATUSCREATED and thus will not run. Only objects with status STATUSQUEUED will be considered by the ProcessManager to be 'started'. 
 
 *table 6: Structure output list elements*
@@ -131,10 +131,10 @@ This creates an 'output' object. An 'output' object is a container for all infor
 
 The content of these fields is constantly modified and queried by the various requests/services running on the server thread. 
 
-##### Start a registered Job
+#### Start a registered Job
 The ProcessManager changes the status of the job to STATUSQUEUED. This causes the object the picked up by the infinite loop. If it is picked up, it will be removed from the queue and a process will be started with an OpenEOProcess as parameter (and thus split of OpenEOProcess in the 'outputs' list).
 
-##### Communication
+#### Communication
 The ProcessManager maintains an instance of type Queue. Which is in python an inter-process structure in which processes can push objects that are (in this case) shared with the parent process. The server (ProcessManager) pops object of the queue and stores its information with the relevant element in the output list.
 
 *table 7: Information elements*
@@ -217,8 +217,42 @@ The class splits the processing part( the graph) of a client processing request 
 
 The client is usually polling the server at regular intervals, that increase the longer the process takes, for information. This happens in the server process. The server process than asks the OpenEOProcess linked to the job_id to generate an appropriate response based on the state/value of its members. These members are filled initially by construction the instance, but are constantly updated by processing information from the inter-process Queue. Note that at the processing side of things(a seperate Process) a similar instance of OpenEOProcess exists. The Queue ensure that the state of these two instances remains consistent.
 
-### operations
-A list of operations that is discovered by the RegisterOperation method that **must** be implemented by every operation implementation. The metadata of an operation is available in the operation/metadata folder and each operation knows how to access it. 
+### Operations
+A list of operations that is discovered by the RegisterOperation method that **must** be implemented by every operation implementation. The operations must be located in the ./operations folder under the root of the project or any subfolder of that. At startup the system checks every module in the folder for the existence of the RegisterOperation function.If present, it creates an instance of the operation which is used for metadata purposes. The metadata of an operation is available in the operations/metadata folder and each operation knows how to access it. It is a json file which is a copy of the actual [json metadata file(s)](https://github.com/Open-EO/openeo-processes) on the openeo github
+An instance of the operation class does the actual processing. It is mandatory implements three methods:
+- Prepare method. 
+  - Unwraps the data (if any) from the input parameter(s). The actual rasters are wrapped in a RasteData structure which contains a lot of metadata and a description of the structure of the data. The prepare method unwraps it and organize it in such a way the the Run method(see below) doesn't have to bother with administrative details
+  - Unmarshal data if needed. Usualy data is passed in IlwisObjects format and doesn't need unmarshalling but is not strictly needed.
+  - resample data if needed if the raster data of the parameters is of different geometry
+  - Unpack the other parameters and make them easily available for the Run method
+- Run Method
+  - Does the actual processing
+  - wraps the output with sufficient metadata and passes it to the system.
+- RegisterOperation
 
 
 ## Processing Backend
+
+### ProcessGraph
+The class ProcessGraph analyzes the graph and
+- determine its end-point. The end point is the only node with a 'return' attribute. As running the graph is a back tracing algorithm, this will be were the back tracing begins.
+- optimize the graph. The graph, as comming from the client, contains all the actions needed to calculate the end result. It is not always efficiently organized. Depending on the processing back-end the graph often can be reorganized  to run more efficiently.
+- Mapping the nodes the optimized graph ( which is a dict) to the ProcessNode class which maps the items of various dicts to appropriate metadata/data for the ProcessNode for easier access. A ProcessNode represents a 'single' operation to be executed. Single is relative notion here as to execute it we might have to run other operations to resolve the parameters needed for this operation.
+- executing the graph. This is handled by an instance of the NodeExecution class which is handed the end-point node at the start from which it starts its back tracing.
+- offering sum support interface for the rest of the system to query properties of the graph (validity, estimations)
+ 
+For the moment optimizing the incomming graph is limited to amalgamating consecutive nodes which together represent a raster calc expression to one expression that can be executed at once.
+
+#### NodeExecution
+The NodeExecution wraps a ProcessNode and tries to execute the node based on the available parameters( called localParameters). A ProcessNode has a number of parameters as defined by the process graph( called localArguments). A parameter is a simpel dict with two items
+- 'base' : This is the value as described in the process graph. It might be an actual direct value, a reference to another ProcessNode or a sub process graph.
+- 'resolved' : Default None. Will have the value to which the 'base' points to but now a resolved form. A 'real' value.  
+
+
+
+
+
+### RasterData
+### Raster Iterators
+### Memeory for rasters
+### Raster Processing
