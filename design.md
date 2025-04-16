@@ -12,6 +12,12 @@
    4. [OpenEOProcess](#openeoprocess)
    5. [Operations](#operations)
 4. [Processing Backend](#processing-backend)
+   1. [ProcessGraph](#processgraph)
+      1. [NodeExecution](#nodeexecution)
+   2. [RasterData](#rasterdata)
+   3. [Raster Iterators](#raster-iterators)
+   4. [Memeory for rasters](#memeory-for-rasters)
+   5. [Raster Processing](#raster-processing)
 ## OpenEO API
 The following part of the OpenEO web API(https://api.openeo.org/) is implemented.
 
@@ -244,14 +250,16 @@ The class ProcessGraph analyzes the graph and
 For the moment optimizing the incomming graph is limited to amalgamating consecutive nodes which together represent a raster calc expression to one expression that can be executed at once.
 
 #### NodeExecution
-The NodeExecution wraps a ProcessNode and tries to execute the node based on the available parameters( called localParameters). A ProcessNode has a number of parameters as defined by the process graph( called localArguments). A parameter is a simpel dict with two items
+The NodeExecution wraps a ProcessNode and tries to execute the node based on the available parameters( called localParameters). A ProcessNode has a number of parameters as defined by the process graph. A parameter is a simpel dict with two items
 - 'base' : This is the value as described in the process graph. It might be an actual direct value, a reference to another ProcessNode or a sub process graph.
 - 'resolved' : Default None. Will have the value to which the 'base' points to but now a resolved form. A 'real' value.  
 
+The trick is to be able to resolve all the values. Values are either a direct value (e.g. the value 3.1415927) or a referred value. A referred value can be a reference to a 'graph' value or a reference to another node in the graph. A 'graph' value can be seen a global value of the current graph. If the referrence is another node, this node has be queried for its resolved values, which in turn can query other nodes etc... leading to a recursive back tracing path through the graph resolving all unknowns. If a resolve fails an error is generated.
 
 
 ![resolveparameters](https://github.com/user-attachments/assets/aa4589f2-1d7b-4516-81b7-ce8d607424cf)
 
+after all unknowns have been resolved the node can be executed. The id of the node matches the name of the operation that should be executed. This id is in the metadata of each operation and based on this the approriate instance of the operation is fetched. Each operation has a prepare and run method. The prepare is called with the resolved parameters and if the prepare succeeds the run is called.
 
 ### RasterData
 ### Raster Iterators
