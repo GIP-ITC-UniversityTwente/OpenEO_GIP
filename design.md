@@ -1,4 +1,4 @@
-1. [OpenEO API](#openeo-api)
+![nodeexecution](https://github.com/user-attachments/assets/1777f2a3-5257-4e4b-aa34-b7f501ed8905)1. [OpenEO API](#openeo-api)
 2. [Python Implementation](#python-implementation)
    1. [Flask Pattern](#flask-pattern)
    2. [API handlers](#api-handlers)
@@ -258,9 +258,12 @@ The trick is to be able to resolve all the values. Values are either a direct va
 
 ![resolveparameters](https://github.com/user-attachments/assets/0262c614-fb15-4365-8450-c78b2257bac7)
 
-after all unknowns have been resolved the node can be executed. The id of the node matches the name of the operation that should be executed. This id is in the metadata of each operation and based on this the approriate instance of the operation is fetched. Each operation has a prepare and run method. The prepare is called with the resolved parameters and if the prepare succeeds the run is called.
+after all unknowns have been resolved the node can be executed. Not that if you look in the sub diagram 'resolve referred node' you'll see that can create another execution node, in this way execution propegates backwards through the graph. The id of the node matches the name of the operation that should be executed. This id is in the metadata of each operation and based on this the approriate instance of the operation is fetched. Each operation has a prepare and run method. The prepare is called with the resolved parameters and if the prepare succeeds the run is called.
+
+![nodeexecution](https://github.com/user-attachments/assets/7a3003ba-81a6-435c-a9bf-15c0f1fba00d)
 
 ### RasterData
+
 ### Raster Iterators
 ### Memeory for rasters
 ### Raster Processing
