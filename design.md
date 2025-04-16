@@ -256,8 +256,7 @@ The NodeExecution wraps a ProcessNode and tries to execute the node based on the
 
 The trick is to be able to resolve all the values. Values are either a direct value (e.g. the value 3.1415927) or a referred value. A referred value can be a reference to a 'graph' value or a reference to another node in the graph. A 'graph' value can be seen a global value of the current graph. If the referrence is another node, this node has be queried for its resolved values, which in turn can query other nodes etc... leading to a recursive back tracing path through the graph resolving all unknowns. If a resolve fails an error is generated.
 
-
-![resolveparameters](https://github.com/user-attachments/assets/aa4589f2-1d7b-4516-81b7-ce8d607424cf)
+![resolveparameters](https://github.com/user-attachments/assets/0262c614-fb15-4365-8450-c78b2257bac7)
 
 after all unknowns have been resolved the node can be executed. The id of the node matches the name of the operation that should be executed. This id is in the metadata of each operation and based on this the approriate instance of the operation is fetched. Each operation has a prepare and run method. The prepare is called with the resolved parameters and if the prepare succeeds the run is called.
 
