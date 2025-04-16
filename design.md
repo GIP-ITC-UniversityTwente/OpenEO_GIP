@@ -1,4 +1,3 @@
-![nodeexecution](https://github.com/user-attachments/assets/1777f2a3-5257-4e4b-aa34-b7f501ed8905)1. [OpenEO API](#openeo-api)
 2. [Python Implementation](#python-implementation)
    1. [Flask Pattern](#flask-pattern)
    2. [API handlers](#api-handlers)
