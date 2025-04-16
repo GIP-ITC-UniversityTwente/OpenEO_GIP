@@ -250,6 +250,7 @@ The NodeExecution wraps a ProcessNode and tries to execute the node based on the
 
 
 
+![resolveparameters](https://github.com/user-attachments/assets/aa4589f2-1d7b-4516-81b7-ce8d607424cf)
 
 
 ### RasterData
