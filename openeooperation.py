@@ -2,7 +2,7 @@ import threading
 import json
 from constants import constants
 import ilwis
-from rasterdata import *
+from datacube import *
 import logging
 import common
 import customexception
@@ -161,7 +161,7 @@ class OpenEoOperation:
         return newGraph
 
     def createOutput(self, idx, ilwisRasters, extra):
-        rasterData = RasterData()
+        rasterData = DataCube()
         rasterData.load(ilwisRasters, 'ilwisraster', extra )
         if 'name' in extra:
             rasterData['title'] = extra['name']
@@ -205,7 +205,7 @@ class OpenEoOperation:
                
     
 
-    def createExtra(self, r : RasterData, reduce=False, basename=''):
+    def createExtra(self, r : DataCube, reduce=False, basename=''):
         level = r.getImplementationDimension()
         meta = r[DIMENSIONSLABEL][level]
         bands = []
@@ -257,7 +257,7 @@ class OpenEoOperation:
         
     def makeOutput(self,  ilwisRasters, extra):
         outputRasters = []
-        rasterData = RasterData()
+        rasterData = DataCube()
         rasterData.load(ilwisRasters, 'ilwisraster', extra )
         outputRasters.append(rasterData)
         return outputRasters 
@@ -282,7 +282,7 @@ class OpenEoOperation:
             return namemapping[name]
         return name
     
-    def getDimension(self, raster : RasterData, arguments):
+    def getDimension(self, raster : DataCube, arguments):
         if DIMENSIONSLABEL in arguments:
             return self.mapname(arguments[DIMENSIONSLABEL]['resolved'])
         else: # if the dimension is not given we assume the toplevel
@@ -434,7 +434,7 @@ class OpenEoOperation:
             t == DTBOOL 
         elif  isinstance(a, dict):
             t == DTDICT 
-        elif  isinstance(a, RasterData):
+        elif  isinstance(a, DataCube):
             t == DTRASTER 
         return t                            
 

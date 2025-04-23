@@ -71,7 +71,7 @@ def createNewRaster(job_id, rasters):
 # in practice this index has often only one or two levels. Meaning (often) which spectral band and which temporal layer.
 # note that the XY dimenions is present but not actually used as it is assumed to be always there
 # the content of the 'extra' parameter may shape how the dimensional structure is actually build.
-class RasterData(dict):
+class DataCube(dict):
     def load( self, layerDataLink, method = 'eoreader', extra = None ) : 
         if method == 'eoreader':
             namepath = os.path.splitext(layerDataLink)[0]
@@ -709,7 +709,7 @@ class RasterData(dict):
             rasters.append(ilwRaster)
      
         extra['basename'] = self['title'] + '_' + str(len(bands))
-        rasterData = RasterData()
+        rasterData = DataCube()
         rasterData.load(rasters, 'ilwisraster', extra )
 
         return rasterData

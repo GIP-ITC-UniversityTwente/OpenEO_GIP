@@ -11,7 +11,7 @@ import common
 import os, shutil
 from openeooperation import put2Queue
 import customexception
-import rasterdata
+import datacube
 import ilwis
 import re
 import operations.operationconstants as opc
@@ -268,7 +268,7 @@ class OpenEOProcess(multiprocessing.Process):
         if data != None:
             if isinstance(data, list):
                 for d in data:
-                    if isinstance(d, rasterdata.RasterData):
+                    if isinstance(d, datacube.DataCube):
                         name = d['title'] 
                         name = name.replace('_ANONYMOUS', 'raster')                    
                         for raster in d.getRasters():
@@ -298,7 +298,7 @@ class OpenEOProcess(multiprocessing.Process):
                 self._logJobStart(time_start)
 
                 # Start the process graph
-                output_info = self._executeProcessGraph(toServer)
+                output_info = self.processGraph.run(self, toServer, self.fromServer)
 
                 time_end = str(datetime.now())
                 self._handleProcessGraphOutput(output_info, toServer, time_start, time_end)
@@ -319,18 +319,7 @@ class OpenEOProcess(multiprocessing.Process):
             common.process_user
         )
 
-    def _executeProcessGraph(self, toServer):
-        """
-        Executes the process graph.
-
-        Args:
-            toServer: The server object for communication.
-
-        Returns:
-            The output information from the process graph.
-        """
-        return self.processGraph.run(self, toServer, self.fromServer)
-
+ 
     def _handleProcessGraphOutput(self, output_info, toServer, time_start, time_end):
         """
         Handles the output of the process graph.

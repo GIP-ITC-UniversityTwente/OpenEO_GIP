@@ -1,7 +1,7 @@
 from openeooperation import *
 from operationconstants import *
 from constants import constants
-from rasterdata import *
+from datacube import *
 from common import openeoip_config, saveIdDatabase
 import ilwis
 from pathlib import Path
@@ -171,8 +171,8 @@ class LoadCollectionOperation(OpenEoOperation):
             if id == item[0] or id == item[1]['title']:
                 raster = item[1]
                 if not os.path.exists(raster['dataSource']): #virtual datasets with no real source
-                    return RasterData(raster)
-                return RasterData(raster)
+                    return DataCube(raster)
+                return DataCube(raster)
 
         return None 
     def prepare(self, arguments):
@@ -238,6 +238,9 @@ class LoadCollectionOperation(OpenEoOperation):
                 The loaded raster data.
             """
             raster_data = self.id2Raster(file_id_database, arguments['id']['resolved'])
+            if raster_data['proj'] == '0':
+                raster_data['proj'] = raster_data.getRaster().coordinateSystem().toProj4();
+      
             if raster_data is None:
                 self.handleError(to_server, job_id, 'input raster not found', 'ProcessParameterInvalid')
             return raster_data
@@ -566,7 +569,7 @@ class LoadCollectionOperation(OpenEoOperation):
             extra_metadata['textsublayers'] = layer_temporal_extent
 
         common.registerIlwisIds(openeo_job.job_id, raster_coverage_list)
-        raster_data = RasterData()
+        raster_data = DataCube()
         raster_data.load(raster_coverage_list, 'ilwisraster', extra_metadata)
         return [raster_data]
 

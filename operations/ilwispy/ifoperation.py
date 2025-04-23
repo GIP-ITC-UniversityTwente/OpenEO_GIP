@@ -10,7 +10,7 @@ class IfOperation(OpenEoOperation):
 
         def checkData(self, data):
 
-                if type(data) is RasterData:
+                if type(data) is DataCube:
                         extra = self.constructExtraParams(data, data[TEMPORALEXTENT], 0)
                         raster = data.getRaster().rasterImp()
                         return {'raster' : raster, 'extra' : extra}

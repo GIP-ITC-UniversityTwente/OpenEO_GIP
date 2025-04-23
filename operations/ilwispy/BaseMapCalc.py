@@ -2,7 +2,7 @@ from openeooperation import *
 from operationconstants import *
 from constants import constants
 import math
-from rasterdata import RasterData
+from datacube import DataCube
 
 class BaseUnarymapCalc(OpenEoOperation):
     def base_prepare(self, arguments, oper):
@@ -16,7 +16,7 @@ class BaseUnarymapCalc(OpenEoOperation):
         if isinstance(p1, list):
             rasterList = []
             for ras in p1:
-                if type(ras) is RasterData:
+                if type(ras) is DataCube:
                     setWorkingCatalog(ras, self.name)
                     self.createExtra(ras,False, self.name)
                     raster = ras.getRaster()

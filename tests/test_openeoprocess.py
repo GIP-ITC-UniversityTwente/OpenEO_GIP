@@ -4,7 +4,9 @@ import pathlib
 import json
 import os
 import ilwis
-import rasterdata
+import datacube
+import common
+import constants.constants as cc
 
 pp = pathlib.Path(__file__).parent.resolve()
 pp = '/home/mschouwen/projects/openeo/openeo/'
@@ -312,6 +314,242 @@ class TestToDict(unittest.TestCase):
             "spatialextent": {"extent": "mocked_extent"},
         }
         self.assertEqual(result, expected_result)
+
+class TestCleanup(unittest.TestCase):
+    def setUp(self):
+        # Mocking common.openeoip_config
+        self.mock_common = MagicMock()
+        self.mock_common.openeoip_config = {
+            'data_locations': {
+                'root_user_data_location': {'location': '/mocked/path'}
+            }
+        }
+
+        # Patching common in the OpenEOProcess module
+        patcher = patch('workflow.openeoprocess.common', self.mock_common)
+        self.addCleanup(patcher.stop)
+        patcher.start()
+
+        # Creating an instance of OpenEOProcess
+        self.process = OpenEOProcess(
+            user=MagicMock(username="test_user"),
+            request_json={
+                "process_graph": {
+                    "firstMult": {
+                        "process_id": "dummylongfunc",
+                        "arguments": {"a": 1000},
+                        "result": True,
+                    }
+                },
+                "id": "test_id",
+                "description": "test_description",
+            },
+            id=0,
+        )
+        self.process.job_id = "test_job_id"
+
+    @patch('os.path.isdir')
+    @patch('shutil.rmtree')
+    def test_cleanup_directory_exists(self, mock_rmtree, mock_isdir):
+        # Simulate the directory exists
+        mock_isdir.return_value = True
+
+        # Call the cleanup method
+        self.process.cleanup()
+
+        # Verify the directory path
+        expected_path = '/mocked/path/test_job_id'
+        mock_isdir.assert_called_once_with(expected_path)
+        mock_rmtree.assert_called_once_with(expected_path)
+
+    @patch('os.path.isdir')
+    @patch('shutil.rmtree')
+    def test_cleanup_directory_does_not_exist(self, mock_rmtree, mock_isdir):
+        # Simulate the directory does not exist
+        mock_isdir.return_value = False
+
+        # Call the cleanup method
+        self.process.cleanup()
+
+        # Verify the directory path
+        expected_path = '/mocked/path/test_job_id'
+        mock_isdir.assert_called_once_with(expected_path)
+        mock_rmtree.assert_not_called()
+
+class TestStop(unittest.TestCase):
+    def setUp(self):
+        # Mocking common.openeoip_config
+        self.mock_common = MagicMock()
+        self.mock_common.openeoip_config = {
+            'data_locations': {
+                'root_user_data_location': {'location': '/mocked/path'}
+            }
+        }
+
+        # Patching common in the OpenEOProcess module
+        patcher = patch('workflow.openeoprocess.common', self.mock_common)
+        self.addCleanup(patcher.stop)
+        patcher.start()
+
+        # Patching Pipe
+        self.mock_pipe = patch('workflow.openeoprocess.Pipe', MagicMock(return_value=(MagicMock(), MagicMock())))
+        self.addCleanup(self.mock_pipe.stop)
+        self.mock_pipe.start()
+
+        # Creating an instance of OpenEOProcess
+        self.process = OpenEOProcess(
+            user=MagicMock(username="test_user"),
+            request_json={
+                "process_graph": {
+                    "firstMult": {
+                        "process_id": "dummylongfunc",
+                        "arguments": {"a": 1000},
+                        "result": True,
+                    }
+                },
+                "id": "test_id",
+                "description": "test_description",
+            },
+            id=0,
+        )
+        self.process.job_id = "test_job_id"
+
+    @patch('workflow.openeoprocess.json.dumps')
+    @patch('workflow.openeoprocess.OpenEOProcess.cleanup')
+    def test_stop(self, mock_cleanup, mock_json_dumps):
+        # Mocking json.dumps
+        mock_json_dumps.return_value = '{"job_id": "test_job_id", "status": "stop"}'
+
+        # Call the stop method
+        self.process.stop()
+
+        # Verify json.dumps was called with the correct data
+        mock_json_dumps.assert_called_once_with({"job_id": "test_job_id", "status": "stop"})
+
+        # Verify sendTo.send was called with the correct message
+        self.process.sendTo.send.assert_called_once_with('{"job_id": "test_job_id", "status": "stop"}')
+
+        # Verify cleanup was called
+        mock_cleanup.assert_called_once()
+
+class TestSaveResult(unittest.TestCase):
+    def setUp(self):
+        # Mocking ilwis.Envelope
+        self.mock_envelope = patch('workflow.openeoprocess.ilwis.Envelope', MagicMock()).start()
+        self.addCleanup(patch.stopall)
+
+        # Mocking rasterdata.RasterData
+        self.mock_raster_data = patch('workflow.openeoprocess.rasterdata.RasterData', MagicMock()).start()
+
+        # Creating an instance of OpenEOProcess
+        self.process = OpenEOProcess(
+            user=MagicMock(username="test_user"),
+            request_json={
+                "process_graph": {
+                    "firstMult": {
+                        "process_id": "dummylongfunc",
+                        "arguments": {"a": 1000},
+                        "result": True,
+                    }
+                },
+                "id": "test_id",
+                "description": "test_description",
+            },
+            id=0,
+        )
+
+    @patch('workflow.openeoprocess.re.split')
+    def test_saveResult_with_valid_data(self, mock_re_split):
+        # Mocking data and dependencies
+        mock_re_split.return_value = ["part1", "part2"]
+
+        mock_raster = MagicMock()
+        mock_raster.envelope.return_value = "mocked_env"
+        mock_store = MagicMock()
+        mock_raster.store = mock_store
+
+        mock_raster_data_instance = MagicMock()
+        mock_raster_data_instance.getRasters.return_value = [mock_raster]
+        mock_raster_data_instance.__getitem__.return_value = "mocked_title"
+
+
+        # Set the side_effect for isinstance
+        data = [mock_raster_data_instance]
+        mock_isinstance = patch('builtins.isinstance')
+            # Define a custom side_effect function for isinstance
+        def isinstance_side_effect(obj, cls):
+            if cls == datacube.DataCube:
+                return obj is mock_raster_data_instance  # Directly compare with the mock object
+            elif cls == list:
+                return type(obj) is list  # Use type() instead of isinstance
+            elif cls == str:
+                return type(obj) is str  # Use type() instead of isinstance
+            return False  # Default to False for other types
+
+        # Set the side_effect for isinstance
+        mock_isinstance.side_effect = isinstance_side_effect
+
+        # Call saveResult
+        result = self.process.saveResult("/mocked/path", data, "mocked_format")
+
+        # Verify raster.store was called
+        mock_raster.store.assert_called_once_with("file:///mocked/path/mocked_title_0", "mocked_format", "gdal")
+
+        # Verify the result
+        self.assertEqual(result, ["part1", "part2"])
+
+        # Verify raster.store was called
+        mock_raster.store.assert_called_once_with("file:///mocked/path/mocked_title_0", "mocked_format", "gdal")
+
+        # Verify the result
+        self.assertEqual(result, ["part1", "part2"])
+
+    def test_saveResult_with_empty_data(self):
+        # Call saveResult with None data
+        result = self.process.saveResult("/mocked/path", None, "mocked_format")
+
+        # Verify the result is None
+        self.assertIsNone(result)
+
+    def test_saveResult_with_non_raster_data(self):
+        # Mocking non-raster data
+        data = ["non_raster_data"]
+
+        # Call saveResult
+        result = self.process.saveResult("/mocked/path", data, "mocked_format")
+
+        # Verify the result is None
+        self.assertIsNone(result)
+
+    @patch('workflow.openeoprocess.re.split')
+    def test_saveResult_with_multiple_rasters(self, mock_re_split):
+        # Mocking multiple raster data
+        mock_raster1 = MagicMock()
+        mock_raster1.envelope.return_value = "env1"
+        mock_raster1.store = MagicMock()
+
+        mock_raster2 = MagicMock()
+        mock_raster2.envelope.return_value = "env2"
+        mock_raster2.store = MagicMock()
+
+        mock_raster_data_instance = MagicMock()
+        mock_raster_data_instance.getRasters.return_value = [mock_raster1, mock_raster2]
+        mock_raster_data_instance.__getitem__.return_value = "mocked_title"
+
+        data = [mock_raster_data_instance]
+        mock_re_split.return_value = ["part1", "part2"]
+
+        # Call saveResult
+        result = self.process.saveResult("/mocked/path", data, "mocked_format")
+
+        # Verify raster.store was called for both rasters
+        mock_raster1.store.assert_called_once_with("file:///mocked/path/mocked_title_0", "mocked_format", "gdal")
+        mock_raster2.store.assert_called_once_with("file:///mocked/path/mocked_title_1", "mocked_format", "gdal")
+
+        # Verify the result
+        self.assertEqual(result, ["part1", "part2"])
+
+
 
       
 if __name__ == '__main__':

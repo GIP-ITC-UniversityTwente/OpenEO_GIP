@@ -1,7 +1,7 @@
 from openeooperation import *
 from operationconstants import *
 from constants import constants
-from rasterdata import *
+from datacube import *
 
 
 class ArrayElementOperation(OpenEoOperation):
@@ -21,13 +21,13 @@ class ArrayElementOperation(OpenEoOperation):
         inpData = arguments['data']['resolved'] 
         if not isinstance(inpData, list) and len(inpData) > 0:
              self.handleError(toServer, job_id, 'Input raster','Invalid input list', 'ProcessParameterInvalid')  
-        self.rasterCase = isinstance(inpData[0], RasterData)
+        self.rasterCase = isinstance(inpData[0], DataCube)
         if self.rasterCase:
             self.inputRasters = inpData
             if self.inputRasters == None:
                 self.handleError(toServer, job_id, 'Input raster','No input raster found', 'ProcessParameterInvalid')
             self.bandIndex = -1
-            if isinstance(inpData[0], RasterData):
+            if isinstance(inpData[0], DataCube):
                 idx = self.findBandIndex(toServer, job_id, inpData[0], arguments )
                 if idx == -1:
                     v = str(arguments['label']['resolved'])

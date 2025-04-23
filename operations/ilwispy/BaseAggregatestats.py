@@ -1,7 +1,7 @@
 from openeooperation import *
 from operationconstants import *
 from constants import constants
-from rasterdata import RasterData
+from datacube import DataCube
 import ilwis
 import numpy
 
@@ -15,7 +15,7 @@ class BaseAggregateData(OpenEoOperation):
             inpData = arguments['data']['resolved']
             if len(inpData) == 0:
                 self.handleError(toServer, job_id, 'Input raster','invalid input. Number of rasters is 0', 'ProcessParameterInvalid')
-            if isinstance(inpData[0], RasterData):
+            if isinstance(inpData[0], DataCube):
                 setWorkingCatalog(inpData[0], self.name)
                 self.rasters = inpData
 

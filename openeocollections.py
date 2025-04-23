@@ -7,7 +7,7 @@ from globals import globalsSingleton
 from eoreader.bands import *
 from pathlib import Path
 from userinfo import UserInfo
-from rasterdata import RasterData
+from datacube import DataCube
 import common
 import logging
 import tests.addTestRasters as tr
@@ -26,7 +26,7 @@ def processMetaFile(filename):
 
 def loadFile(fullPath, extraMetadataAll):
     try:
-        raster = RasterData()                    
+        raster = DataCube()                    
 
         if Path(fullPath).suffix != ".metadata":
             raster.load(fullPath, 'eoreader', extraMetadataAll)

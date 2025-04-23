@@ -34,7 +34,7 @@ class ResampleSpatial(OpenEoOperation):
         data = arguments['data']['resolved']
         for r in data:
             if r.isValid():
-                if type(r) is RasterData:
+                if type(r) is DataCube:
                     self.extra = self.constructExtraParams(r, r[TEMPORALEXTENT], 0)                 
                     self.inputRaster = r.getRaster()                  
                     pixSize = r.getRaster().geoReference().pixelSize()

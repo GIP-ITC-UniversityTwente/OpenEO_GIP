@@ -1,7 +1,7 @@
 from openeooperation import *
 from operationconstants import *
 from constants import constants
-from rasterdata import RasterData
+from datacube import DataCube
 from globals import getOperation
 from workflow.processGraph import ProcessGraph
 import copy
@@ -92,7 +92,7 @@ class MergeCubes(OpenEoOperation):
         args.append(mc['merge'].getRaster().rasterImp())
         mergedRaster = self.collectRasters(args)
         extra = self.constructExtraParams(mc['target'], mc['target'].temporalExtent, 0)
-        rasterData = RasterData()
+        rasterData = DataCube()
         rasterData.load(mergedRaster, 'ilwisraster', extra )
 
         pgraph = self.overlap_resolver['resolved']['process_graph']
@@ -111,7 +111,7 @@ class MergeCubes(OpenEoOperation):
                 return False
         return True
                 
-    def determineMergeCondition(self, targetRaster : RasterData, mergeRaster : RasterData):
+    def determineMergeCondition(self, targetRaster : DataCube, mergeRaster : DataCube):
         result = {'nameclash' : False, 'sizesEqual' : False, 'projectionsUnequal' : False}
 
         

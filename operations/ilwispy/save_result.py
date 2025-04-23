@@ -71,7 +71,7 @@ class SaveResultOperation(OpenEoOperation):
         files = []
 
         for data_item in self.data:
-            if isinstance(data_item, RasterData):
+            if isinstance(data_item, DataCube):
                 files.extend(self._storeRasterData(filePath, data_item, env, count))
                 count += len(data_item.getRasters())
 

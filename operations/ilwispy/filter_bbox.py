@@ -16,7 +16,7 @@ class FilterBBox(OpenEoOperation):
                 
                 if len(self.data) == 0:
                     self.handleError(toServer, job_id, "parameter", "Input data is empty", 'ProcessParameterInvalid')
-                if not isinstance(self.data[0], RasterData):
+                if not isinstance(self.data[0], DataCube):
                     self.handleError(toServer, job_id, "parameter", "Input data is not rasterdata", 'ProcessParameterInvalid')
 
                 self.data = self.data[0]

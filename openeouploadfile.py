@@ -14,7 +14,7 @@ import json
 import jsonschema
 from jsonschema import validate
 import glob
-from rasterdata import RasterData
+from datacube import DataCube
 import ilwis
 import shutil
 import logging
@@ -73,7 +73,7 @@ def checkdata(folder, fpath):
             common.logMessage(logging.INFO, 'load file for processing ' + fpath) 
             ilwRaster = ilwis.RasterCoverage(fpath)
             if ilwRaster:
-                raster = RasterData() 
+                raster = DataCube() 
                 raster.load(ilwRaster, 'ilwisraster')
                 globalsSingleton.insertRasterInDatabase(raster) 
                 globalsSingleton.saveIdDatabase() 
@@ -106,7 +106,7 @@ def checkdata(folder, fpath):
                     fmeta = json.load(fp) 
                     message = checkMetadata(fmeta, folder)  
             if message == "":                    
-                raster = RasterData()                       
+                raster = DataCube()                       
                 raster.load(path, 'metadata')
                 globalsSingleton.insertRasterInDatabase(raster) 
                 globalsSingleton.saveIdDatabase()    

@@ -10,7 +10,7 @@ import uuid
 import sqlite3
 from authenticationdatabase import authenticationDB
 from flask import jsonify, make_response
-from rasterdata import RasterData
+from datacube import DataCube
 import copy
 
 def authenticateError():
@@ -92,10 +92,10 @@ class Globals :
             if id == item[0] or id == item[1]['title']:
                 raster = item[1]
                 if not os.path.exists(raster['dataSource']): #virtual datasets with no real source
-                    return RasterData(raster)
+                    return DataCube(raster)
                 mttime = str(datetime.datetime.fromtimestamp(os.path.getmtime(raster['dataSource'])))
                 #if mttime == str(raster['lastmodified']):
-                return RasterData(raster)
+                return DataCube(raster)
 
         return None        
     

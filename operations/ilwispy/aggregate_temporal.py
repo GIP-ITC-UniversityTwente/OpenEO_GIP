@@ -1,7 +1,7 @@
 from openeooperation import *
 from operationconstants import *
 from constants import constants
-from rasterdata import RasterData
+from datacube import DataCube
 import ilwis
 from workflow import processGraph
 from globals import getOperation

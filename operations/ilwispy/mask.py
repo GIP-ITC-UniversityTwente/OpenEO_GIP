@@ -2,7 +2,7 @@ from openeooperation import *
 from operationconstants import *
 from constants import constants
 from common import openeoip_config
-from rasterdata import RasterData, matchBands, matchesTemporalExtent
+from datacube import DataCube, matchBands, matchesTemporalExtent
 
 class MaskOperation(OpenEoOperation):
     def __init__(self):
@@ -52,15 +52,15 @@ class MaskOperation(OpenEoOperation):
                 self.handleError(toServer, job_id, 'input rasters', 'data and mask have different number of items but mask items is larger than 1', 'ProcessParameterInvalid')
 
             for i in range(len(dataRasters)):
-                dRaster: RasterData = dataRasters[i]
-                mRaster: RasterData = maskRasters[i]
+                dRaster: DataCube = dataRasters[i]
+                mRaster: DataCube = maskRasters[i]
                 self._validateRasterCompatibility(toServer, job_id, dRaster, mRaster)
                 resampleNeeded = not self.checkSpatialDimensions([dRaster, mRaster])
                 rasters.append({"data": dRaster, "mask": mRaster, "resampleneeded": resampleNeeded})
         else:
             for i in range(len(dataRasters)):
-                dRaster: RasterData = dataRasters[i]
-                mRaster: RasterData = maskRasters[0]  # Single mask applies to all data rasters
+                dRaster: DataCube = dataRasters[i]
+                mRaster: DataCube = maskRasters[0]  # Single mask applies to all data rasters
                 resampleNeeded = not self.checkSpatialDimensions([dRaster, mRaster])
                 rasters.append({"data": dRaster, "mask": mRaster, "resampleneeded": resampleNeeded})
 

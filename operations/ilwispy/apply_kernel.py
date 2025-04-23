@@ -21,7 +21,7 @@ class ApplyKernel(OpenEoOperation):
         self.factor = arguments['factor']['resolved']
         self.border = arguments['border']['resolved']
         for rd in self.data:
-            if not isinstance(rd, RasterData):
+            if not isinstance(rd, DataCube):
                 self.handleError(toServer, job_id, "data", "All data must be rasterdata", 'ProcessParameterInvalid')
         if len(self.kernel) % 2 != 1:
             self.handleError(toServer, job_id, "kernel", "Kernel column size must be odd", 'ProcessParameterInvalid')

@@ -21,27 +21,40 @@ class LinearScaleRangeOperation(OpenEoOperation):
         self.outMax = arguments['outputMax']['resolved']
         self.outMin = arguments['outputMin']['resolved']
 
-        last_key = list(arguments)[-1]
-        raster = arguments[last_key]['resolved']
-        if not isinstance(raster, RasterData):
-            self.handleError(toServer, job_id, 'Input raster','invalid input. rasters are not valid', 'ProcessParameterInvalid')
+        rasters = arguments['x']['resolved']
 
-        if raster.getRaster().datadef().domain().ilwisType() != ilwis.it.NUMERICDOMAIN:
-            self.handleError(toServer, job_id, 'Input raster','invalid datatype in raster. Must be numeric', 'ProcessParameterInvalid')
-        setWorkingCatalog( raster, self.name)
-        self.inputRaster = raster.getRaster()
-        self.createExtra(raster, 0) 
+        if not isinstance(rasters, list):
+                self.handleError(toServer, job_id, 'Input raster','invalid input. rasters are not a list', 'ProcessParameterInvalid')
+        if len(rasters) == 0:
+            self.handleError(toServer, job_id, 'Input raster','invalid input. rasters are zero length', 'ProcessParameterInvalid')
+        self.inputRasters = []
+        setWorkingCatalog( rasters[0], self.name)
+        self.createExtra(rasters[0]) 
+        for raster in rasters:
+            if not isinstance(raster, DataCube):
+                self.handleError(toServer, job_id, 'Input raster','invalid input. rasters are not valid', 'ProcessParameterInvalid')
+            if raster.getRaster().datadef().domain().ilwisType() != ilwis.it.NUMERICDOMAIN:
+                self.handleError(toServer, job_id, 'Input raster','invalid datatype in raster. Must be numeric', 'ProcessParameterInvalid')
+            ilwRasters = raster.getRasters()                
+            for ilwRaster in ilwRasters:
+                self.rasterSizesEqual = ilwRaster.size() == ilwRasters[0].size()
+                if not self.rasterSizesEqual:
+                    break
+            self.inputRasters.extend(ilwRasters)
+        if self.rasterSizesEqual:
+            self.extra['bands'] =  [{'type' : 'float', BANDINDEX : 0, 'name' : 'combined','details' : {} }] 
         self.logEndPrepareOperation(job_id) 
               
 
     def run(self,openeojob, processOutput, processInput):
         if self.runnable:
             self.logStartOperation(processOutput, openeojob)
-
-            outputRc = ilwis.do("linearstretch", self.inputRaster,self.inpMin, self.inpMax, self.outMin, self.outMax)
-            outputRasters = []   
-            common.registerIlwisIds(openeojob.job_id, [outputRc])               
-            outputRasters.extend(self.setOutput(openeojob.job_id,[outputRc], self.extra))
+            outputRasters = [] 
+            outputRcs = []  
+            for raster in self.inputRasters:
+                outputRcs.append(ilwis.do("linearstretch", raster,self.inpMin, self.inpMax, self.outMin, self.outMax))
+            common.registerIlwisIds(openeojob.job_id, outputRcs)               
+            outputRasters.extend(self.setOutput(openeojob.job_id,outputRcs, self.extra))
             return createOutput(constants.STATUSFINISHED, outputRasters, constants.DTRASTERLIST)
         
         return createOutput('error', "operation no runnable", constants.DTERROR)

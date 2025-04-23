@@ -1,7 +1,7 @@
 import common
 import copy
 import customexception
-import rasterdata
+import datacube
 import logging
 from constants import constants
 
@@ -77,7 +77,6 @@ class NodeExecution :
             The resolved value of the parameter.
         """
 
-
         if isinstance(parmDefinition, dict):
             # the unresolved parameter is complex and of dict form. We now must try understand
             # what is defined in the dict
@@ -127,7 +126,7 @@ class NodeExecution :
         resolvedValues = []
         resolvedValue = []
         for elem in parmDefinition:
-            if isinstance(elem, dict) and not isinstance(elem, rasterdata.RasterData):
+            if isinstance(elem, dict) and not isinstance(elem, datacube.DataCube):
                 # similar to the earlier 'dict' case but now the calculated values
                 # are aggregated into a list
                 for item in elem.items():

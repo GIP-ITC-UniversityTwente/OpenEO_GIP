@@ -21,7 +21,7 @@ class NormalizedDifference(OpenEoOperation):
             self.handleError(toServer, job_id, 'Input paremeter', 'raster list must have equal length between two lists', 'ProcessParameterInvalid')
 
         for idx in range(len(self.inputRaster1)):           
-            if not( isinstance(self.inputRaster2[idx], RasterData) and isinstance(self.inputRaster1[idx], RasterData)):
+            if not( isinstance(self.inputRaster2[idx], DataCube) and isinstance(self.inputRaster1[idx], DataCube)):
                 self.handleError(toServer, job_id, 'Input raster','invalid input. rasters are not valid', 'ProcessParameterInvalid')
         
         self.createExtra(self.inputRaster1[0], 0) 

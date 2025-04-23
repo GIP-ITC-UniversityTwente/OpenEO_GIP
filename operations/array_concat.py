@@ -30,14 +30,14 @@ class ArrayConcat(OpenEoOperation):
             self.handleError(toServer, job_id, 'data','array must have a size or else the used datatype is unknown', 'ProcessParameterInvalid')
 
         self.targetBandIndex = 0
-        self.rasterCase = isinstance(list2[0], RasterData)
+        self.rasterCase = isinstance(list2[0], DataCube)
         if self.rasterCase:
             if len(list2[0]['eo:bands']) != 1:
                 self.handleError(toServer, job_id, 'source size',"source may only contain  one band", 'ProcessParameterInvalid')
 
             self.targetRaster = list2[0]
             
-            if isinstance(list1[0], RasterData):
+            if isinstance(list1[0], DataCube):
                 idx = self.findBandIndex(toServer, job_id, list1, arguments )
                 if idx == -1:
                     self.handleError(toServer, job_id, 'band label or index',"label or index can't be found", 'ProcessParameterInvalid')

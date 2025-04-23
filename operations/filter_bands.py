@@ -1,7 +1,7 @@
 from openeooperation import *
 from operationconstants import *
 from constants import constants
-from rasterdata import RasterData
+from datacube import DataCube
 
 class FilterBands(OpenEoOperation):
     def __init__(self):
@@ -19,7 +19,7 @@ class FilterBands(OpenEoOperation):
             common.logMessage(logging.ERROR, message,common.process_user)
             self.handleError(toServer, job_id, 'Input raster',message, 'ProcessParameterInvalid')
             return message         
-        if isinstance(self.inpData[0], RasterData):
+        if isinstance(self.inpData[0], DataCube):
             if 'bands' in arguments:
                 requestedBands = arguments['bands']['resolved']
                 if len(requestedBands) > 0:

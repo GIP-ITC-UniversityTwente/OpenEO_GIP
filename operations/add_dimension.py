@@ -18,7 +18,7 @@ class AddDimension(OpenEoOperation):
         dimname = self.mapname(dimname)                
         rasters = arguments['data']['resolved']
         for raster in rasters:
-            if not isinstance(raster, RasterData):
+            if not isinstance(raster, DataCube):
                 self.handleError(toServer, job_id, 'data','data must be a raster', 'ProcessParameterInvalid')
             for fname in raster[DIMORDER]:
                 if fname == dimname:
