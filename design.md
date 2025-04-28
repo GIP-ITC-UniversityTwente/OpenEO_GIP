@@ -272,6 +272,7 @@ The class (or instance of) that holds the metadata and data of a collection. For
 - give access and storing metadata
 - give access and storing data
 The data members are not meant to be accessed publicly (though nothing in Python prevents that) as the internal organisation might change in feature versions. Th facilitate access(read/write) a number of functions exists.
+Spectral bands and Temporal layers are the main organization of data. In the text when 'band' is used it refers to 'Spectral band' and when 'layer' is used to 'temporal layer' is meant
 
 *table 9: Datacube attributes*
 | member| description|
@@ -288,8 +289,8 @@ The data members are not meant to be accessed publicly (though nothing in Python
 | implementation | describes the order how bands and layers are organized in the actual data |
 | | |
 
-Spectral bands and Temporal layers are the main 
-*table 10: Spectral band attributes*
+
+*table 10: Band attributes*
 | member| description|
 |----------------------------|-------------------------------------------|
 | common band name| a commonly understood name for a spectral band. E.g. in sentinel 2 the band name 'B02' has as common name 'blue'. If done correctly these names can be compared between different formats but it should be understood that the spectral range maybe somewhat different between formats(though probably somewhat similar). Outside primary sattelite formats these names have less meaning |
@@ -300,7 +301,7 @@ Spectral bands and Temporal layers are the main
 | data | reference to the actual data belonging to this band | 
 | label | not similar to the name but a description of the value range of the band. The notion is a bit vague |
 
-*table 11: Temporal layer attributes*
+*table 11: Layer attributes*
 | member| description|
 |----------------------------|-------------------------------------------|
 | | |
