@@ -307,5 +307,13 @@ Spectral bands and Temporal layers are the main organization of data. In the tex
 | | |
 
 ### Raster Iterators
-### Memory for rasters
+### Memory model for rasters
+Though the following description is about the internal organization of memory and rasters and resides at the C++ side of the IlwisPy library it is (can be) important to understand this as some of the parameters of this organization can be tweaked from the Python side.
+- movement of the focus of processing works through iterators which can move in any of the 3 axis of a 3D raster. It can use steps(default is 1) and can be moved around at 'random' if the algorithm requires it. By default movement it is XYZ; first all X's are done until the end of the bounding box, then Y is increased and again all X's are done for the new Y until the Y also reaches the end of the bounding box. Z is increased and process repeats. The other organization is ZXY which has the vertical column as primary movement.  
+- an iterator runs in a bounding box and not outside it. By default this is the whole (3d) raster but it might be a subsection(potential 3d).
+- to diminish memory use as rasters can quickly eat up memory each raster is divided into blocks. 
+
+![memorymodel](https://github.com/user-attachments/assets/87486f37-9ca8-42c8-a202-7ea17970238c)
+
+
 ### Raster Processing
