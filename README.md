@@ -24,3 +24,4 @@ This project is a backend for OpenEo clients(https://openeo.org/). It facilitate
 - the file app.py starts the server on port 5000
 - The file config.json describes locations that the server needs to find and write information/data. Modify this to suit your own needs.
 
+- see also [design.md](https://github.com/GIP-ITC-UniversityTwente/OpenEO_GIP/blob/main/design.md)
