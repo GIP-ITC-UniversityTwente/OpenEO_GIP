@@ -311,9 +311,22 @@ Spectral bands and Temporal layers are the main organization of data. In the tex
 Though the following description is about the internal organization of memory and rasters and resides at the C++ side of the IlwisPy library it is (can be) important to understand this as some of the parameters of this organization can be tweaked from the Python side.
 - movement of the focus of processing works through iterators which can move in any of the 3 axis of a 3D raster. It can use steps(default is 1) and can be moved around at 'random' if the algorithm requires it. By default movement it is XYZ; first all X's are done until the end of the bounding box, then Y is increased and again all X's are done for the new Y until the Y also reaches the end of the bounding box. Z is increased and process repeats. The other organization is ZXY which has the vertical column as primary movement.  
 - an iterator runs in a bounding box and not outside it. By default this is the whole (3d) raster but it might be a subsection(potential 3d).
-- to diminish memory use as rasters can quickly eat up memory each raster is divided into blocks. 
+- to diminish memory use, as rasters can quickly eat up memory, each raster is divided into blocks. For the XYZ movement a block(red block in the picture)
+  -  x sixe, the x size of the bounding box. Often the x size of the raster
+  -  y size. A fixed number in the picture below it would be red block of 4 lines(y). In reality this number is significantly bigger
+  -  z size. Is 1. A 2D block. For the moment there is no special reason to make this 3D as the vast majority of the algorithms that use XYZ work per z layer. It complicates code to make this 3D, though the ZXY movement (see below) has 3D blocks.
+For the ZXY the organization is lightly different( red/green block in the picture)
+  -  x sixe, the x size of the bounding box. Often the x size of the raster
+  -  y size, a fixed smalish number
+  -  z size, the full z column size of the raster
 
 ![memorymodel](https://github.com/user-attachments/assets/87486f37-9ca8-42c8-a202-7ea17970238c)
 
+The way this works is that blocks are swapped in and out of memory as use demands with a certain caching to enhance efficiency. The cache leaves certain blocks (LIFO) in memory until a treshold is reached. In this way memory is no limitation when doing raster processing.
+
+![rasterblocks](https://github.com/user-attachments/assets/f627b030-7f89-4ec8-9b12-66141badd9ab)
+
+Apart from memory use the blocks also play a role for multi-trheading as each block can be (depending on the type of algorithm) the base for splitting processing over different threads(lock free). Note that by default this is disabled and has to be enabled per algorithm as there are certain classes of algorithms that can not be easily muli-threaded. 
 
 ### Raster Processing
+
