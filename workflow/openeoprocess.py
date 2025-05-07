@@ -303,8 +303,14 @@ class OpenEOProcess(multiprocessing.Process):
                 time_end = str(datetime.now())
                 self._handleProcessGraphOutput(output_info, toServer, time_start, time_end)
 
-            except (Exception, BaseException, customexception.CustomException) as ex:
+       
+            except (Exception) as ex:
                 self._handleRunException(ex, toServer)
+            except (customexception.CustomException) as ex:
+                self._handleRunException(ex, toServer)                 
+            except (BaseException) as ex:
+                self._handleRunException(ex, toServer)                
+            
 
     def _logJobStart(self, time_start):
         """
@@ -433,7 +439,7 @@ class OpenEOProcess(multiprocessing.Process):
             time_start: The start time of the job.
             time_end: The end time of the job.
         """
-        if 'spatialextent' in output_info:
+        if output_info is not None and 'spatialextent' in output_info:
             self.spatialextent = output_info['spatialextent']
         self.returns = output_info
 

@@ -3,10 +3,9 @@ import sys
 import pathlib
 import json
 import os
-import ilwis
-import datacube
-import common
-import constants.constants as cc
+
+from unittest.mock import ANY
+import logging
 
 pp = pathlib.Path(__file__).parent.resolve()
 pp = '/home/mschouwen/projects/openeo/openeo/'
@@ -15,6 +14,7 @@ sys.path.append(pp + '/workflow')
 sys.path.append(pp + '/constants')
 sys.path.append(pp + '/operations')
 sys.path.append(pp + '/operations/ilwispy')
+sys.path.append(pp + '/tests')
 sys.path.append(pp)
 
 from workflow.openeoprocess import OpenEOParameter
@@ -22,6 +22,21 @@ from unittest.mock import MagicMock, patch
 from workflow.openeoprocess import OpenEOProcess
 from workflow.processGraph import ProcessGraph
 from constants.constants import STATUSCREATED
+import constants.constants as cc
+from customexception import CustomException
+
+
+# import common
+# import datacube
+import addTestRasters
+
+testRasters = addTestRasters.setTestRasters(5)
+homepath = os.environ['HOME']
+if not os.path.exists(homepath + '/temp'): 
+    os.makedirs(homepath + '/temp') 
+if not os.path.exists(homepath + '/temp/openeotest'): 
+    os.makedirs(homepath + '/temp/openeotest') 
+testdir = homepath + '/temp/openeotest'       
 
 class TestOpenEOParameter(unittest.TestCase):
     maxDiff = None
@@ -75,7 +90,7 @@ class TestOpenEOProcess(unittest.TestCase):
 
         # Mocking constants
         self.mock_constants = MagicMock()
-        self.mock_constants.STATUSCREATED = STATUSCREATED
+        self.mock_constants.STATUSCREATED = cc.STATUSCREATED
 
         # Creating an instance of OpenEOProcess with mocked dependencies
 
@@ -206,7 +221,7 @@ class TestEstimate(unittest.TestCase):
 
         # Mocking constants
         self.mock_constants = MagicMock()
-        self.mock_constants.STATUSCREATED = STATUSCREATED
+        self.mock_constants.STATUSCREATED = cc.STATUSCREATED
 
         # Creating an instance of OpenEOProcess with mocked dependencies
         self.process = OpenEOProcess(
@@ -435,12 +450,9 @@ class TestStop(unittest.TestCase):
 class TestSaveResult(unittest.TestCase):
     def setUp(self):
         # Mocking ilwis.Envelope
-        self.mock_envelope = patch('workflow.openeoprocess.ilwis.Envelope', MagicMock()).start()
         self.addCleanup(patch.stopall)
 
-        # Mocking rasterdata.RasterData
-        self.mock_raster_data = patch('workflow.openeoprocess.rasterdata.RasterData', MagicMock()).start()
-
+     
         # Creating an instance of OpenEOProcess
         self.process = OpenEOProcess(
             user=MagicMock(username="test_user"),
@@ -458,62 +470,29 @@ class TestSaveResult(unittest.TestCase):
             id=0,
         )
 
-    @patch('workflow.openeoprocess.re.split')
-    def test_saveResult_with_valid_data(self, mock_re_split):
+    def test_saveResult_with_valid_data(self):
         # Mocking data and dependencies
-        mock_re_split.return_value = ["part1", "part2"]
-
-        mock_raster = MagicMock()
-        mock_raster.envelope.return_value = "mocked_env"
-        mock_store = MagicMock()
-        mock_raster.store = mock_store
-
-        mock_raster_data_instance = MagicMock()
-        mock_raster_data_instance.getRasters.return_value = [mock_raster]
-        mock_raster_data_instance.__getitem__.return_value = "mocked_title"
-
-
-        # Set the side_effect for isinstance
-        data = [mock_raster_data_instance]
-        mock_isinstance = patch('builtins.isinstance')
-            # Define a custom side_effect function for isinstance
-        def isinstance_side_effect(obj, cls):
-            if cls == datacube.DataCube:
-                return obj is mock_raster_data_instance  # Directly compare with the mock object
-            elif cls == list:
-                return type(obj) is list  # Use type() instead of isinstance
-            elif cls == str:
-                return type(obj) is str  # Use type() instead of isinstance
-            return False  # Default to False for other types
-
-        # Set the side_effect for isinstance
-        mock_isinstance.side_effect = isinstance_side_effect
+     
+        data = testRasters[0]
 
         # Call saveResult
-        result = self.process.saveResult("/mocked/path", data, "mocked_format")
-
-        # Verify raster.store was called
-        mock_raster.store.assert_called_once_with("file:///mocked/path/mocked_title_0", "mocked_format", "gdal")
-
+        result = self.process.saveResult(testdir, [data], "GTiff")
+      
         # Verify the result
-        self.assertEqual(result, ["part1", "part2"])
+        
+        self.assertEqual(result, ['0.000000', '25.000000', '30.000000', '60.000000'])
 
-        # Verify raster.store was called
-        mock_raster.store.assert_called_once_with("file:///mocked/path/mocked_title_0", "mocked_format", "gdal")
-
-        # Verify the result
-        self.assertEqual(result, ["part1", "part2"])
+   
 
     def test_saveResult_with_empty_data(self):
         # Call saveResult with None data
-        result = self.process.saveResult("/mocked/path", None, "mocked_format")
+        result = self.process.saveResult(testdir, None, "GTiff")
 
         # Verify the result is None
         self.assertIsNone(result)
 
     def test_saveResult_with_non_raster_data(self):
-        # Mocking non-raster data
-        data = ["non_raster_data"]
+        data = 21
 
         # Call saveResult
         result = self.process.saveResult("/mocked/path", data, "mocked_format")
@@ -521,33 +500,245 @@ class TestSaveResult(unittest.TestCase):
         # Verify the result is None
         self.assertIsNone(result)
 
-    @patch('workflow.openeoprocess.re.split')
-    def test_saveResult_with_multiple_rasters(self, mock_re_split):
-        # Mocking multiple raster data
-        mock_raster1 = MagicMock()
-        mock_raster1.envelope.return_value = "env1"
-        mock_raster1.store = MagicMock()
-
-        mock_raster2 = MagicMock()
-        mock_raster2.envelope.return_value = "env2"
-        mock_raster2.store = MagicMock()
-
-        mock_raster_data_instance = MagicMock()
-        mock_raster_data_instance.getRasters.return_value = [mock_raster1, mock_raster2]
-        mock_raster_data_instance.__getitem__.return_value = "mocked_title"
-
-        data = [mock_raster_data_instance]
-        mock_re_split.return_value = ["part1", "part2"]
+    def test_saveResult_with_multiple_rasters(self):
+        data1 = testRasters[0]
+        data2 = testRasters[1]
 
         # Call saveResult
-        result = self.process.saveResult("/mocked/path", data, "mocked_format")
-
-        # Verify raster.store was called for both rasters
-        mock_raster1.store.assert_called_once_with("file:///mocked/path/mocked_title_0", "mocked_format", "gdal")
-        mock_raster2.store.assert_called_once_with("file:///mocked/path/mocked_title_1", "mocked_format", "gdal")
+        result = self.process.saveResult(testdir, [data1,data2], "GTiff")
 
         # Verify the result
-        self.assertEqual(result, ["part1", "part2"])
+        self.assertEqual(result,  ['0.000000', '25.000000', '30.000000', '60.000000'])
+
+class TestRun(unittest.TestCase):
+    def setUp(self):
+        # Mocking dependencies
+        self.mock_process_graph = MagicMock()
+        self.mock_process_graph.run.return_value = {"status": cc.STATUSJOBDONE, "spatialextent": "mocked_extent"}
+        self.mock_constants = MagicMock()
+        self.mock_constants.STATUSJOBDONE = cc.STATUSCREATED
+        self.mock_constants.STATUSSTOPPED = cc.STATUSSTOPPED
+        self.mock_constants.STATUSERROR = cc.STATUSERROR
+
+        # Patching dependencies
+        patcher_common = patch('workflow.openeoprocess.common', MagicMock())
+        self.addCleanup(patcher_common.stop)
+        self.mock_common = patcher_common.start()
+
+        patcher_customexception = patch('workflow.openeoprocess.customexception', MagicMock())
+        self.addCleanup(patcher_customexception.stop)
+        self.mock_customexception = patcher_customexception.start()
+
+        # Creating an instance of OpenEOProcess
+        self.process = OpenEOProcess(
+            user=MagicMock(username="test_user"),
+            request_json={
+                "process_graph": {
+                    "firstMult": {
+                        "process_id": "dummylongfunc",
+                        "arguments": {"a": 1000},
+                        "result": True,
+                    }
+                },
+                "id": "test_id",
+                "description": "test_description",
+            },
+            id=0,
+        )
+        self.process.processGraph = self.mock_process_graph
+        self.process.job_id = "test_job_id"
+
+        # Mocking pipes
+        self.process.fromServer = MagicMock()
+        self.process.sendTo = MagicMock()
+
+        # Mocking private methods
+        self.process._logJobStart = MagicMock()
+        self.process._handleProcessGraphOutput = MagicMock()
+        self.process._handleRunException = MagicMock()
+
+    def test_run_successful_execution(self):
+        # Mocking successful process graph execution
+        self.mock_process_graph.run.return_value = {"status": cc.STATUSJOBDONE, "spatialextent": "mocked_extent"}
+
+        # Call the run method
+        self.process.run(toServer=MagicMock())
+
+        # Verify that the private methods were called
+        self.process._logJobStart.assert_called_once()
+        self.process._handleProcessGraphOutput.assert_called_once_with(
+            {"status": cc.STATUSJOBDONE, "spatialextent": "mocked_extent"},
+            ANY,
+            ANY,
+            ANY
+        )
+        self.process._handleRunException.assert_not_called()
+
+    def test_run_with_exception(self):
+        # Mocking an exception during process graph execution
+        self.mock_process_graph.run.side_effect = Exception("Testing Exception")
+
+        # Call the run method
+        self.process.run(toServer=MagicMock())
+
+        # Verify that the private methods were called
+        self.process._logJobStart.assert_called_once()
+        self.process._handleProcessGraphOutput.assert_not_called()
+        self.process._handleRunException.assert_called_once_with(ANY, ANY)
+
+    def test_run_with_custom_exception(self):
+        # Mocking a custom exception during process graph execution
+        self.mock_process_graph.run.side_effect = CustomException("test_job_id", cc.STATUSERROR,"dummy", "Custom Exception")
+
+        # Call the run method
+        self.process.run(toServer=MagicMock())
+
+        # Verify that the private methods were called
+        self.process._logJobStart.assert_called_once()
+        self.process._handleProcessGraphOutput.assert_not_called()
+        self.process._handleRunException.assert_called_once_with(ANY, ANY)
+
+class TestLogJobStart(unittest.TestCase):
+    def setUp(self):
+        # Mocking common.logMessage
+        self.mock_common = MagicMock()
+        patcher = patch('workflow.openeoprocess.common', self.mock_common)
+        self.addCleanup(patcher.stop)
+        patcher.start()
+
+        # Creating an instance of OpenEOProcess
+        self.process = OpenEOProcess(
+            user=MagicMock(username="test_user"),
+            request_json={
+                "process_graph": {
+                    "firstMult": {
+                        "process_id": "dummylongfunc",
+                        "arguments": {"a": 1000},
+                        "result": True,
+                    }
+                },
+                "process" : {},
+                "id": "test_id",
+                "description": "test_description",
+            },
+            id=0,
+        )
+        self.process.job_id = "test_job_id"
+        self.process.title = "Test Title"
+
+    def test_logJobStart(self):
+        # Call _logJobStart
+        time_start = "2023-01-01T00:00:00Z"
+        self.process._logJobStart(time_start)
+
+        # Verify common.logMessage was called with the correct arguments
+        self.mock_common.logMessage.assert_called_once_with(
+            logging.INFO,
+            "started job_id: test_job_id with name: Test Title",
+            self.process.user.username
+        )
+
+class TestHandleProcessGraphOutput(unittest.TestCase):
+    def setUp(self):
+        # Mocking dependencies
+        self.mock_constants = MagicMock()
+        self.mock_constants.STATUSJOBDONE = cc.STATUSJOBDONE
+        self.mock_constants.STATUSSTOPPED = cc.STATUSSTOPPED
+
+        # Patching dependencies
+        patcher_common = patch('workflow.openeoprocess.common', MagicMock())
+        self.addCleanup(patcher_common.stop)
+        self.mock_common = patcher_common.start()
+
+        # Creating an instance of OpenEOProcess
+        self.process = OpenEOProcess(
+            user=MagicMock(username="test_user"),
+            request_json={
+                "process_graph": {
+                    "firstMult": {
+                        "process_id": "dummylongfunc",
+                        "arguments": {"a": 1000},
+                        "result": True,
+                    }
+                },
+                "id": "test_id",
+                "description": "test_description",
+            },
+            id=0,
+        )
+        self.process.job_id = "test_job_id"
+        self.process.spatialextent = None
+        self.process.status = None
+        self.process._saveMetadata = MagicMock()
+        self.process.cleanup = MagicMock()
+
+    def test_handleProcessGraphOutput_with_spatialextent(self):
+        output_info = {
+            "status": cc.STATUSJOBDONE,
+            "spatialextent": "mocked_extent"
+        }
+        toServer = MagicMock()
+        time_start = "2023-01-01T00:00:00Z"
+        time_end = "2023-01-01T01:00:00Z"
+
+        self.process._handleProcessGraphOutput(output_info, toServer, time_start, time_end)
+
+        self.assertEqual(self.process.spatialextent, "mocked_extent")
+        self.assertEqual(self.process.returns, output_info)
+        toServer.put.assert_called_once_with({
+            'type': 'progressevent',
+            'job_id': "test_job_id",
+            'progress': 'job finished',
+            'last_updated': time_end,
+            'status': cc.STATUSJOBDONE,
+            'current_operation': '?'
+        })
+        self.assertEqual(self.process.status, cc.STATUSJOBDONE)
+        self.process._saveMetadata.assert_called_once_with(output_info, time_start, time_end)
+        self.process.cleanup.assert_not_called()
+
+    def test_handleProcessGraphOutput_with_status_stopped(self):
+        output_info = {
+            "status": cc.STATUSSTOPPED
+        }
+        toServer = MagicMock()
+        time_start = "2023-01-01T00:00:00Z"
+        time_end = "2023-01-01T01:00:00Z"
+
+        self.process._handleProcessGraphOutput(output_info, toServer, time_start, time_end)
+
+        self.assertEqual(self.process.returns, output_info)
+        toServer.put.assert_called_once_with({
+            'type': 'progressevent',
+            'job_id': "test_job_id",
+            'progress': 'job finished',
+            'last_updated': time_end,
+            'status': cc.STATUSJOBDONE,
+            'current_operation': '?'
+        })
+        self.process.cleanup.assert_called_once()
+        self.process._saveMetadata.assert_called_once_with(output_info, time_start, time_end)
+
+    def test_handleProcessGraphOutput_with_none_output_info(self):
+        output_info = None
+        toServer = MagicMock()
+        time_start = "2023-01-01T00:00:00Z"
+        time_end = "2023-01-01T01:00:00Z"
+
+        self.process._handleProcessGraphOutput(output_info, toServer, time_start, time_end)
+
+        self.assertEqual(self.process.returns, None)
+        toServer.put.assert_called_once_with({
+            'type': 'progressevent',
+            'job_id': "test_job_id",
+            'progress': 'job finished',
+            'last_updated': time_end,
+            'status': cc.STATUSJOBDONE,
+            'current_operation': '?'
+        })
+        self.assertEqual(self.process.status, cc.STATUSJOBDONE)
+        self.process._saveMetadata.assert_called_once_with(output_info, time_start, time_end)
+        self.process.cleanup.assert_not_called()
 
 
 

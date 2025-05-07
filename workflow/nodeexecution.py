@@ -251,4 +251,7 @@ class NodeExecution :
             The resolved value of the parameter, or None if it cannot be resolved.
         """
         refNode = self.processNode.parentProcessGraph.resolveParameter(parameterName)
+        if refNode is None:
+            return None
+        # Check if the parameter is resolved
         return refNode['resolved'] if refNode['resolved'] is not None else None

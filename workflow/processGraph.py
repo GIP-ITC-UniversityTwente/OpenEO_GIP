@@ -1,9 +1,8 @@
-from estimationnode import EstimationNode
+from workflow.estimationnode import EstimationNode
 from openeooperation import *
 from constants import constants
-from nodeexecution import NodeExecution
-import graphoptimize 
-
+from workflow.nodeexecution import NodeExecution
+from graphoptimize import analyzeGraph
 
 
 class ProcessNode :
@@ -38,17 +37,18 @@ class ProcessGraph(OpenEoOperation):
     def __init__(self, source_graph, arguments, getOperation, subgraph=False):
         self.processGraph = {}
         self.outputNodes = []
-        self.sourceGraph = graphoptimize.analyzeGraph(source_graph,  subgraph)
+        self.sourceGraph = analyzeGraph(source_graph,  subgraph)
         self.localArguments = {}
         self.processArguments = arguments        
         self.getOperation = getOperation
         self.startNode = None
         self.title = ''
-        for processKey,processValues in self.sourceGraph.items():
-            grNode = ProcessNode(self, processValues, processKey)
-            self.processGraph[processKey] = grNode
+        if source_graph:
+            for processKey,processValues in self.sourceGraph.items():
+                grNode = ProcessNode(self, processValues, processKey)
+                self.processGraph[processKey] = grNode
 
-        self.determineOutputNodes(self.processGraph)
+                self.determineOutputNodes(self.processGraph)
     
           
     # helper function for the validatgraph method
@@ -56,7 +56,7 @@ class ProcessGraph(OpenEoOperation):
           self.outputNodes[index][1].localArguments[key] = value
 
     def clearLocalArgument(self, index = 0):
-        if len(self.outputNodes) > 0 and len(self.outputNodes[index]) > 1:
+        if len(self.outputNodes) > 0 and len(self.outputNodes) > index and len(self.outputNodes[index]) > 1:
             self.outputNodes[index][1].localArguments = {}
     
     def validateNode(self, node):
@@ -68,7 +68,8 @@ class ProcessGraph(OpenEoOperation):
                         if 'from_node' in base:
                             fromNodeId = base['from_node']
                             backNode = self.id2node(fromNodeId)
-                            errors = errors + self.validateNode(backNode[1])
+                            if backNode[0] is not node.process_id: # prevent inf recursion
+                                errors = errors + self.validateNode(backNode[1])
                    
         processObj = self.getOperation(node.process_id)
         if processObj == None:
@@ -119,6 +120,8 @@ class ProcessGraph(OpenEoOperation):
     # translates the a given id to an actual graphNode. All nodes have a unique id (for this graph)
     def id2node(self, id):
         if isinstance(id, list):
+            if  len(id) == 0:
+                return None
             nodes = []
             for node in self.processGraph.items():
                 if node[0] == id:
@@ -131,9 +134,18 @@ class ProcessGraph(OpenEoOperation):
         return None            
     # an output node is identified by havingf a 'result' attribute
     def determineOutputNodes(self, nodes):
+        self.outputNodes = []
         for node in nodes.items():
-            if hasattr(node[1], 'result'):
-                self.outputNodes.append(node) 
+            k = node[1]
+            pp = k.__dict__.keys()
+            for name in pp:
+                if name == 'result':
+                    self.outputNodes.append(node)
+                    self.startNode = node
+        if len(self.outputNodes) != 1:
+            self.outputNodes = []
+            self.startNode = None
+        return len(self.outputNodes) == 1
 
     def resolveParameter(self, parmKey):
         if parmKey in self.processArguments:

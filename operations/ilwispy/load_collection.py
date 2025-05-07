@@ -1,5 +1,5 @@
 from openeooperation import *
-from operationconstants import *
+#from operationconstants import *
 from constants import constants
 from datacube import *
 from common import openeoip_config, saveIdDatabase
@@ -133,7 +133,13 @@ class LoadCollectionOperation(OpenEoOperation):
             product: The EOReader product object.
             unpack_folder: The folder where the unpacked data will be moved.
         """
-        origin = posixpath.dirname(product.output.glob(tmp_folder + "*/*.tif")[0])
+        if not os.path.exists(tmp_folder): 
+            return
+        dirfiles = tmp_folder + "*/*.tif"
+        files = product.output.glob(dirfiles)
+       # if len(files) == 0:
+       #     return
+        origin = posixpath.dirname(files[0])
 
         if not os.path.exists(unpack_folder):
             shutil.move(origin, unpack_folder)

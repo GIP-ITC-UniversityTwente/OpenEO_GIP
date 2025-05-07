@@ -49,6 +49,8 @@ def analyzeProcessGraph(node, processGraph, nodeName):
 def analyzeGraph(sourceGraph, subgraph):
         if not subgraph:
             return sourceGraph
+        if sourceGraph == {}:
+            return sourceGraph
       
         k = list(sourceGraph.values())[-1]
         lastKey = list(sourceGraph)[-1]
