@@ -7,6 +7,7 @@ import uuid
 from multiprocessing import Pipe
 import json
 import logging
+import openeologging
 import common
 import os, shutil
 from openeooperation import put2Queue
@@ -319,7 +320,7 @@ class OpenEOProcess(multiprocessing.Process):
         Args:
             time_start: The start time of the job.
         """
-        common.logMessage(
+        openeologging.logMessage(
             logging.INFO,
             f"started job_id: {self.job_id} with name: {self.title}",
             common.process_user
@@ -385,7 +386,7 @@ class OpenEOProcess(multiprocessing.Process):
         with open(metadata_path, "w") as fp:
             json.dump(metadata, fp)
 
-        common.logMessage(logging.INFO, f"finished job_id: {self.job_id}", common.process_user)
+        openeologging.logMessage(logging.INFO, f"finished job_id: {self.job_id}", common.process_user)
 
     def _handleRunException(self, ex, toServer):
         """
@@ -414,7 +415,7 @@ class OpenEOProcess(multiprocessing.Process):
             'current_operation': '?'
         }
         toServer.put(log)
-        common.logMessage(logging.ERROR, message, common.process_user)
+        openeologging.logMessage(logging.ERROR, message, common.process_user)
 
     def _logJobStart(self, time_start):
         """
@@ -423,7 +424,7 @@ class OpenEOProcess(multiprocessing.Process):
         Args:
             time_start: The start time of the job.
         """
-        common.logMessage(
+        openeologging.logMessage(
             logging.INFO,
             f"started job_id: {self.job_id} with name: {self.title}",
             common.process_user

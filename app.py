@@ -8,6 +8,7 @@ pp = str(pp)
 sys.path.append(pp)
 
 import common
+import openeologging
 
 def initLogger():
     logFormatter = logging.Formatter("%(asctime)s [%(threadName)-12.12s] [%(levelname)-5.5s]  %(message)s")
@@ -25,8 +26,8 @@ def initLogger():
     logger.addHandler(consoleHandler)   
 
 initLogger()
-common.logMessage(logging.INFO, '----------------------------------------------')
-common.logMessage(logging.INFO, 'server started, process id:' + str(os.getpid()))
+openeologging.logMessage(logging.INFO, '----------------------------------------------')
+openeologging.logMessage(logging.INFO, 'server started, process id:' + str(os.getpid()))
 
 sys.path.append(pp + '/workflow')
 sys.path.append(pp + '/constants')
@@ -130,11 +131,11 @@ f = common.openeoip_config['data_locations']['system_files']
 ilwis.setContextProperty('initlogger', f['location'])
 
 
-common.logMessage(logging.INFO, 'ilwis cache location ' + ilwis.contextProperty('cachelocation'))
-common.logMessage(logging.INFO, 'ilwis system catalog ' +  ilwis.contextProperty('systemcatalog'))
-common.logMessage(logging.INFO, 'ilwis root ' +  ilwis.contextProperty('ilwisfolder'))
+openeologging.logMessage(logging.INFO, 'ilwis cache location ' + ilwis.contextProperty('cachelocation'))
+openeologging.logMessage(logging.INFO, 'ilwis system catalog ' +  ilwis.contextProperty('systemcatalog'))
+openeologging.logMessage(logging.INFO, 'ilwis root ' +  ilwis.contextProperty('ilwisfolder'))
 
-common.logMessage(logging.INFO, 'server started, initialization finished')
+openeologging.logMessage(logging.INFO, 'server started, initialization finished')
 
 if __name__ == '__main__':
     app.run()

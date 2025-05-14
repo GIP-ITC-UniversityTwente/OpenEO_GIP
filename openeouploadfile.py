@@ -1,3 +1,9 @@
+import ilwis
+import shutil
+import subprocess
+import json
+import jsonschema
+import glob
 from flask_restful import Resource
 from flask import make_response, jsonify, request
 from globals import globalsSingleton
@@ -9,16 +15,8 @@ from pathlib import Path
 import os
 from datetime import datetime
 from processmanager import makeBaseResponseDict
-import subprocess
-import json
-import jsonschema
-from jsonschema import validate
-import glob
 from datacube import DataCube
-import ilwis
-import shutil
-import logging
-import common
+import openeologging
 
 
 
@@ -47,7 +45,7 @@ def checkMetadata(metajson, folder):
     metafile = open('./config/metadataformat.json')
     metadict = json.load(metafile) 
     try:
-        validate(instance=metajson, schema=metadict)
+        jsonschema.validate(instance=metajson, schema=metadict)
         raster = globalsSingleton.id2Raster(metajson['id'])
         if raster != None:
             return "Id for this dataset is already in use:"  + metajson['id']
@@ -70,7 +68,7 @@ def checkdata(folder, fpath):
     file_extension = os.path.splitext(fpath)[1]
     if file_extension != '.zip'and file_extension != '.gz':
         if file_extension == '.tif' or file_extension == '.nc' :
-            common.logMessage(logging.INFO, 'load file for processing ' + fpath) 
+            openeologging.logMessage(logging.INFO, 'load file for processing ' + fpath) 
             ilwRaster = ilwis.RasterCoverage(fpath)
             if ilwRaster:
                 raster = DataCube() 
@@ -117,7 +115,7 @@ def checkdata(folder, fpath):
 class OpenEOUploadFile(AuthenticatedResource):
    
     def put(self, path):
-        common.logMessage(logging.INFO, 'uploading file')
+        openeologging.logMessage(logging.INFO, 'uploading file')
         binary_data = request.data
         user = UserInfo(request)
         username = user.username
@@ -125,7 +123,7 @@ class OpenEOUploadFile(AuthenticatedResource):
     
         folder = os.path.join(rootdata, username)
 
-        common.logMessage(logging.INFO, 'uploading file to ' + folder)
+        openeologging.logMessage(logging.INFO, 'uploading file to ' + folder)
         
 
         if not os.path.exists(folder):
@@ -139,7 +137,7 @@ class OpenEOUploadFile(AuthenticatedResource):
         with open(fpath, 'wb') as f:
             f.write(binary_data)
 
-        common.logMessage(logging.INFO, 'file uploaded to ' + filename + " to " + folder)            
+        openeologging.logMessage(logging.INFO, 'file uploaded to ' + filename + " to " + folder)            
 
         file_size = os.path.getsize(fpath)
         mod_time = os.path.getmtime(fpath)

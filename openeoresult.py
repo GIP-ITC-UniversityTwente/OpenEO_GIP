@@ -5,8 +5,8 @@ from workflow.openeoprocess import OpenEOProcess
 from userinfo import UserInfo
 from processmanager import makeBaseResponseDict
 from authentication import AuthenticatedResource
-import logging
 import common
+import openeologging
 from constants import constants
 from customexception import CustomException
 
@@ -18,10 +18,10 @@ class OpenEOIPResult(AuthenticatedResource):
         try:
             process = OpenEOProcess(user, request_json,0)
             
-            common.logMessage(logging.INFO, 'started sync: ' + process.job_id , common.process_user)
+            openeologging.logMessage(logging.INFO, 'started sync: ' + process.job_id , common.process_user)
             if process.processGraph != None:
                 outputInfo = process.processGraph.run(process, None, None)
-                common.logMessage(logging.INFO, 'ended sync: ' + process.job_id , common.process_user)
+                openeologging.logMessage(logging.INFO, 'ended sync: ' + process.job_id , common.process_user)
                 common.removeTempFiles(process.job_id)
                 return common.makeResponse(outputInfo)#, {'removedata' : process.job_id})
         except (Exception, CustomException) as ex:
@@ -29,7 +29,7 @@ class OpenEOIPResult(AuthenticatedResource):
             if isinstance(ex, CustomException):
                 code = ex.jsonErr['code']
                 message = ex.jsonErr['message']
-                common.logMessage(logging.ERROR, 'error: ' + message , common.process_user)
+                openeologging.logMessage(logging.ERROR, 'error: ' + message , common.process_user)
                 return make_response(makeBaseResponseDict(process.job_id, 'error', code, None, message),int(code))
             return make_response(makeBaseResponseDict(-1, 'error', 404, None, str(ex)),400)
 

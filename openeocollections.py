@@ -9,7 +9,7 @@ from pathlib import Path
 from userinfo import UserInfo
 from datacube import DataCube
 import common
-import logging
+import openeologging
 import tests.addTestRasters as tr
 
 
@@ -39,7 +39,7 @@ def loadFile(fullPath, extraMetadataAll):
         return raster            
             
     except Exception as ex:
-        common.logMessage(logging.ERROR,str(ex),common.process_user)
+        openeologging.logMessage(logging.ERROR,str(ex),common.process_user)
     return None
 
 def loadCollections():
@@ -51,7 +51,7 @@ def loadCollections():
     """
     user = UserInfo(request)
     data_locations = _getDataLocations(user)
-    common.logMessage(logging.INFO, 'reading collections', common.process_user)
+    openeologging.logMessage(logging.INFO, 'reading collections', common.process_user)
 
     allCollections = []
     for location in data_locations:
@@ -133,7 +133,7 @@ def _processFile(fullPath, filename, extraMetadataAll):
         A dictionary representing the collection, or None if the file could not be processed.
     """
     name = os.path.splitext(filename)[0]
-    common.logMessage(logging.INFO, f'reading file {filename}', common.process_user)
+    openeologging.logMessage(logging.INFO, f'reading file {filename}', common.process_user)
 
     raster = globalsSingleton.id2Raster(name)
     if raster is None:
@@ -142,7 +142,7 @@ def _processFile(fullPath, filename, extraMetadataAll):
             return None
 
     collectionJsonDict = raster.toShortDictDefinition()
-    common.logMessage(logging.INFO, f'finished file {filename}', common.process_user)
+    openeologging.logMessage(logging.INFO, f'finished file {filename}', common.process_user)
     return collectionJsonDict if collectionJsonDict else None
 
 def _finalizeCollections():
@@ -153,7 +153,7 @@ def _finalizeCollections():
     rasters = tr.setTestRasters(5)
     for r in rasters:
         globalsSingleton.raster_database[r['id']] = r
-    common.logMessage(logging.INFO, 'finished reading collections', common.process_user)
+    openeologging.logMessage(logging.INFO, 'finished reading collections', common.process_user)
 
 def openExtraMetadata(extraPath):
     extraMetadataAll = None

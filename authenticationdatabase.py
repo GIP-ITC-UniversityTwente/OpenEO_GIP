@@ -2,7 +2,7 @@ import sqlite3
 from nacl import pwhash, secret, utils
 import hashlib
 import os
-import common
+import openeologging
 import logging
 from datetime import datetime
 import threading
@@ -17,6 +17,7 @@ class AuthenticationDatabase:
         self.openDataBase()
 
     def openDataBase(self):
+        openeologging.logMessage(logging.INFO,'open database')
         self.dbConnection = None
         try:
             path = './config/database.db'
@@ -38,6 +39,7 @@ class AuthenticationDatabase:
             print(e)
 
     def close(self):
+        openeologging.logMessage(logging.INFO,'close database')
         if  self.dbConnection:
             self.dbConnection.close()
 
@@ -65,6 +67,7 @@ class AuthenticationDatabase:
             print(err)            
 
     def verify_password(self, stored_password, provided_password):
+        openeologging.logMessage(logging.INFO,'verifying password')
         """Verifies if the provided password matches the stored hashed password."""
         salt = stored_password[:32]
         stored_key = stored_password[32:]
@@ -72,6 +75,7 @@ class AuthenticationDatabase:
         return stored_key == provided_key
 
     def login(self, username, password):
+        openeologging.logMessage(logging.INFO,'login for user ' + username + ' logged in', username)
         myLock = threading.Lock()
         with myLock:
             cursor = self.dbConnection.cursor()
@@ -79,16 +83,17 @@ class AuthenticationDatabase:
             stored_password = cursor.fetchone()
         if stored_password is not None:
             if self.verify_password(stored_password[0], password):
-                common.logMessage(logging.INFO,'user ' + username + ' logged in', username)
+                openeologging.logMessage(logging.INFO,'user ' + username + ' logged in', username)
                 return True
             else:
-                common.logMessage(logging.INFO,'user ' + username + ' logged in with incorrect password', username)
+                openeologging.logMessage(logging.INFO,'user ' + username + ' logged in with incorrect password', username)
                 return False
         else:
-            common.logMessage(logging.INFO,'user ' + username + ' not found', username)
+            openeologging.logMessage(logging.INFO,'user ' + username + ' not found', username)
         return False  
 
     def addToken(self, token, username, endTime):
+        openeologging.logMessage(logging.INFO,'token ' + token + ' added for user ' + username, username)
         myLock = threading.Lock()
         with myLock:
             query = """Select username from tokens where token= ?"""
@@ -118,6 +123,7 @@ class AuthenticationDatabase:
         return False
    
     def getUserFromToken(self, token):
+        openeologging.logMessage(logging.INFO,'get user from token ' + token)
         myLock = threading.Lock()
         user = '?'
         with myLock:        
@@ -125,6 +131,7 @@ class AuthenticationDatabase:
             cursor = self.dbConnection.execute(query,(token,))
             data = cursor.fetchone()
             user = data[0]
+            openeologging.logMessage(logging.INFO,'token ' + token + ' used for user ' + user, user)
           
         return user
 
@@ -149,6 +156,7 @@ class AuthenticationDatabase:
             self.dbConnection.execute(query)
 
     def clearDatabase(self):
+        openeologging.logMessage(logging.INFO,'clear database')
         myLock = threading.Lock()
         with myLock:        
             query = """delete from users"""

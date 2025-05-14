@@ -7,11 +7,9 @@ import pickle
 from pathlib import Path
 import os
 from authenticationdatabase import authenticationDB
-import ilwis
-import glob
-import logging
+import openeologging
 
-lockLogger = threading.Lock()
+
 
 def linkSection(begin, end):
         return {
@@ -239,7 +237,7 @@ class ProcessManager:
         self.running = False
 
     def removeFromOutputs(self, key, whenTimer):
-        common.logMessage(logging.INFO, 'removing output from of date output data')
+        openeologging.logMessage(logging.INFO, 'removing output from of date output data')
         endTimer = datetime.now()
         delta2 = endTimer - self.outputs[key].last_updated
         if delta2.seconds > whenTimer:
@@ -251,7 +249,7 @@ class ProcessManager:
         for out in self.outputs.values():
             if out.status == constants.STATUSJOBDONE:
                 if not shown:
-                    common.logMessage(logging.INFO, 'removing temporary data')
+                    openeologging.logMessage(logging.INFO, 'removing temporary data')
                     shown = True
                 out.cleanUp()
 
@@ -265,7 +263,7 @@ class ProcessManager:
             lines = fp.readlines()
             lineCount = len(lines)
         if lineCount > 5000:
-            common.logMessage(logging.INFO, 'reduce size log file')         
+            openeologging.logMessage(logging.INFO, 'reduce size log file')         
             with open(filepath, 'w') as fp:
                 limit  = 1000
                 for number, line in enumerate(lines):

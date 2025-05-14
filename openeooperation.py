@@ -5,6 +5,7 @@ import ilwis
 from datacube import *
 import logging
 import common
+import openeologging
 import customexception
 from pathlib import Path
 from urllib.parse import urlparse, unquote
@@ -342,27 +343,27 @@ class OpenEoOperation:
         put2Queue(processOutput, log)
     
     def logStartPrepareOperation(self, jobid):
-        common.logMessage(logging.INFO, self.name + " started prepare. job name:" + jobid,common.process_user)
+        openeologging.logMessage(logging.INFO, self.name + " started prepare. job name:" + jobid,common.process_user)
 
     def logEndPrepareOperation(self, jobid):
-        common.logMessage(logging.INFO, self.name + " ended prepare. with job name:" + jobid,common.process_user)        
+        openeologging.logMessage(logging.INFO, self.name + " ended prepare. with job name:" + jobid,common.process_user)        
 
     def logStartOperation(self, processOutput,openeojob, extraMessage=""):
-        common.logMessage(logging.INFO, self.name + " started run. with job name:" + openeojob.title,common.process_user)
+        openeologging.logMessage(logging.INFO, self.name + " started run. with job name:" + openeojob.title,common.process_user)
         if extraMessage == "":
             return self.logProgress(processOutput, openeojob.job_id, self.name ,constants.STATUSRUNNING, 0)
         else:
             return self.logProgress(processOutput, openeojob.job_id, "started " + self.name + ": " + extraMessage ,constants.STATUSRUNNING, 0)
 
     def logEndOperation(self, processOutput,openeojob, outputs = None, extraMessage=""):
-        common.logMessage(logging.INFO,self.name + " ended run. with job name:" + openeojob.title, common.process_user)
+        openeologging.logMessage(logging.INFO,self.name + " ended run. with job name:" + openeojob.title, common.process_user)
         if extraMessage == "":
             return self.logProgress(processOutput, openeojob.job_id, 'finished ' + self.name,constants.STATUSFINISHED,100, common.getIdsForJob(openeojob.job_id))
         else:
             return self.logProgress(processOutput, openeojob.job_id, 'finished ' + self.name +": " + extraMessage,constants.STATUSFINISHED,100, common.getIdsForJob(openeojob.job_id))
     
     def handleError(self, processOutput, job_id, parameter, message, code):
-        common.logMessage(logging.ERROR, 'error: ' + self.name + " with job:" + job_id + " ;" + message, common.process_user)
+        openeologging.logMessage(logging.ERROR, 'error: ' + self.name + " with job:" + job_id + " ;" + message, common.process_user)
         message = message + ": " + self.name
         self.logProgress(processOutput, job_id, message, constants.STATUSERROR )
         raise customexception.CustomException(code, job_id, parameter, message)
@@ -455,7 +456,7 @@ class OpenEoOperation:
         return None
             
 def setWorkingCatalog(raster, name):
-    common.logMessage(logging.INFO, name + ' new working catalog:' + str(raster.dataFolder() ) )
+    openeologging.logMessage(logging.INFO, name + ' new working catalog:' + str(raster.dataFolder() ) )
     path = Path(raster.dataFolder()).as_uri()
     if path.find('file://') == -1:
         folderPath = path + "/" + raster['dataFolder']

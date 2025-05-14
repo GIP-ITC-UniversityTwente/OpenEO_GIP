@@ -3,6 +3,7 @@ import copy
 import customexception
 import datacube
 import logging
+import openeologging
 from constants import constants
 
 class NodeExecution :
@@ -14,7 +15,7 @@ class NodeExecution :
         self.indirectKeys = ['from_parameter', 'from_node']
 
     def handleError(self, openeojob, message, type):
-        common.logMessage(logging.ERROR, message, openeojob.user.username )
+        openeologging.logMessage(logging.ERROR, message, openeojob.user.username )
         raise customexception.CustomException(constants.ERROROPERATION, self.processNode.process_id,  type, message)        
 
     # this method together with  the support method resolveNode do the heavy lifting for executing

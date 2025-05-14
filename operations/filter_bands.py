@@ -2,6 +2,7 @@ from openeooperation import *
 from operationconstants import *
 from constants import constants
 from datacube import DataCube
+import openeologging
 
 class FilterBands(OpenEoOperation):
     def __init__(self):
@@ -16,7 +17,7 @@ class FilterBands(OpenEoOperation):
         self.inpData = arguments['data']['resolved']
         if len(self.inpData) == 0:
             message =  "invalid input. Number of rasters is 0 in operation:" + self.name
-            common.logMessage(logging.ERROR, message,common.process_user)
+            openeologging.logMessage(logging.ERROR, message,common.process_user)
             self.handleError(toServer, job_id, 'Input raster',message, 'ProcessParameterInvalid')
             return message         
         if isinstance(self.inpData[0], DataCube):
@@ -32,7 +33,7 @@ class FilterBands(OpenEoOperation):
                                 foundCount = foundCount + 1
                     if foundCount != len(requestedBands):
                         message =  'Band list doesn match available bands'
-                        common.logMessage(logging.ERROR, message,common.process_user)
+                        openeologging.logMessage(logging.ERROR, message,common.process_user)
                         self.handleError(toServer, job_id, 'bands',message, 'ProcessParameterInvalid')                   
             if 'wavelengths' in arguments:
                 wavelengths = arguments['wavelengths']['resolved']

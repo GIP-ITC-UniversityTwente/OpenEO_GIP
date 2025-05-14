@@ -9,6 +9,7 @@ import constants.constants as cc
 from datetime import datetime, timedelta
 import logging
 import common
+import openeologging
 
 logger = logging.getLogger(__name__)
 
@@ -88,7 +89,7 @@ def setTestRaster(dims, bndcount = 1, version = 0):
     url.replace('////', '///') # if at all
     path = url.split('//')
     folder = os.path.dirname("/"+ path[1])
-    common.logMessage(logging.INFO, 'creating synthetic data. new working folder:' + folder) 
+    openeologging.logMessage(logging.INFO, 'creating synthetic data. new working folder:' + folder) 
     path = Path(folder).as_uri()
     ilwis.setWorkingCatalog(path)  
 

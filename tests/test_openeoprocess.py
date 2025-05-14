@@ -600,7 +600,7 @@ class TestRun(unittest.TestCase):
 
 class TestLogJobStart(unittest.TestCase):
     def setUp(self):
-        # Mocking common.logMessage
+        # Mocking openeologging.logMessage
         self.mock_common = MagicMock()
         patcher = patch('workflow.openeoprocess.common', self.mock_common)
         self.addCleanup(patcher.stop)
@@ -631,8 +631,8 @@ class TestLogJobStart(unittest.TestCase):
         time_start = "2023-01-01T00:00:00Z"
         self.process._logJobStart(time_start)
 
-        # Verify common.logMessage was called with the correct arguments
-        self.mock_common.logMessage.assert_called_once_with(
+        # Verify openeologging.logMessage was called with the correct arguments
+        self.mock_openeologging.logMessage.assert_called_once_with(
             logging.INFO,
             "started job_id: test_job_id with name: Test Title",
             self.process.user.username

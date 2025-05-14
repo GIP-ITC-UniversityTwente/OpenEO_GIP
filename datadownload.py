@@ -5,6 +5,7 @@ from processmanager import globalProcessManager
 from datetime import datetime
 from globals import globalsSingleton
 import common 
+import openeologging
 import os
 import mimetypes
 import logging
@@ -20,12 +21,12 @@ class OpenEODataDownload(Resource):
             folder_token = parts[0]
             resultName = parts[1]
             folder = ''
-            common.logMessage(logging.INFO,'prepare downloading ' + resultName,user.username) 
+            openeologging.logMessage(logging.INFO,'prepare downloading ' + resultName,user.username) 
             try:
                 folder = s.loads(folder_token)['user_id']
                 now = datetime.now()
                 if globalProcessManager.outputs[folder].eoprocess.user.username != user.username:
-                    common.logMessage(logging.ERROR,'credentials invalid for '+ resultName,user.username) 
+                    openeologging.logMessage(logging.ERROR,'credentials invalid for '+ resultName,user.username) 
                     err = globalsSingleton.errorJson('CredentialsInvalid', user.username,'')
                     return make_response(jsonify(err),err.code) 
                 
@@ -49,7 +50,7 @@ class OpenEODataDownload(Resource):
                                     direct_passthrough=True)
                         return response
             except Exception as ex:
-                common.logMessage(logging.ERROR,'failed download result with error'+ str(ex),common.process_user) 
+                openeologging.logMessage(logging.ERROR,'failed download result with error'+ str(ex),common.process_user) 
                 err = globalsSingleton.errorJson('FileNotFound', 'system','')
                 return make_response(jsonify(err),err.code) 
             return make_response(jsonify({ "errors": 'test'}), 200)

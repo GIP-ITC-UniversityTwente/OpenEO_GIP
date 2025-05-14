@@ -5,7 +5,7 @@ import os
 import importlib
 import json
 import logging
-import common
+import openeologging
 
 # this method traverse the 'operations' folder to find all source modules that implement the
 # registerOperation method. If so it will call the registerOperation method which will create a 
@@ -15,7 +15,7 @@ def initOperationMetadata(getOperation):
 
 # Specify the subdirectory path
     operationsMetaData = {}
-    common.logMessage(logging.INFO, 'registering operations')
+    openeologging.logMessage(logging.INFO, 'registering operations')
     current_dir = os.path.dirname(os.path.abspath(__file__))
     subfolders = [ f.path for f in os.scandir(current_dir) if f.is_dir() ]
     for folder in subfolders:
@@ -24,7 +24,7 @@ def initOperationMetadata(getOperation):
 
     # find all sources in the main folder which implement the registerOperation method and register them
     operationsMetaData = loadOperationsFolder(current_dir,operationsMetaData)
-    common.logMessage(logging.INFO, 'finished registering operations')
+    openeologging.logMessage(logging.INFO, 'finished registering operations')
     
     # udfs
     rootLocation = os.path.join(os.path.dirname(__file__), '..')
@@ -32,17 +32,17 @@ def initOperationMetadata(getOperation):
     configFileLocation = os.path.join(rootLocation, 'config/config.json')
     configFileLocation = os.path.abspath(configFileLocation)
     if not os.path.exists(configFileLocation):
-        common.logMessage(logging.CRITICAL, "missing \'config.json\' file at " + configFileLocation)
+        openeologging.logMessage(logging.CRITICAL, "missing \'config.json\' file at " + configFileLocation)
         raise Exception("missing \'config.json\' file at " + configFileLocation)
     
     openeoip_configfile = open(configFileLocation)
-    common.logMessage(logging.INFO, 'reading udfs')
+    openeologging.logMessage(logging.INFO, 'reading udfs')
     openeoip_config = json.load(openeoip_configfile)
     udf_locations = openeoip_config["data_locations"]["udf_locations"]
     for udf_location in udf_locations:
         location = udf_location["location"]
         if not os.path.exists(location):
-             common.logMessage(logging.WARNING, 'udf location doesnt exist: ' + location)
+             openeologging.logMessage(logging.WARNING, 'udf location doesnt exist: ' + location)
              continue
         file_names = [f for f in os.listdir(location) if f.endswith('.udf')]
         for filename in file_names:
@@ -52,12 +52,12 @@ def initOperationMetadata(getOperation):
             processValues = data['process']
             wf = processGraph.ProcessGraph(processValues['process_graph'], None, getOperation)
             operationsMetaData[processValues['id']] = wf
-    common.logMessage(logging.INFO, 'finished reading udfs')            
+    openeologging.logMessage(logging.INFO, 'finished reading udfs')            
     return operationsMetaData
 
 def loadOperationsFolder(folder,operationsMetaData):
     if not os.path.exists(folder):
-        common.logMessage(logging.WARNING, 'operation location doesnt exist: ' + folder)
+        openeologging.logMessage(logging.WARNING, 'operation location doesnt exist: ' + folder)
         return operationsMetaData  
     
     file_names = [f for f in os.listdir(folder) if f.endswith('.py')]

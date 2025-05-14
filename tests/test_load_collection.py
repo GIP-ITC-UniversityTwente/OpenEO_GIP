@@ -87,7 +87,7 @@ class TestGetRasterDataSets(unittest.TestCase):
 class TestUnpackOriginalData(unittest.TestCase):
 
     @patch("operations.ilwispy.load_collection.Reader")
-    @patch("operations.ilwispy.load_collection.common.logMessage")
+    @patch("operations.ilwispy.load_collection.openeologging.logMessage")
     @patch("operations.ilwispy.load_collection.os.path.join")
     @patch("operations.ilwispy.load_collection.os.path.isdir")
     @patch("operations.ilwispy.load_collection.os.scandir")

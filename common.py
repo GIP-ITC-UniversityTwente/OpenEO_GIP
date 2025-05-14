@@ -3,7 +3,6 @@ from werkzeug.wsgi import FileWrapper
 import json
 from pathlib import Path
 from multiprocessing import Lock
-import logging
 import mimetypes
 from constants.constants import *
 from io import BytesIO
@@ -12,7 +11,6 @@ import os, shutil
 from datetime import datetime
 from dateutil import parser
 # import tests.addTestRasters as tr
-from processmanager import lockLogger
 import ilwis
 import glob
 
