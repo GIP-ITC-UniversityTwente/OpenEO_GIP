@@ -5,6 +5,7 @@ from workflow.openeoprocess import OpenEOProcess
 from userinfo import UserInfo
 from processmanager import makeBaseResponseDict
 from authentication import AuthenticatedResource
+import logging
 import common
 import openeologging
 from constants import constants
