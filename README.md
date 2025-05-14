@@ -7,21 +7,21 @@ This project is a backend for OpenEo clients(https://openeo.org/). It facilitate
  - make sure the packages below are installed
  
  *table 1: Installation packages*   
-| Package            | Installation Command                          |
-|--------------------|----------------------------------------------|
-| OpenEO           | `pip install openeo`                         |
-| Flask           | `pip install -U Flask`                        |
-| Flask-RESTful   | `sudo apt-get install -y python-flask-restful` |
-| Flask-HTTPAuth  | `pip install Flask-HTTPAuth`                  |
-| PyNaCl          | `pip install pynacl`                          |
-| JSON Schema     | `pip install jsonschema`                      |
-| EOReader        | `pip install eoreader`                        |
-| ILWISPy    | `pip install ilwis`                       |
+| Package        | Installation Command                           |
+| -------------- | ---------------------------------------------- |
+| OpenEO         | `pip install openeo`                           |
+| Flask          | `pip install -U Flask`                         |
+| Flask-RESTful  | `sudo apt-get install -y python-flask-restful` |
+| Flask-HTTPAuth | `pip install Flask-HTTPAuth`                   |
+| PyNaCl         | `pip install pynacl`                           |
+| JSON Schema    | `pip install jsonschema`                       |
+| EOReader       | `pip install eoreader`                         |
+| ILWISPy        | `pip install ilwis`                            |
 | Qt5            | `sudo apt install -y qtbase5-dev`              |
 | GDAL           | `sudo apt-get install gdal-bin`                |
 | NetCDF         | `sudo apt -y install netcdf-bin`               |
 
 - the file app.py starts the server on port 5000
-- The file config.json describes locations that the server needs to find and write information/data. Modify this to suit your own needs.
+- The file [config.json](https://github.com/GIP-ITC-UniversityTwente/OpenEO_GIP/blob/main/config/config.json) describes locations that the server needs to find and write information/data. Modify this to suit your own needs.
 
 - see also [design.md](https://github.com/GIP-ITC-UniversityTwente/OpenEO_GIP/blob/main/design.md)

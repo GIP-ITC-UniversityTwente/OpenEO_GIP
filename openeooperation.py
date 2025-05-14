@@ -172,7 +172,7 @@ class OpenEoOperation:
             return rasters[0]
         
         ilwisRaster = self.createNewRaster( rasters)
-
+     
         for index in range(0, len(rasters)):
             iter = rasters[index].begin()
             ilwisRaster.addBand(index, iter) ## will add to the end
@@ -265,12 +265,13 @@ class OpenEoOperation:
     def setOutput(self, job_id, ilwisRasters, extra):
         outputRasters = []
         if len(ilwisRasters) > 0:
-            if self.rasterSizesEqual:
+            is4D = ilwisRasters[0].size().zsize > 1
+            if self.rasterSizesEqual and not is4D:
                 ilwisRaster = self.collectRasters(job_id, ilwisRasters)
                 outputRasters.append(self.createOutput(0, ilwisRaster, extra))
             else:
                 count = 0
-                for rc in self.rasters:
+                for rc in ilwisRasters:
                     outputRasters.append(self.createOutput(count, rc, extra))
                     count = count + 1
 
