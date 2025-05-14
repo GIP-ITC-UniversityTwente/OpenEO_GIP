@@ -9,6 +9,7 @@ from pathlib import Path
 from userinfo import UserInfo
 from datacube import DataCube
 import common
+import logging
 import openeologging
 import tests.addTestRasters as tr
 
