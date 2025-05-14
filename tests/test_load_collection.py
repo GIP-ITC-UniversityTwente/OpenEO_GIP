@@ -21,6 +21,11 @@ import unittest
 import os
 import logging
 
+import addTestRasters
+
+testRasters = addTestRasters.setTestRasters(5)
+  
+
 class TestGetRasterDataSets(unittest.TestCase):
 
     @patch("operations.ilwispy.load_collection.Path.home")
@@ -343,6 +348,83 @@ class TestGetNewFiles(unittest.TestCase):
 
         # Assertions
         self.assertEqual(result, [])
+
+class TestPrepare(unittest.TestCase):
+
+    @patch("operations.ilwispy.load_collection.LoadCollectionOperation._initializePreparation")
+    @patch("operations.ilwispy.load_collection.getRasterDataSets")
+    @patch("operations.ilwispy.load_collection.LoadCollectionOperation._loadInputRaster")
+    @patch("operations.ilwispy.load_collection.LoadCollectionOperation._transformDataIfNeeded")
+    @patch("operations.ilwispy.load_collection.LoadCollectionOperation._processBandsArgument")
+    @patch("operations.ilwispy.load_collection.LoadCollectionOperation._processTemporalExtent")
+    @patch("operations.ilwispy.load_collection.setWorkingCatalog")
+    @patch("operations.ilwispy.load_collection.LoadCollectionOperation._processSpatialExtent")
+    @patch("operations.ilwispy.load_collection.LoadCollectionOperation._processProperties")
+    @patch("operations.ilwispy.load_collection.LoadCollectionOperation.logEndPrepareOperation")
+    def test_prepare_success(
+        self, mock_log_end, mock_process_properties, mock_process_spatial_extent,
+        mock_set_working_catalog, mock_process_temporal_extent, mock_process_bands_argument,
+        mock_transform_data, mock_load_input_raster, mock_get_raster_datasets, mock_initialize_preparation
+    ):
+        # Mocking dependencies
+        mock_initialize_preparation.return_value = ("mock_server", "mock_job_id")
+        mock_get_raster_datasets.return_value = {"mock_id": {"data": "mock_data"}}
+        mock_load_input_raster.return_value = {"dataFolder": "mock_folder"}
+        mock_transform_data.return_value = "mock_folder"
+        mock_set_working_catalog.return_value = "mock_path"
+
+        # Create an instance of the operation
+        operation = LoadCollectionOperation()
+        operation.name = "test_operation"
+
+        # Call the method
+        operation.prepare({"mock_argument": "value"})
+
+        # Assertions
+        mock_initialize_preparation.assert_called_once_with({"mock_argument": "value"})
+        mock_get_raster_datasets.assert_called_once()
+        mock_load_input_raster.assert_called_once_with(
+            {"mock_id": {"data": "mock_data"}}, {"mock_argument": "value"}, "mock_server", "mock_job_id"
+        )
+        mock_transform_data.assert_called_once_with({"mock_id": {"data": "mock_data"}}, "mock_server", "mock_job_id")
+        mock_process_bands_argument.assert_called_once_with({"mock_argument": "value"})
+        mock_process_temporal_extent.assert_called_once_with({"mock_argument": "value"}, "mock_server", "mock_job_id")
+        mock_set_working_catalog.assert_called_once_with({"dataFolder": "mock_folder"}, "test_operation")
+        mock_process_spatial_extent.assert_called_once_with({"mock_argument": "value"}, "mock_server", "mock_job_id", "mock_path")
+        mock_process_properties.assert_called_once_with({"mock_argument": "value"})
+        mock_log_end.assert_called_once_with("mock_job_id")
+        self.assertTrue(operation.runnable)
+        self.assertTrue(operation.rasterSizesEqual)
+
+    @patch("operations.ilwispy.load_collection.LoadCollectionOperation._initializePreparation")
+    @patch("operations.ilwispy.load_collection.getRasterDataSets")
+    @patch("operations.ilwispy.load_collection.LoadCollectionOperation._loadInputRaster")
+    def test_prepare_failure_on_load_input_raster(
+        self, mock_load_input_raster, mock_get_raster_datasets, mock_initialize_preparation
+    ):
+        # Mocking dependencies
+        mock_initialize_preparation.return_value = ("mock_server", "mock_job_id")
+        mock_get_raster_datasets.return_value = {"mock_id": {"data": "mock_data"}}
+        mock_load_input_raster.side_effect = Exception("Failed to load input raster")
+
+        # Create an instance of the operation
+        operation = LoadCollectionOperation()
+        operation.name = "test_operation"
+
+        # Call the method and assert exception
+        with self.assertRaises(Exception) as context:
+            operation.prepare({"mock_argument": "value"})
+
+        self.assertEqual(str(context.exception), "Failed to load input raster")
+        mock_initialize_preparation.assert_called_once_with({"mock_argument": "value"})
+        mock_get_raster_datasets.assert_called_once()
+        mock_load_input_raster.assert_called_once_with(
+            {"mock_id": {"data": "mock_data"}}, {"mock_argument": "value"}, "mock_server", "mock_job_id"
+        )
+        self.assertFalse(operation.runnable)
+
+
+
 
 
 
