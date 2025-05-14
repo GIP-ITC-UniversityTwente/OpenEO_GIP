@@ -244,6 +244,8 @@ class LoadCollectionOperation(OpenEoOperation):
                 The loaded raster data.
             """
             raster_data = self.id2Raster(file_id_database, arguments['id']['resolved'])
+            if raster_data is None:
+                self.handleError(to_server, job_id, 'input raster not found', 'ProcessParameterInvalid')
             if raster_data['proj'] == '0':
                 raster_data['proj'] = raster_data.getRaster().coordinateSystem().toProj4();
       
