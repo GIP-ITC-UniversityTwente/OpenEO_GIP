@@ -52,5 +52,5 @@ class BaseAggregateData(OpenEoOperation):
                 self.logEndOperation(processOutput,openeojob)
                 return createOutput(constants.STATUSFINISHED, result, self.type2type(result))
 
-        message = common.notRunnableError(self.name, openeojob.job_id) 
+        message = openeologging.notRunnableError(self.name, openeojob.job_id) 
         return createOutput('error', message, constants.DTERROR)      

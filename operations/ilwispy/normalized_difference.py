@@ -2,6 +2,7 @@ from openeooperation import *
 from operationconstants import *
 from constants import constants
 from common import openeoip_config
+import openeologging
 
 
 class NormalizedDifference(OpenEoOperation):
@@ -45,7 +46,7 @@ class NormalizedDifference(OpenEoOperation):
             outputRasters.extend(self.setOutput(openeojob.job_id, ilwRasters, self.extra))
             self.logEndOperation(processOutput,openeojob, outputs=outputRasters)
             return createOutput(constants.STATUSFINISHED, outputRasters, constants.DTRASTERLIST)
-        message = common.notRunnableError(self.name, openeojob.job_id) 
+        message = openeologging.notRunnableError(self.name, openeojob.job_id) 
         return createOutput('error', message, constants.DTERROR)
         
 def registerOperation():

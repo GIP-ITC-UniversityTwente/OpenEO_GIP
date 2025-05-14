@@ -411,7 +411,7 @@ class LoadCollectionOperation(OpenEoOperation):
         openeologging.logMessage(logging.INFO, self.name + ' move original data to a backup folder: ' + str(self.inputRaster['dataSource']))   
         mvfolder = os.path.join(oldFolder, 'original_data')
         file_name = os.path.basename(self.inputRaster['dataSource'])
-        common.makeFolder(mvfolder)
+        openeologging.makeFolder(mvfolder)
         shutil.move(self.inputRaster['dataSource'], mvfolder + "/" + file_name) 
         #internal databse up to tdata to reflect the new (transformed) data
         self.inputRaster['dataSource'] = newDataSource
@@ -689,7 +689,7 @@ class LoadCollectionOperation(OpenEoOperation):
             self.logEndOperation(processOutput,openeojob, outputs=outputRasters, extraMessage=self.inputRaster['title'])
             return createOutput(constants.STATUSFINISHED, outputRasters, constants.DTRASTER)
         
-        message = common.notRunnableError(self.name, openeojob.job_id) 
+        message = openeologging.notRunnableError(self.name, openeojob.job_id) 
         return createOutput('error', message, constants.DTERROR)
            
 def registerOperation():

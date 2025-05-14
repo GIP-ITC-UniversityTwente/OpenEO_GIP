@@ -3,6 +3,7 @@ from operationconstants import *
 from constants import constants
 import math
 from datacube import DataCube
+import openeologging
 
 class BaseUnarymapCalc(OpenEoOperation):
     def base_prepare(self, arguments, oper):
@@ -56,7 +57,7 @@ class BaseUnarymapCalc(OpenEoOperation):
                 self.logEndOperation(processOutput,openeojob)
             ##put2Queue(processOutput,{'progress' : 100, 'job_id' : openeojob.job_id, 'status' : 'finished'}) 
             return out
-        message = common.notRunnableError(self.name, openeojob.job_id)   
+        message = openeologging.notRunnableError(self.name, openeojob.job_id)   
         return createOutput('error', message, constants.DTERROR)
     
 class BaseBinarymapCalcBase(OpenEoOperation):
@@ -207,5 +208,5 @@ class BaseBinarymapCalcBase(OpenEoOperation):
             self.logEndOperation(processOutput,openeojob, outputs=outputRasters)
             ##put2Queue(processOutput,{'progress' : 100, 'job_id' : openeojob.job_id, 'status' : 'finished'}) 
             return out
-        common.notRunnableError(openeojob.job_id)   
+        openeologging.notRunnableError(openeojob.job_id)   
         return createOutput('error', "operation no runnable", constants.DTERROR)                        

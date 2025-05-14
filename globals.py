@@ -11,7 +11,7 @@ import sqlite3
 from authenticationdatabase import authenticationDB
 from flask import jsonify, make_response
 from datacube import DataCube
-import copy
+import openeologging
 
 def authenticateError():
     err = globalsSingleton.errorJson('AuthenticationRequired', 0,'')
@@ -104,7 +104,7 @@ class Globals :
         loc = globalsSingleton.openeoip_config['data_locations']['system_files']
         sytemFolder = os.path.join(home, loc['location'])
         propertiesFolder = os.path.join(home, sytemFolder)
-        common.makeFolder(propertiesFolder)
+        openeologging.makeFolder(propertiesFolder)
                         
         propsPath = os.path.join(propertiesFolder, 'id2filename.table')
         propsFile = open(propsPath, 'w')
@@ -123,7 +123,7 @@ class Globals :
         loc = globalsSingleton.openeoip_config['data_locations']['system_files']
         sytemFolder = os.path.join(home, loc['location'])        
         propertiesFolder = os.path.join(home, sytemFolder)
-        common.makeFolder(propertiesFolder)
+        openeologging.makeFolder(propertiesFolder)
         
         propertiesPath = os.path.join(propertiesFolder, 'id2filename.table')
         if ( os.path.exists(propertiesPath)):

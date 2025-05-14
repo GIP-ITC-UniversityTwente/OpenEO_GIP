@@ -3,6 +3,7 @@ from operationconstants import *
 from constants import constants
 from common import openeoip_config
 import re
+import openeologging
 
 
 class SaveResultOperation(OpenEoOperation):
@@ -53,7 +54,7 @@ class SaveResultOperation(OpenEoOperation):
                     self.logEndOperation(processOutput, openeojob)
                     return outputInfo
 
-        message = common.notRunnableError(self.name, openeojob.job_id)
+        message = openeologging.notRunnableError(self.name, openeojob.job_id)
         return createOutput('error', message, constants.DTERROR)
     
     def _processRasterData(self, filePath, env):

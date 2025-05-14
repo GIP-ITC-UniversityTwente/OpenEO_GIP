@@ -83,7 +83,7 @@ class MergeCubes(OpenEoOperation):
                     
             return createOutput(constants.STATUSFINISHED, outputRasters, constants.DTRASTERLIST)
 
-        message = common.notRunnableError(self.name, openeojob.job_id)
+        message = openeologging.notRunnableError(self.name, openeojob.job_id)
         return createOutput('error', message, constants.DTERROR) 
 
     def combineRasters(self, openeojob, toServer, fromServer, mc):
