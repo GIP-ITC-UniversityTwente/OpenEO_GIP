@@ -2,9 +2,12 @@ import sys
 import os
 import pathlib
 import logging
+
+pp = pathlib.Path(__file__).parent.resolve()
+pp = str(pp)
+sys.path.append(pp)
+
 import common
-
-
 
 def initLogger():
     logFormatter = logging.Formatter("%(asctime)s [%(threadName)-12.12s] [%(levelname)-5.5s]  %(message)s")
@@ -25,14 +28,11 @@ initLogger()
 common.logMessage(logging.INFO, '----------------------------------------------')
 common.logMessage(logging.INFO, 'server started, process id:' + str(os.getpid()))
 
-pp = pathlib.Path(__file__).parent.resolve()
-pp = str(pp)
-
 sys.path.append(pp + '/workflow')
 sys.path.append(pp + '/constants')
 sys.path.append(pp + '/operations')
 sys.path.append(pp + '/operations/ilwispy')
-sys.path.append(pp)
+
 
 from flask import Flask, jsonify, make_response, request
 from flask_restful import Api
@@ -62,7 +62,6 @@ from openeouploadfile import OpenEOUploadFile
 from processmanager import globalProcessManager
 from threading import Thread
 from wellknown import WellKnown
-import common
 import ilwis
 
 #init part
