@@ -3,13 +3,13 @@ import threading
 import os
 
 
-lockLogger = threading.Lock()
+lockLogger = threading.RLock()
 
 def logMessage(level, message, user='system'):
-      lockLogger.acquire()
+      #lockLogger.acquire()
       logger = logging.getLogger('openeo')
       logger.log(level, '[ ' + user + ' ] '  + message)
-      lockLogger.release()
+      #lockLogger.release()
 
 def notRunnableError(name, job_name):
      message = "operation not runnable:" + name + "job id:" + str(job_name)
