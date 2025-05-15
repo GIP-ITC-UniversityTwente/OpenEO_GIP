@@ -6,10 +6,9 @@ import os
 lockLogger = threading.RLock()
 
 def logMessage(level, message, user='system'):
-      #lockLogger.acquire()
-      logger = logging.getLogger('openeo')
-      logger.log(level, '[ ' + user + ' ] '  + message)
-      #lockLogger.release()
+      with lockLogger:
+            logger = logging.getLogger('openeo')
+            logger.log(level, '[ ' + user + ' ] '  + message)
 
 def notRunnableError(name, job_name):
      message = "operation not runnable:" + name + "job id:" + str(job_name)
