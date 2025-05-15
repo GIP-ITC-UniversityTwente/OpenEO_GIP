@@ -8,6 +8,7 @@ from pathlib import Path
 import os
 from authenticationdatabase import authenticationDB
 import openeologging
+import logging
 
 
 
@@ -72,9 +73,9 @@ class ProcessManager:
         return cls.instance
       
     def __init__(self):
-        self.lockProcessQue = threading.Lock()
-        self.lockOutput = threading.Lock()
-        self.lockLogger = threading.Lock()
+        self.lockProcessQue = threading.RLock()
+        self.lockOutput = threading.RLock()
+        self.lockLogger = threading.RLock()
         self.processQueue  = []
         self.outputs = {}
         self.outputQueue = Queue()
@@ -153,12 +154,13 @@ class ProcessManager:
         return constants.STATUSUNKNOWN                
     
     def getProcess(self, user, job_id):
-        for i in range(len(self.processQueue)):
-            if str(self.processQueue[i].job_id) == job_id:
-                return self.processQueue[i]
-        for jobb_id, item in self.outputs.items(): 
-            if str(jobb_id) == job_id:
-                return item.eoprocess
+        with self.lockOutput:
+            for i in range(len(self.processQueue)):
+                if str(self.processQueue[i].job_id) == job_id:
+                    return self.processQueue[i]
+            for jobb_id, item in self.outputs.items(): 
+                if str(jobb_id) == job_id:
+                    return item.eoprocess
         return None            
 
     # creates a dict which contains meta infortmation for a certain job. This function is used by the
@@ -254,22 +256,21 @@ class ProcessManager:
                 out.cleanUp()
 
     def reduceLogFile(self):
-        
-        lockLogger.acquire()
-        logpath = os.path.join(os.path.dirname(__file__), 'log')
-        filepath = "{0}/{1}.log".format(logpath, 'openeoserver' )
-        lineCount = 0
-        with open(filepath, 'r') as fp:
-            lines = fp.readlines()
-            lineCount = len(lines)
-        if lineCount > 5000:
-            openeologging.logMessage(logging.INFO, 'reduce size log file')         
-            with open(filepath, 'w') as fp:
-                limit  = 1000
-                for number, line in enumerate(lines):
-                    if number > limit:
-                        fp.write(line) 
-        lockLogger.release()                           
+        with openeologging.lockLogger:
+            logpath = os.path.join(os.path.dirname(__file__), 'log')
+            filepath = "{0}/{1}.log".format(logpath, 'openeoserver' )
+            lineCount = 0
+            with open(filepath, 'r') as fp:
+                lines = fp.readlines()
+                lineCount = len(lines)
+            if lineCount > 5000:
+                openeologging.logMessage(logging.INFO, 'reduce size log file')         
+                with open(filepath, 'w') as fp:
+                    limit  = 1000
+                    for number, line in enumerate(lines):
+                        if number > limit:
+                            fp.write(line) 
+
 
     # this is the main function that handels process graph management. It starts, communicates with and stops
     # the process graphs that are requested. When created processes are put on a queue and started when there
