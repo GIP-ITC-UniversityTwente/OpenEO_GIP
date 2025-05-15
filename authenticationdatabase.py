@@ -15,6 +15,7 @@ class AuthenticationDatabase:
     
     def __init__(self):
         self.openDataBase()
+        self.authLock = threading.RLock()
 
     def openDataBase(self):
         openeologging.logMessage(logging.INFO,'open database')
@@ -57,7 +58,6 @@ class AuthenticationDatabase:
     
     def create_user(self, username, password):
         try:
-            self.authLock = threading.RLockLock()
             with self.authLock:
                 cursor = self.dbConnection.cursor()
                 hashed_password = self.hash_password(password)
@@ -76,7 +76,6 @@ class AuthenticationDatabase:
 
     def login(self, username, password):
         openeologging.logMessage(logging.INFO,'login for user ' + username + ' logged in', username)
-        self.authLock = threading.RLock()
         with self.authLock:
             cursor = self.dbConnection.cursor()
             cursor.execute("SELECT password_hash FROM users WHERE username = ?", (username,))
@@ -94,7 +93,6 @@ class AuthenticationDatabase:
 
     def addToken(self, token, username, endTime):
         openeologging.logMessage(logging.INFO,'token ' + token + ' added for user ' + username, username)
-        self.authLock = threading.RLock()
         with self.authLock:
             query = """Select username from tokens where token= ?"""
             cursor = self.dbConnection.execute(query,(token,))
@@ -108,7 +106,6 @@ class AuthenticationDatabase:
         
 
     def tokenExpired(self, token):
-        self.authLock = threading.RLock()
         with self.authLock:
             query = """Select endtime from tokens where token= ?"""
             cursor = self.dbConnection.execute(query,(token,))
@@ -124,7 +121,6 @@ class AuthenticationDatabase:
    
     def getUserFromToken(self, token):
         openeologging.logMessage(logging.INFO,'get user from token ' + token)
-        self.authLock = threading.RLock()
         user = '?'
         with self.authLock:        
             query = """Select username from tokens where token= ?"""
@@ -136,13 +132,11 @@ class AuthenticationDatabase:
         return user
 
     def deleteTokens(self):
-        self.authLock = threading.RLock()
         with self.authLock:
             query = """delete from tokens"""
             self.dbConnection.execute(query)
 
     def deleteUser(self, name):
-        self.authLock = threading.RLock()
         with self.authLock:
             query = """delete from users where username= ?"""
             self.dbConnection.execute(query,(name))
@@ -150,14 +144,12 @@ class AuthenticationDatabase:
             self.dbConnection.execute(query,(name))
 
     def clearOutOfDateTokes(self):
-        self.authLock = threading.RLock()
         with self.authLock:
             query = "delete from tokens where JULIANDAY(endtime) - JULIANDAY('now') < 0"
             self.dbConnection.execute(query)
 
     def clearDatabase(self):
         openeologging.logMessage(logging.INFO,'clear database')
-        self.authLock = threading.RLock()
         with self.authLock:        
             query = """delete from users"""
             self.dbConnection.execute(query)
