@@ -28,7 +28,7 @@ The following part of the OpenEO web API(https://api.openeo.org/) is implemented
 *table 2: Implemented API calls*
 | API Call                                  | Method | Implementation | Description |
 |-------------------------------------------|--------|-----|-------------|
-| `/collections`                            | GET    | opencollections.py | Lists available collections with at least the required information. This endpoint is compatible with STAC API 0.9.0 and later OGC API - Features 1.0. STAC API extensions and STAC extensions can be implemented in addition to what is documented here |
+| `/collections`                            | GET    | [opencollections.py](https://github.com/GIP-ITC-UniversityTwente/OpenEO_GIP/blob/9a0c3cc9daec1190afdc3ccddf3a7491ed5caeba/openeocollections.py) | Lists available collections with at least the required information. This endpoint is compatible with STAC API 0.9.0 and later OGC API - Features 1.0. STAC API extensions and STAC extensions can be implemented in addition to what is documented here |
 | `/collections/{collection_id}`            | GET    | opencollections.py | Lists all information about a specific collection specified by the identifier `collection_id` |
 | `/collections/{col_id}/queryables`        | GET    | -  |  |
 | `/processes`                              | GET    | openeoprocessdiscovery.py | Lists all predefined processes and returns detailed process descriptions, including parameters and return values |
@@ -107,7 +107,7 @@ The first lane is the Flask framework itself. The second lane is API handlers (s
 ### raster_database
 A simple dictionary that links that (internal)raster identifier to the id2filename.table. This file contains a json descriptions of the raster data sets. The location of this file is linked to openeoip_config['data_locations']['system_files']. Note that openeo describes a flat structure of files/data. Meaning that it easy to generate id conflicts ( duplicates). 
 
-### ProcessManager
+### [ProcessManager](https://github.com/GIP-ITC-UniversityTwente/OpenEO_GIP/blob/9a0c3cc9daec1190afdc3ccddf3a7491ed5caeba/processmanager.py)
 A class with only one instance that manages all registered jobs. The class has a number of responsibilities 
 - register a user defined progress graph ( a job)
 - start a registered job
@@ -159,7 +159,7 @@ The ProcessManager maintains an instance of type Queue. Which is in python an in
 
 ![flowprocessmanager](https://github.com/user-attachments/assets/e0575726-71d6-4d56-971a-ab67947c691d)
 
-### openip_config
+### [openip_config](https://github.com/GIP-ITC-UniversityTwente/OpenEO_GIP/blob/9a0c3cc9daec1190afdc3ccddf3a7491ed5caeba/config/config.json)
 A simple dictionary that is loaded from config.json file that is located in the {root_project}/config folder.
 ```
 {
@@ -195,7 +195,7 @@ A simple dictionary that is loaded from config.json file that is located in the 
 ```
 Note that the some root locationXXX may be the same locations.
 
-### OpenEOProcess
+### [OpenEOProcess](https://github.com/GIP-ITC-UniversityTwente/OpenEO_GIP/blob/9a0c3cc9daec1190afdc3ccddf3a7491ed5caeba/workflow/openeoprocess.py)
 A wrapper class for the process graph that is the core of openeo processing. It provides services (interface) to the rest of the system to query and run the process graph. 
 - run the process process graph
 - stop the process graph
@@ -244,34 +244,37 @@ An instance of the operation class does the actual processing. It is mandatory i
 
 ## Processing Backend
 
-### ProcessGraph
+### [ProcessGraph](https://github.com/GIP-ITC-UniversityTwente/OpenEO_GIP/blob/9a0c3cc9daec1190afdc3ccddf3a7491ed5caeba/workflow/processGraph.py)
 The class ProcessGraph analyzes the graph and
 - determine its end-point. The end point is the only node with a 'return' attribute. As running the graph is a back tracing algorithm, this will be were the back tracing begins.
 - optimize the graph. The graph, as comming from the client, contains all the actions needed to calculate the end result. It is not always efficiently organized. Depending on the processing back-end the graph often can be reorganized  to run more efficiently.
 - Mapping the nodes the optimized graph ( which is a dict) to the ProcessNode class which maps the items of various dicts to appropriate metadata/data for the ProcessNode for easier access. A ProcessNode represents a 'single' operation to be executed. Single is relative notion here as to execute it we might have to run other operations to resolve the parameters needed for this operation.
 - executing the graph. This is handled by an instance of the NodeExecution class which is handed the end-point node at the start from which it starts its back tracing.
-- offering sum support interface for the rest of the system to query properties of the graph (validity, estimations)
+- offering som support interface for the rest of the system to query properties of the graph (validity, estimations)
  
 For the moment optimizing the incomming graph is limited to amalgamating consecutive nodes which together represent a raster calc expression to one expression that can be executed at once.
 
-#### NodeExecution
+#### [NodeExecution](https://github.com/GIP-ITC-UniversityTwente/OpenEO_GIP/blob/9a0c3cc9daec1190afdc3ccddf3a7491ed5caeba/workflow/nodeexecution.py)
 The NodeExecution wraps a ProcessNode and tries to execute the node based on the available parameters( called localParameters). A ProcessNode has a number of parameters as defined by the process graph. A parameter is a simpel dict with two items
 - 'base' : This is the value as described in the process graph. It might be an actual direct value, a reference to another ProcessNode or a sub process graph.
 - 'resolved' : Default None. Will have the value to which the 'base' points to but now a resolved form. A 'real' value.  
 
 The trick is to be able to resolve all the values. Values are either a direct value (e.g. the value 3.1415927) or a referred value. A referred value can be a reference to a 'graph' value or a reference to another node in the graph. A 'graph' value can be seen a global value of the current graph. If the referrence is another node, this node has be queried for its resolved values, which in turn can query other nodes etc... leading to a recursive back tracing path through the graph resolving all unknowns. If a resolve fails an error is generated.
 
-![resolveparameters](https://github.com/user-attachments/assets/0262c614-fb15-4365-8450-c78b2257bac7)
+![resolveparameter](https://github.com/user-attachments/assets/086eec5b-4518-44be-8944-a29789e42f82)
 
 after all unknowns have been resolved the node can be executed. Not that if you look in the sub diagram 'resolve referred node' you'll see that can create another execution node, in this way execution propegates backwards through the graph. The id of the node matches the name of the operation that should be executed. This id is in the metadata of each operation and based on this the approriate instance of the operation is fetched. Each operation has a prepare and run method. The prepare is called with the resolved parameters and if the prepare succeeds the run is called.
 
 ![nodeexecution](https://github.com/user-attachments/assets/7a3003ba-81a6-435c-a9bf-15c0f1fba00d)
 
-### DataCube
+All errors are implemented as exceptions. The only place where exceptions are caught is at OpenEOProcess level. At this level messages are wrapped and send in the (inter-process)Queue so that the ProcessManager can pick them up and store them.
+
+### [DataCube](https://github.com/GIP-ITC-UniversityTwente/OpenEO_GIP/blob/9a0c3cc9daec1190afdc3ccddf3a7491ed5caeba/datacube.py)
+
 The class (or instance of) that holds the metadata and data of a collection. For the moment it is based on raster data. The class has the following responsibilities
 - give access and storing metadata
 - give access and storing data
-The data members are not meant to be accessed publicly (though nothing in Python prevents that) as the internal organisation might change in feature versions. Th facilitate access(read/write) a number of functions exists.
+The data members are not meant to be accessed publicly (though nothing in Python prevents that) as the internal organisation might change in feature versions. To facilitate access(read/write) a number of functions exists.
 Spectral bands and Temporal layers are the main organization of data. In the text when 'band' is used it refers to 'Spectral band' and when 'layer' is used to 'temporal layer' is meant
 
 *table 9: Datacube attributes*
@@ -306,9 +309,8 @@ Spectral bands and Temporal layers are the main organization of data. In the tex
 |----------------------------|-------------------------------------------|
 | | |
 
-### Raster Iterators
-### Memory model for rasters
-Though the following description is about the internal organization of memory and rasters and resides at the C++ side of the IlwisPy library it is (can be) important to understand this as some of the parameters of this organization can be tweaked from the Python side.
+### [Memory model for rasters](https://github.com/Ilwis/IlwisObjects/blob/777ead5cdfd3f0bbf6f9fa194a516bd5d09d1354/core/ilwisobjects/coverage/grid.cpp)
+Though the following description is about the internal organization of memory and rasters and resides at the C++ side of the IlwisPy library it is (can be) important to understand this as some of the parameters of this organization can be tweaked from the Python side. Rasters are all 3D in structure (XYZ). The XY are the normal spatial dimensions. Z can be anything though typically a temporal dimension, spectral band(s) or, due to lack of metadata, a simpel index is used. 
 - movement of the focus of processing works through iterators which can move in any of the 3 axis of a 3D raster. It can use steps(default is 1) and can be moved around at 'random' if the algorithm requires it. By default movement it is XYZ; first all X's are done until the end of the bounding box, then Y is increased and again all X's are done for the new Y until the Y also reaches the end of the bounding box. Z is increased and process repeats. The other organization is ZXY which has the vertical column as primary movement.  
 - an iterator runs in a bounding box and not outside it. By default this is the whole (3d) raster but it might be a subsection(potential 3d).
 - to diminish memory use, as rasters can quickly eat up memory, each raster is divided into blocks. For the XYZ movement a block(red block in the picture)
@@ -319,10 +321,11 @@ For the ZXY the organization is lightly different( red/green block in the pictur
   -  x sixe, the x size of the bounding box. Often the x size of the raster
   -  y size, a fixed smalish number
   -  z size, the full z column size of the raster
+ So this is a 3D block as algorithmically this makes more sense.
 
 ![memorymodel](https://github.com/user-attachments/assets/87486f37-9ca8-42c8-a202-7ea17970238c)
 
-The way this works is that blocks are swapped in and out of memory as use demands with a certain caching to enhance efficiency. The cache leaves certain blocks (LIFO) in memory until a treshold is reached. In this way memory is no limitation when doing raster processing.
+The way this works is that blocks are swapped in and out of memory as use demands with a certain caching to enhance efficiency. The cache leaves certain blocks (FIFO) in memory until a treshold is reached. In this way memory is no limitation when doing raster processing.
 
 ![rasterblocks](https://github.com/user-attachments/assets/f627b030-7f89-4ec8-9b12-66141badd9ab)
 
