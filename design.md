@@ -107,7 +107,9 @@ The first lane is the Flask framework itself. The second lane is API handlers (s
 ### raster_database
 A simple dictionary that links that (internal)raster identifier to the id2filename.table. This file contains a json descriptions of the raster data sets. The location of this file is linked to openeoip_config['data_locations']['system_files']. Note that openeo describes a flat structure of files/data. Meaning that it easy to generate id conflicts ( duplicates). 
 
-### [ProcessManager](https://github.com/GIP-ITC-UniversityTwente/OpenEO_GIP/blob/9a0c3cc9daec1190afdc3ccddf3a7491ed5caeba/processmanager.py)
+### ProcessManager
+[source](https://github.com/GIP-ITC-UniversityTwente/OpenEO_GIP/blob/9a0c3cc9daec1190afdc3ccddf3a7491ed5caeba/processmanager.py)
+
 A class with only one instance that manages all registered jobs. The class has a number of responsibilities 
 - register a user defined progress graph ( a job)
 - start a registered job
